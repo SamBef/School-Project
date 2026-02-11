@@ -1,6 +1,70 @@
 # Deployment
 
-KoboTrack deployment: **Netlify** (frontend), **Railway** (API + PostgreSQL). Follow the runbook in order.
+KoboTrack deployment: **Netlify** (frontend) plus either **Render** or **Railway** (API + PostgreSQL). Follow one runbook in order.
+
+---
+
+## Option A — Deploy with Render (API + PostgreSQL)
+
+Use this if you prefer Render over Railway (e.g. after Railway CLI upload 404). Netlify stays the same for the frontend.
+
+### Render Step 1 — Create PostgreSQL and get the database URL
+
+1. Open [render.com](https://render.com) and sign in with **GitHub**.
+2. In the dashboard, click **New +** → **PostgreSQL**.
+3. **Name** the database (e.g. `koboTrack-db`). Choose **Free** (or a paid plan). **Region** — pick one. Click **Create Database**.
+4. Wait until the database is **Available**. Open it and go to **Info** or **Connect**.
+5. Copy **Internal Database URL** (for the API service on Render). Copy **External Database URL** (for running `prisma db push` from your PC). Save both.
+
+### Render Step 2 — Create the API Web Service
+
+1. In the Render dashboard, click **New +** → **Web Service**.
+2. **Connect a repository** → select your KoboTrack repo (e.g. **SamBef/School-Project**). Authorize Render if asked.
+3. **Configure:**
+   - **Name:** e.g. `koboTrack-api`
+   - **Region:** same as the database (or nearby).
+   - **Branch:** `main` (or your default branch).
+   - **Root Directory:** **`apps/api`** (required for the monorepo).
+   - **Runtime:** **Node**.
+   - **Build Command:** `npm install && npx prisma generate`
+   - **Start Command:** `npm start`
+4. **Instance type:** **Free** (or paid).
+5. **Environment variables** — Add:
+   - **`DATABASE_URL`** — Paste the **Internal Database URL** from Step 1 (Render will also offer to link the database; use the internal URL).
+   - **`JWT_SECRET`** — Long random string (e.g. from PowerShell: `[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }) -as [byte[]])`).
+   - **`FRONTEND_URL`** — Leave empty for now; set after Netlify deploy (Step 4).
+   - **`SENDGRID_API_KEY`** and **`SENDGRID_FROM_EMAIL`** — Optional.
+6. Click **Create Web Service**. Render will build and deploy. The service URL will be like **`https://koboTrack-api.onrender.com`** (or similar). Copy it (no trailing slash) — you’ll use it for Netlify and for `FRONTEND_URL`.
+
+### Render Step 3 — Apply the database schema
+
+1. On your PC, set **`DATABASE_URL`** in `apps/api/.env` to the **External Database URL** from Render Step 1 (or set it only for this run in PowerShell).
+2. In PowerShell:
+   ```powershell
+   cd c:\Users\User\Desktop\DTTRASM\apps\api
+   npx prisma db push
+   ```
+3. Revert `apps/api/.env` to your local DB URL afterward if you use one.
+4. In Render, the API service may auto-redeploy; if the first deploy failed, trigger **Manual Deploy** from the dashboard.
+
+### Render Step 4 — Netlify (frontend)
+
+Same as the main runbook: **Add new site** → **Import from GitHub** → repo → **Base directory:** `apps/web`, **Build command:** `npm run build`, **Publish directory:** `apps/web/dist`. Add **`VITE_API_URL`** = your **Render** API URL (e.g. `https://koboTrack-api.onrender.com`), no trailing slash. Deploy and copy your Netlify site URL.
+
+### Render Step 5 — Wire frontend URL into API
+
+1. In **Render** → your API **Web Service** → **Environment**.
+2. Add or edit **`FRONTEND_URL`** = your Netlify site URL (e.g. `https://your-site.netlify.app`), no trailing slash. Save. Render will redeploy with the new variable.
+
+### Render Step 6 — Post-deploy checks
+
+Same as the main runbook: open the Netlify URL, register, log in, check Dashboard, invite (if SendGrid), smoke-test Transactions/Expenses/Export. Document the live URLs.
+
+**Render free tier:** The API may spin down after idle time; the first request can take 30–60 seconds (cold start). Subsequent requests are faster.
+
+---
+
+## Option B — Deploy with Railway (API + PostgreSQL)
 
 ---
 
@@ -123,7 +187,7 @@ After this, redeploy or restart the API service in Railway so it starts with the
    - Expand **Environment variables** (or **Advanced build settings** → **Environment variables**).
    - Click **Add a variable** or **New variable**.
    - **Key:** `VITE_API_URL`  
-     **Value:** The Railway API URL from Step 2 (e.g. `https://your-api-name.up.railway.app`) — **no trailing slash**.
+     **Value:** Your **API** public URL — **Render** (e.g. `https://koboTrack-api.onrender.com`) or **Railway** (e.g. `https://your-api-name.up.railway.app`) — **no trailing slash**.
 
 5. Click **Deploy site** (or **Deploy**). Wait until the build finishes (green “Published” or “Site is live”).
 
@@ -205,7 +269,7 @@ If you prefer to deploy and set variables from your machine:
 
 You can also run the script: from repo root, **`.\scripts\deploy-railway.ps1`** (after you’ve run `railway login` and **`railway link` from `apps\api`** and selected the API service). To set FRONTEND_URL at deploy time: **`.\scripts\deploy-railway.ps1 -FrontendUrl "https://your-site.netlify.app"`**
 
-**If you get “Failed to upload code with status code 404”:** (1) Run **`cd apps\api`** then **`railway link`** and ensure you select the **API service** (e.g. eloquent-stillness) when prompted. (2) Deploy from `apps\api`: run **`cd apps\api`** then **`railway up`**, or use **`.\scripts\deploy-railway.ps1`** (it runs `railway up` from `apps\api`). (3) If it still fails, try **`railway up --verbose`** from `apps\api` and check the output; clear the link and re-link if needed (delete `%USERPROFILE%\.railway\config.json` then run `railway link` again from `apps\api`).
+**If you get “Failed to upload code with status code 404”:** **Workaround:** Your API service was created from **Deploy from GitHub repo**. Railway does not accept CLI uploads for those services. Use GitHub as the source: push your code to GitHub, then in Railway open the API service → **Deployments** → **Redeploy** (or **Deploy latest commit**) to trigger a new build from the repo. Set Variables and Generate domain in the dashboard. Use **`railway variables set`** from `apps\api` to change env vars; use **`railway redeploy`** to trigger a redeploy from GitHub (no upload).
 
 ---
 
