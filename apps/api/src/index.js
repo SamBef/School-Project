@@ -9,6 +9,7 @@ import expenseRoutes from './routes/expenses.js';
 import dashboardRoutes from './routes/dashboard.js';
 import exportRoutes from './routes/export.js';
 import businessRoutes from './routes/business.js';
+import analysisRoutes from './routes/analysis.js';
 
 const app = express();
 const port = config.port;
@@ -37,6 +38,7 @@ app.use('/expenses', asyncHandler(expenseRoutes));
 app.use('/dashboard', asyncHandler(dashboardRoutes));
 app.use('/export', asyncHandler(exportRoutes));
 app.use('/business', asyncHandler(businessRoutes));
+app.use('/analysis', asyncHandler(analysisRoutes));
 
 app.use((err, req, res, next) => {
   console.error(err);

@@ -245,6 +245,23 @@
     "pdfDescription": "Un reporte formateado con el encabezado de tu negocio, tablas de transacciones, gastos y totales. Ideal para imprimir o compartir.",
     "csvDescription": "Un archivo compatible con hojas de cálculo con todos los registros. Ideal para contabilidad o importación a otras herramientas."
   },
+  "analysis": {
+    "title": "Análisis",
+    "subtitle": "Tendencias de ingresos, gastos y transacciones en el período seleccionado.",
+    "period": "Período",
+    "last7Days": "Últimos 7 días",
+    "last30Days": "Últimos 30 días",
+    "last90Days": "Últimos 90 días",
+    "periodSummary": "En el período seleccionado",
+    "revenue": "Ingresos",
+    "expenses": "Gastos",
+    "netProfit": "Beneficio neto",
+    "transactionCount": "Transacciones",
+    "revenueExpensesOverTime": "Ingresos y gastos en el tiempo",
+    "transactionsOverTime": "Transacciones por día",
+    "expensesByCategory": "Gastos por categoría",
+    "noExpensesInPeriod": "No hay gastos en este período."
+  },
   "paymentMethods": {
     "CASH": "Efectivo",
     "CARD": "Tarjeta",

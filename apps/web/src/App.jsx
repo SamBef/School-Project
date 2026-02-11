@@ -16,6 +16,7 @@ import TransactionsPage from './pages/TransactionsPage';
 import TransactionDetailPage from './pages/TransactionDetailPage';
 import ExpensesPage from './pages/ExpensesPage';
 import ExportPage from './pages/ExportPage';
+import AnalysisPage from './pages/AnalysisPage';
 import InvitePage from './pages/InvitePage';
 import ProfilePage from './pages/ProfilePage';
 import UserActivityPage from './pages/UserActivityPage';
@@ -106,6 +107,7 @@ export default function App() {
           <Route path="/transactions/:id" element={<ProtectedRoute><Layout><TransactionDetailPage /></Layout></ProtectedRoute>} />
           <Route path="/expenses" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><ExpensesPage /></Layout></RoleRoute></ProtectedRoute>} />
           <Route path="/export" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><ExportPage /></Layout></RoleRoute></ProtectedRoute>} />
+          <Route path="/analysis" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><AnalysisPage /></Layout></RoleRoute></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
           <Route path="/invite" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER']}><Layout><InvitePage /></Layout></RoleRoute></ProtectedRoute>} />
           <Route path="/team/:id" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER']}><Layout><UserActivityPage /></Layout></RoleRoute></ProtectedRoute>} />

@@ -2713,3 +2713,61 @@ img.header-user-avatar-img {
   gap: var(--space-6);
   min-width: 0;
 }
+
+/* ============================
+   Analysis page
+   ============================ */
+
+.analysis-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.analysis-subtitle {
+  margin: 0;
+  color: var(--color-neutral-500);
+  font-size: var(--text-sm);
+  flex: 1;
+  min-width: 0;
+}
+
+.analysis-range {
+  flex-shrink: 0;
+}
+
+.analysis-range-select {
+  min-width: 10rem;
+}
+
+.analysis-kpis {
+  margin-bottom: var(--space-2);
+}
+
+.analysis-chart-wrap {
+  width: 100%;
+  min-height: 200px;
+}
+
+.analysis-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .analysis-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .analysis-charts-row {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-chart-wrap {
+    min-height: 240px;
+  }
+}

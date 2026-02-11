@@ -245,6 +245,23 @@
     "pdfDescription": "Un rapport formaté avec l'en-tête de votre entreprise, les tableaux de transactions, les dépenses et les totaux. Idéal pour l'impression ou le partage.",
     "csvDescription": "Un fichier compatible tableur avec tous les enregistrements. Idéal pour la comptabilité ou l'import dans d'autres outils."
   },
+  "analysis": {
+    "title": "Analyse",
+    "subtitle": "Revenus, dépenses et tendances des transactions sur la période choisie.",
+    "period": "Période",
+    "last7Days": "7 derniers jours",
+    "last30Days": "30 derniers jours",
+    "last90Days": "90 derniers jours",
+    "periodSummary": "Sur la période",
+    "revenue": "Revenus",
+    "expenses": "Dépenses",
+    "netProfit": "Bénéfice net",
+    "transactionCount": "Transactions",
+    "revenueExpensesOverTime": "Revenus et dépenses dans le temps",
+    "transactionsOverTime": "Transactions par jour",
+    "expensesByCategory": "Dépenses par catégorie",
+    "noExpensesInPeriod": "Aucune dépense sur cette période."
+  },
   "paymentMethods": {
     "CASH": "Espèces",
     "CARD": "Carte",

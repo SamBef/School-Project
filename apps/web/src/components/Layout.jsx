@@ -72,6 +72,7 @@ export default function Layout({ children }) {
   const canInvite = role === 'OWNER';
   const canExpenses = role === 'OWNER' || role === 'MANAGER';
   const canExport = role === 'OWNER' || role === 'MANAGER';
+  const canAnalysis = role === 'OWNER' || role === 'MANAGER';
 
   return (
     <div className="app-layout">
@@ -87,6 +88,7 @@ export default function Layout({ children }) {
           <NavLink to="/transactions">{t('common.transactions')}</NavLink>
           {canExpenses && <NavLink to="/expenses">{t('common.expenses')}</NavLink>}
           {canExport && <NavLink to="/export">{t('common.export')}</NavLink>}
+          {canAnalysis && <NavLink to="/analysis">{t('analysis.title')}</NavLink>}
           {canInvite && <NavLink to="/invite">{t('common.inviteWorker')}</NavLink>}
         </nav>
 
@@ -174,6 +176,7 @@ export default function Layout({ children }) {
           <NavLink to="/transactions">{t('common.transactions')}</NavLink>
           {canExpenses && <NavLink to="/expenses">{t('common.expenses')}</NavLink>}
           {canExport && <NavLink to="/export">{t('common.export')}</NavLink>}
+          {canAnalysis && <NavLink to="/analysis">{t('analysis.title')}</NavLink>}
           {canInvite && <NavLink to="/invite">{t('common.inviteWorker')}</NavLink>}
           <NavLink to="/profile">{t('common.profile')}</NavLink>
         </nav>

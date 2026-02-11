@@ -245,6 +245,23 @@
     "pdfDescription": "A formatted report with your business header, transaction tables, expense tables, and summary totals. Ideal for printing or sharing with stakeholders.",
     "csvDescription": "A spreadsheet-compatible file with all transaction and expense records. Ideal for bookkeeping, tax preparation, or importing into other tools."
   },
+  "analysis": {
+    "title": "Analysis",
+    "subtitle": "Revenue, expenses, and transaction trends over the selected period.",
+    "period": "Time period",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "last90Days": "Last 90 days",
+    "periodSummary": "In selected period",
+    "revenue": "Revenue",
+    "expenses": "Expenses",
+    "netProfit": "Net profit",
+    "transactionCount": "Transactions",
+    "revenueExpensesOverTime": "Revenue and expenses over time",
+    "transactionsOverTime": "Transactions per day",
+    "expensesByCategory": "Expenses by category",
+    "noExpensesInPeriod": "No expenses in this period."
+  },
   "paymentMethods": {
     "CASH": "Cash",
     "CARD": "Card",
