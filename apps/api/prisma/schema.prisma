@@ -1,0 +1,115 @@
+// KoboTrack — PostgreSQL schema (Prisma)
+// One business per owner; RBAC: OWNER, MANAGER, CASHIER
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  CASHIER
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  MOBILE_MONEY
+  BANK_TRANSFER
+  OTHER
+}
+
+enum ExpenseCategory {
+  RENT
+  STOCK_INVENTORY
+  UTILITIES
+  TRANSPORT
+  MISCELLANEOUS
+}
+
+model Business {
+  id                String   @id @default(uuid())
+  name              String
+  email             String
+  phone             String
+  primaryLocation   String   // city/town
+  address           String?
+  logoUrl           String?
+  baseCurrencyCode  String   @default("USD") // e.g. USD, EUR, GHS
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  users         User[]
+  transactions  Transaction[]
+  expenses      Expense[]
+}
+
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  firstName          String?
+  lastName           String?
+  avatarUrl          String?   // base64 data URL or external URL
+  passwordHash       String?   // null until set (invited users) or after reset
+  role               Role
+  businessId         String
+  invitedAt          DateTime?
+  acceptedAt         DateTime?
+  inviteToken        String?   // token in invite email link
+  inviteTokenExpiry  DateTime?
+  resetToken         String?
+  resetTokenExpiry   DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  business     Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  expenses     Expense[]
+}
+
+model Transaction {
+  id              String        @id @default(uuid())
+  businessId      String
+  userId          String
+  items           Json          // [{ name, quantity, unitPrice }]
+  total           Decimal       @db.Decimal(12, 2)  // amount in base currency
+  paymentMethod   PaymentMethod
+  currencyCode    String?       // currency used for payment (null = base currency)
+  originalTotal   Decimal?      @db.Decimal(12, 2)  // total in payment currency
+  exchangeRate    Decimal?      @db.Decimal(18, 8)  // 1 payment currency = X base currency
+  createdAt       DateTime      @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  receipt  Receipt?
+}
+
+model Receipt {
+  id             String   @id @default(uuid())
+  transactionId  String   @unique
+  receiptNumber  Int      // sequential per business
+  format         String   @default("standard") // standard, thermal (see docs)
+  generatedAt    DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+}
+
+model Expense {
+  id          String         @id @default(uuid())
+  businessId  String
+  userId      String
+  description String
+  category    ExpenseCategory
+  amount      Decimal        @db.Decimal(12, 2)
+  date        DateTime       @db.Date
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
