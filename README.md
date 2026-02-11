@@ -24,9 +24,10 @@ Target users: SME owners, managers, and daily workers.
 ```
 kobotrack/
 ├── apps/
-│   ├── web/          # React frontend (HTML, vanilla CSS)
+│   ├── web/          # React frontend (HTML, vanilla CSS) — company-facing app
+│   ├── admin/        # React admin app — platform admin (companies list, summary only)
 │   └── api/          # Node.js + Express backend
-├── docs/             # Detailed documentation
+├── docs/             # Detailed documentation (incl. admin.md)
 ├── REPORT.md         # University-style report (source)
 └── README.md         # This file
 ```

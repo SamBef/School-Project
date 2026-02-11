@@ -7,12 +7,14 @@
   "license": "UNLICENSED",
   "workspaces": [
     "apps/web",
-    "apps/api"
+    "apps/api",
+    "apps/admin"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=apps/web & npm run dev --workspace=apps/api",
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:api": "npm run dev --workspace=apps/api",
+    "dev:admin": "npm run dev --workspace=apps/admin",
     "dev:web:run": "npm run dev --workspace=apps/web",
     "build": "npm run build --workspace=apps/web && npm run build --workspace=apps/api",
     "build:web": "npm run build --workspace=apps/web",

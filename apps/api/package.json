@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
+    "admin:create": "node scripts/create-admin.js",
     "test": "node --test src/",
     "lint": "eslint src --ext .js"
   },

@@ -10,6 +10,7 @@ import dashboardRoutes from './routes/dashboard.js';
 import exportRoutes from './routes/export.js';
 import businessRoutes from './routes/business.js';
 import analysisRoutes from './routes/analysis.js';
+import adminRoutes from './routes/admin/index.js';
 
 const app = express();
 const port = config.port;
@@ -24,7 +25,8 @@ function asyncHandler(fn) {
   };
 }
 
-app.use(cors({ origin: config.frontendUrl, credentials: true }));
+const corsOrigins = [config.frontendUrl, config.adminFrontendUrl].filter(Boolean);
+app.use(cors({ origin: corsOrigins.length ? corsOrigins : true, credentials: true }));
 app.use(express.json({ limit: '5mb' }));
 
 app.get('/health', (req, res) => {
@@ -39,6 +41,7 @@ app.use('/dashboard', asyncHandler(dashboardRoutes));
 app.use('/export', asyncHandler(exportRoutes));
 app.use('/business', asyncHandler(businessRoutes));
 app.use('/analysis', asyncHandler(analysisRoutes));
+app.use('/admin', asyncHandler(adminRoutes));
 
 app.use((err, req, res, next) => {
   console.error(err);

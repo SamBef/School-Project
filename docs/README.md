@@ -24,6 +24,7 @@ This folder contains detailed documentation for the SME Transaction & Receipt Ma
 | [Database schema](database.md) | Tables, relationships, Prisma schema |
 | [Deployment](deployment.md) | Netlify (web), Railway (api + PostgreSQL), env vars |
 | [Testing](testing.md) | Manual and automated test approach |
+| [Admin](admin.md) | Platform admin app — manage companies (summary only, confidentiality preserved) |
 | [Report](report.md) | University-style report (same content as root REPORT.md and report PDF) |
 
 ---
