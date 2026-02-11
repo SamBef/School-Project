@@ -45,11 +45,15 @@ You now have a project and a PostgreSQL database. Next: add the API service.
    - Go to the **Settings** tab (or **Configure**).
    - Find **Root Directory**, **Build path**, or **Source** and set it to: **`apps/api`**. Save if there’s a Save button.
 
+   **What the root directory does:** Railway clones your whole repo (the monorepo). By default it would run build and start from the **repo root**, where there is no API code — only the root `package.json`. Setting **Root Directory** to **`apps/api`** tells Railway: “Treat this folder as the project root.” From then on, every command (build, start) runs **inside** `apps/api`. So `npm install` installs the API’s dependencies (from `apps/api/package.json`), `npx prisma generate` reads `apps/api/prisma/schema.prisma`, and `npm start` runs the API’s start script (e.g. `node src/index.js`). Without this, Railway would look for `package.json` at the repo root and the API would not run correctly.
+
 3. **Set build and start commands:**
    - In the same **Settings**:
      - **Build Command:** `npm install && npx prisma generate`
      - **Start Command:** `npm start`
    - Save.
+
+   **What happens after (each deploy):** When Railway deploys, it (1) clones the repo, (2) changes into the root directory you set (`apps/api`), (3) runs the **build command** there: `npm install` installs dependencies, then `npx prisma generate` creates the Prisma client from your schema (no database tables are created yet — that’s Step 3). (4) Railway then runs the **start command** `npm start`, which starts your API server (e.g. `node src/index.js`). The server listens on the port Railway provides and is exposed via the public URL you generate in step 5 below.
 
 4. **Add environment variables:**
    - Open the **Variables** tab for this API service.
