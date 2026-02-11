@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import { config } from './config.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
@@ -27,6 +28,7 @@ function asyncHandler(fn) {
 
 const corsOrigins = [config.frontendUrl, config.adminFrontendUrl].filter(Boolean);
 app.use(cors({ origin: corsOrigins.length ? corsOrigins : true, credentials: true }));
+app.use(compression());
 app.use(express.json({ limit: '5mb' }));
 
 app.get('/health', (req, res) => {

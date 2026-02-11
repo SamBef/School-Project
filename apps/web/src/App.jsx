@@ -1,28 +1,40 @@
 /**
  * App — routes, AuthProvider, and public landing page.
+ * Protected routes are lazy-loaded for smaller initial bundle and faster first paint.
  */
 
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import RoleRoute from './components/RoleRoute';
+import { t } from './i18n';
+
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import SetPasswordPage from './pages/SetPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
-import DashboardPage from './pages/DashboardPage';
-import TransactionsPage from './pages/TransactionsPage';
-import TransactionDetailPage from './pages/TransactionDetailPage';
-import ExpensesPage from './pages/ExpensesPage';
-import ExportPage from './pages/ExportPage';
-import AnalysisPage from './pages/AnalysisPage';
-import InvitePage from './pages/InvitePage';
-import ProfilePage from './pages/ProfilePage';
-import UserActivityPage from './pages/UserActivityPage';
-import NotFoundPage from './pages/NotFoundPage';
-import RoleRoute from './components/RoleRoute';
-import { t } from './i18n';
+
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const TransactionsPage = lazy(() => import('./pages/TransactionsPage'));
+const TransactionDetailPage = lazy(() => import('./pages/TransactionDetailPage'));
+const ExpensesPage = lazy(() => import('./pages/ExpensesPage'));
+const ExportPage = lazy(() => import('./pages/ExportPage'));
+const AnalysisPage = lazy(() => import('./pages/AnalysisPage'));
+const InvitePage = lazy(() => import('./pages/InvitePage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const UserActivityPage = lazy(() => import('./pages/UserActivityPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+
+function PageFallback() {
+  return (
+    <div className="loading-page" aria-live="polite">
+      <p>Loading…</p>
+    </div>
+  );
+}
 
 function HomePage() {
   const { isAuthenticated } = useAuth();
@@ -95,24 +107,26 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/set-password" element={<SetPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Layout><DashboardPage /></Layout></ProtectedRoute>} />
-          <Route path="/transactions" element={<ProtectedRoute><Layout><TransactionsPage /></Layout></ProtectedRoute>} />
-          <Route path="/transactions/:id" element={<ProtectedRoute><Layout><TransactionDetailPage /></Layout></ProtectedRoute>} />
-          <Route path="/expenses" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><ExpensesPage /></Layout></RoleRoute></ProtectedRoute>} />
-          <Route path="/export" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><ExportPage /></Layout></RoleRoute></ProtectedRoute>} />
-          <Route path="/analysis" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><AnalysisPage /></Layout></RoleRoute></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
-          <Route path="/invite" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER']}><Layout><InvitePage /></Layout></RoleRoute></ProtectedRoute>} />
-          <Route path="/team/:id" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER']}><Layout><UserActivityPage /></Layout></RoleRoute></ProtectedRoute>} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/set-password" element={<SetPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Layout><DashboardPage /></Layout></ProtectedRoute>} />
+            <Route path="/transactions" element={<ProtectedRoute><Layout><TransactionsPage /></Layout></ProtectedRoute>} />
+            <Route path="/transactions/:id" element={<ProtectedRoute><Layout><TransactionDetailPage /></Layout></ProtectedRoute>} />
+            <Route path="/expenses" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><ExpensesPage /></Layout></RoleRoute></ProtectedRoute>} />
+            <Route path="/export" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><ExportPage /></Layout></RoleRoute></ProtectedRoute>} />
+            <Route path="/analysis" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><AnalysisPage /></Layout></RoleRoute></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
+            <Route path="/invite" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER']}><Layout><InvitePage /></Layout></RoleRoute></ProtectedRoute>} />
+            <Route path="/team/:id" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER']}><Layout><UserActivityPage /></Layout></RoleRoute></ProtectedRoute>} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   );

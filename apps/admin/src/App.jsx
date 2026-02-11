@@ -1,8 +1,14 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAdminAuth } from './context/AdminAuthContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import CompanyDetailPage from './pages/CompanyDetailPage';
+
+const CompanyDetailPage = lazy(() => import('./pages/CompanyDetailPage'));
+
+function PageFallback() {
+  return <p className="loading">Loading…</p>;
+}
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAdminAuth();
@@ -26,7 +32,9 @@ export default function App() {
         path="/companies/:id"
         element={
           <ProtectedRoute>
-            <CompanyDetailPage />
+            <Suspense fallback={<PageFallback />}>
+              <CompanyDetailPage />
+            </Suspense>
           </ProtectedRoute>
         }
       />
