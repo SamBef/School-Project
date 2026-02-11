@@ -197,15 +197,15 @@ If you prefer to deploy and set variables from your machine:
 
 1. **Install the CLI** (one time): `npm install -g @railway/cli`
 2. **Log in** (one time; opens browser): run **`railway login`** in PowerShell or CMD and complete the login in the browser.
-3. **Link the repo** (one time): from the repo root run **`railway link`** and select your **project** and the **API service** (e.g. eloquent-stillness).  
-   Or link non-interactively if you have project and service IDs:  
-   `railway link -p PROJECT_ID -s SERVICE_ID` (IDs are in the Railway dashboard URL or service settings.)
-4. **Deploy:** from the repo root run **`railway up`**. Railway will use the service’s root directory (`apps/api`) and build/start from the repo.
+3. **Link the API service** (one time): run **`cd apps\api`** then **`railway link`**. Select your **workspace**, **project** (e.g. joyful-exploration), **environment** (e.g. production), and — when the CLI asks — the **service** (e.g. eloquent-stillness). Linking from `apps/api` and selecting the API service avoids “Failed to upload code 404” when you deploy.
+4. **Deploy:** from the repo root run **`.\scripts\deploy-railway.ps1`** (the script runs `railway up` from `apps/api`). Or run **`cd apps\api`** then **`railway up`**.
 5. **Set FRONTEND_URL:** after your Netlify site is live, run  
    **`railway variables set FRONTEND_URL=https://your-site.netlify.app`** (use your real Netlify URL, no trailing slash).
 6. **Generate domain (if not done):** in the Railway dashboard → API service → Settings → Networking → **Generate domain**, or run **`railway domain`** if the CLI supports it.
 
-You can also run the script: from repo root, **`.\scripts\deploy-railway.ps1`** (after you’ve run `railway login` and `railway link` once). To set FRONTEND_URL at deploy time: **`.\scripts\deploy-railway.ps1 -FrontendUrl "https://your-site.netlify.app"`**
+You can also run the script: from repo root, **`.\scripts\deploy-railway.ps1`** (after you’ve run `railway login` and **`railway link` from `apps\api`** and selected the API service). To set FRONTEND_URL at deploy time: **`.\scripts\deploy-railway.ps1 -FrontendUrl "https://your-site.netlify.app"`**
+
+**If you get “Failed to upload code with status code 404”:** (1) Run **`cd apps\api`** then **`railway link`** and ensure you select the **API service** (e.g. eloquent-stillness) when prompted. (2) Deploy from `apps\api`: run **`cd apps\api`** then **`railway up`**, or use **`.\scripts\deploy-railway.ps1`** (it runs `railway up` from `apps\api`). (3) If it still fails, try **`railway up --verbose`** from `apps\api` and check the output; clear the link and re-link if needed (delete `%USERPROFILE%\.railway\config.json` then run `railway link` again from `apps\api`).
 
 ---
 
