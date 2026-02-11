@@ -17,6 +17,19 @@ Phase 6 from the roadmap (Weeks 12–14): manual test cases per role, bug fixes,
 
 ## Task breakdown and order
 
+### 0. Run automated tests (quick check)
+
+From repo root:
+
+```bash
+cd apps/api && npm run test
+cd apps/web && npm run test
+```
+
+Then proceed to manual testing.
+
+---
+
 ### 1. Manual testing (do first)
 
 | Task | Description | Doc |

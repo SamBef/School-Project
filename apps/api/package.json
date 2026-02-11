@@ -11,7 +11,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "test": "node --test src/**/*.test.js",
+    "test": "node --test src/",
     "lint": "eslint src --ext .js"
   },
   "dependencies": {
