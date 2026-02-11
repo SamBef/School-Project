@@ -70,6 +70,8 @@ You now have a project and a PostgreSQL database. Next: add the API service.
 
 6. Trigger a **Deploy** (or wait for auto-deploy). The first deploy may fail until you run Step 3 (database schema). That’s expected.
 
+**Config from repo:** The repo has `apps/api/railway.json` with build and start commands. In Railway → API service → **Settings** → **Config-as-code**, you can set **Railway Config File** (or config file path) to **`apps/api/railway.json`** so Railway uses those commands from the repo instead of only the dashboard.
+
 ---
 
 ## Step 3 — How to apply the database schema
@@ -186,6 +188,24 @@ After this, redeploy or restart the API service in Railway so it starts with the
    $env:ADMIN_EMAIL="your-admin@example.com"; $env:ADMIN_INITIAL_PASSWORD="YourSecurePassword"; node scripts/create-admin.js
    ```
    Then open the admin site URL, log in with that email and password, and confirm the dashboard and company list load.
+
+---
+
+## Deploy from the terminal (Railway CLI)
+
+If you prefer to deploy and set variables from your machine:
+
+1. **Install the CLI** (one time): `npm install -g @railway/cli`
+2. **Log in** (one time; opens browser): run **`railway login`** in PowerShell or CMD and complete the login in the browser.
+3. **Link the repo** (one time): from the repo root run **`railway link`** and select your **project** and the **API service** (e.g. eloquent-stillness).  
+   Or link non-interactively if you have project and service IDs:  
+   `railway link -p PROJECT_ID -s SERVICE_ID` (IDs are in the Railway dashboard URL or service settings.)
+4. **Deploy:** from the repo root run **`railway up`**. Railway will use the service’s root directory (`apps/api`) and build/start from the repo.
+5. **Set FRONTEND_URL:** after your Netlify site is live, run  
+   **`railway variables set FRONTEND_URL=https://your-site.netlify.app`** (use your real Netlify URL, no trailing slash).
+6. **Generate domain (if not done):** in the Railway dashboard → API service → Settings → Networking → **Generate domain**, or run **`railway domain`** if the CLI supports it.
+
+You can also run the script: from repo root, **`.\scripts\deploy-railway.ps1`** (after you’ve run `railway login` and `railway link` once). To set FRONTEND_URL at deploy time: **`.\scripts\deploy-railway.ps1 -FrontendUrl "https://your-site.netlify.app"`**
 
 ---
 
