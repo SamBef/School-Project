@@ -1,0 +1,33 @@
+---
+description: Commit and push to the repo after every step of work (project workflow)
+alwaysApply: true
+---
+
+# Commit and Push Every Step
+
+This project requires that **every step of the way** is committed and pushed to the remote repository so team members always see current progress.
+
+## When to Commit and Push
+
+- After completing a discrete task or feature (e.g. add a page, fix a bug, update docs).
+- After a logical unit of work that could be described in one commit message.
+- At the end of any session or before switching context.
+
+## What the Agent Must Do
+
+1. **After finishing a change or set of related changes**: Run `git add -A`, then `git commit` with a clear, present-tense message describing what was done.
+2. **After committing**: Run `git push` (or `git push -u origin <branch>` if pushing a new branch) so the remote is updated.
+3. **Do not** leave the working tree with uncommitted changes at the end of a task unless the user explicitly asks to pause mid-work.
+
+## Commit Message Guidelines
+
+- Use present tense, imperative: "Add export filters" not "Added export filters".
+- One logical change per commit when possible.
+- Message should let teammates understand what changed without reading the diff.
+
+## Technical Note
+
+- Use PowerShell-compatible commands in this repo (e.g. `;` to chain, not `&&`).
+- Default branch: `main`. Remote: `origin` (School-Project).
+
+This rule is exclusive to this project and ensures the repo always reflects the latest progress for the team.
