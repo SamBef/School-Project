@@ -76,4 +76,95 @@ router.get(
   }
 );
 
+/**
+ * GET /admin/businesses/:id
+ * Returns one business summary + activityLast7Days (counts per day, no detail).
+ */
+router.get(
+  '/:id',
+  wrap(requireAdmin),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const business = await prisma.business.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          name: true,
+          primaryLocation: true,
+          createdAt: true,
+          baseCurrencyCode: true,
+          _count: { select: { users: true, transactions: true, expenses: true } },
+        },
+      });
+      if (!business) {
+        res.status(404).json({ message: 'Business not found.' });
+        return;
+      }
+
+      const lastTx = await prisma.transaction.groupBy({
+        by: ['businessId'],
+        where: { businessId: id },
+        _max: { createdAt: true },
+      });
+      const lastEx = await prisma.expense.groupBy({
+        by: ['businessId'],
+        where: { businessId: id },
+        _max: { createdAt: true },
+      });
+      const lastT = lastTx[0]?._max?.createdAt ?? null;
+      const lastE = lastEx[0]?._max?.createdAt ?? null;
+      const lastActivityAt = [lastT, lastE].filter(Boolean).length
+        ? new Date(Math.max((lastT && lastT.getTime()) || 0, (lastE && lastE.getTime()) || 0)).toISOString()
+        : null;
+
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+
+      const [transactionsInRange, expensesInRange] = await Promise.all([
+        prisma.transaction.findMany({
+          where: { businessId: id, createdAt: { gte: sevenDaysAgo } },
+          select: { createdAt: true },
+        }),
+        prisma.expense.findMany({
+          where: { businessId: id, createdAt: { gte: sevenDaysAgo } },
+          select: { createdAt: true },
+        }),
+      ]);
+
+      const dayMap = {};
+      for (let d = new Date(sevenDaysAgo); d <= new Date(); d.setDate(d.getDate() + 1)) {
+        const key = d.toISOString().slice(0, 10);
+        dayMap[key] = { date: key, transactionCount: 0, expenseCount: 0 };
+      }
+      transactionsInRange.forEach((t) => {
+        const key = t.createdAt.toISOString().slice(0, 10);
+        if (dayMap[key]) dayMap[key].transactionCount += 1;
+      });
+      expensesInRange.forEach((e) => {
+        const key = e.createdAt.toISOString().slice(0, 10);
+        if (dayMap[key]) dayMap[key].expenseCount += 1;
+      });
+      const activityLast7Days = Object.keys(dayMap).sort().map((k) => dayMap[k]);
+
+      res.json({
+        id: business.id,
+        name: business.name,
+        primaryLocation: business.primaryLocation,
+        createdAt: business.createdAt.toISOString(),
+        baseCurrencyCode: business.baseCurrencyCode,
+        userCount: business._count.users,
+        transactionCount: business._count.transactions,
+        expenseCount: business._count.expenses,
+        lastActivityAt,
+        activityLast7Days,
+      });
+    } catch (err) {
+      console.error('admin business detail error', err);
+      res.status(500).json({ message: 'Failed to load business.' });
+    }
+  }
+);
+
 export default router;

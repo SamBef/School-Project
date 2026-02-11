@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAdminAuth } from './context/AdminAuthContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import CompanyDetailPage from './pages/CompanyDetailPage';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAdminAuth();
@@ -18,6 +19,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/companies/:id"
+        element={
+          <ProtectedRoute>
+            <CompanyDetailPage />
           </ProtectedRoute>
         }
       />

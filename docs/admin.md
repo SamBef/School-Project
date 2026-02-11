@@ -65,7 +65,9 @@ The admin app runs at **http://localhost:5174** (web app stays on 5173). Sign in
 ## API (admin only)
 
 - **POST /admin/auth/login** — Body: `{ email, password }`. Returns `{ token }` (JWT with `adminId`, `admin: true`). Company user tokens are not accepted.
+- **GET /admin/stats** — Returns `{ businessCount, userCount, transactionCount, expenseCount }` (platform-wide totals).
 - **GET /admin/businesses** — Returns `{ businesses }`: each has `id`, `name`, `primaryLocation`, `createdAt`, `baseCurrencyCode`, `userCount`, `transactionCount`, `expenseCount`, `lastActivityAt`. No business contact details or transaction/expense records.
+- **GET /admin/businesses/:id** — Returns one business summary plus `activityLast7Days`: array of `{ date, transactionCount, expenseCount }` for the last 7 days. No transaction/expense detail.
 
 All admin routes require the admin JWT in `Authorization: Bearer <token>`.
 
@@ -73,7 +75,7 @@ All admin routes require the admin JWT in `Authorization: Bearer <token>`.
 
 ## App structure
 
-- **apps/admin** — Vite + React app (port 5174).
-- **apps/api** — Admin model, `scripts/create-admin.js`, `/admin/auth` and `/admin/businesses` routes, `requireAdmin` middleware.
+- **apps/admin** — Vite + React app (port 5174). Dashboard: platform stats cards, companies table with search and sort, export CSV, link to company detail. Company detail: summary + activity last 7 days (counts per day).
+- **apps/api** — Admin model, `scripts/create-admin.js`, `/admin/auth`, `/admin/stats`, `/admin/businesses` (list + `GET :id`), `requireAdmin` middleware.
 
 Design tokens and layout are aligned with the main KoboTrack web app for consistency.

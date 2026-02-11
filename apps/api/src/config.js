@@ -5,7 +5,7 @@
 export const config = {
   port: parseInt(process.env.PORT ?? '3000', 10),
   frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:5173',
-  adminFrontendUrl: process.env.ADMIN_FRONTEND_URL ?? '', // optional; admin app origin for CORS
+  adminFrontendUrl: process.env.ADMIN_FRONTEND_URL ?? 'http://localhost:5174', // admin app origin for CORS
   jwtSecret: process.env.JWT_SECRET ?? '',
 
   // Gmail / SMTP (preferred for dev)
