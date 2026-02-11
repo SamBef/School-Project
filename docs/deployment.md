@@ -21,8 +21,8 @@ KoboTrack deployment: **Netlify** (frontend), **Railway** (API + PostgreSQL).
 1. Create a new project on [Railway](https://railway.app).
 2. **PostgreSQL:** Add a PostgreSQL service; note `DATABASE_URL`.
 3. **API service:** Add a service from the repo; set root (or build context) to `apps/api`.
-   - Build command: `npm install && npm run build` (or as needed).
-   - Start command: `node dist/index.js` or `npm start` (adjust to your build output).
+   - Build command: `npm install && npx prisma generate`.
+   - Start command: `npm start` (runs `node src/index.js`).
 4. **Environment variables** for the API service:
    - `DATABASE_URL` (from PostgreSQL service)
    - `JWT_SECRET`

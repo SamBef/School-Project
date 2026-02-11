@@ -10,6 +10,10 @@ This folder contains detailed documentation for the SME Transaction & Receipt Ma
 |----------|-------------|
 | [Phase 2 walkthrough](phase-2-walkthrough.md) | **Authentication & RBAC** — step-by-step explanation of every file and decision |
 | [Phase 2 run and test](phase-2-run-and-test.md) | **How to run and test Phase 2** — prerequisites, env, DB, servers, and test flows |
+| [Phase 3 walkthrough](phase-3-walkthrough.md) | **Core business features** — transactions, receipts, expenses, dashboard, export |
+| [Phase 3 run and test](phase-3-run-and-test.md) | **How to run and test Phase 3** — step-by-step feature tests |
+| [Phase 6 plan](phase-6-plan.md) | **Testing & deployment** — task breakdown, order, and references |
+| [Phase 6 test cases](phase-6-test-cases.md) | **Manual test cases by role** — Owner, Manager, Cashier checklists |
 | [Database: one option](database-option.md) | **Free PostgreSQL (Neon)** — get a URL, put it in `.env`, run `db:push` |
 | [Neon signup choices](neon-signup-choices.md) | **Postgres version, cloud provider, Neon auth** — what to pick on Neon |
 | [db:generate fix](db-generate-fix.md) | **If db:generate fails with EPERM** — stop the API, then run it again |
