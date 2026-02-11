@@ -64,6 +64,75 @@ Same as the main runbook: open the Netlify URL, register, log in, check Dashboar
 
 ---
 
+### Execute Render Steps 3–6 in order (no back-and-forth)
+
+Do these in sequence. Have these ready before you start: **Render External Database URL** (from Step 1), **Render API URL** (from Step 2, e.g. `https://koboTrack-api.onrender.com`).
+
+---
+
+**Step 3 — Apply the database schema (on your PC only)**
+
+1. Open **PowerShell** (or Terminal).
+2. Go to the API folder:
+   ```powershell
+   cd c:\Users\User\Desktop\DTTRASM\apps\api
+   ```
+3. Set the production database URL for this run only (paste your **Render External Database URL** between the quotes):
+   ```powershell
+   $env:DATABASE_URL="postgresql://user:pass@host/dbname?sslmode=require"
+   ```
+4. Apply the schema:
+   ```powershell
+   npx prisma db push
+   ```
+5. You should see “Your database is now in sync with your schema” or similar. Clear the env var so later commands don’t use production:
+   ```powershell
+   Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
+   ```
+6. **Render dashboard:** Open [dashboard.render.com](https://dashboard.render.com) → your **API Web Service**. If the latest deploy **failed**, click **Manual Deploy** → **Deploy latest commit**. Otherwise do nothing. Leave this tab open.
+
+---
+
+**Step 4 — Deploy the frontend on Netlify (Netlify only)**
+
+1. Open [netlify.com](https://www.netlify.com) and sign in with **GitHub**.
+2. **Add new site** → **Import an existing project** → **GitHub** → select your KoboTrack repo (e.g. **SamBef/School-Project**).
+3. **Branch to deploy:** `main`. Click **Options** or **Edit** next to build settings.
+4. **Base directory:** type **`apps/web`**.
+5. **Build command:** `npm run build`
+6. **Publish directory:** `apps/web/dist`
+7. Expand **Environment variables** → **Add a variable** or **Add variable** → **New variable**.
+8. **Key:** `VITE_API_URL`  
+   **Value:** your **Render API URL** (e.g. `https://koboTrack-api.onrender.com`) — **no trailing slash**.
+9. Click **Deploy site** (or **Deploy**). Wait until the build finishes (green “Published” or “Site is live”).
+10. Copy your **Netlify site URL** from the top of the page (e.g. `https://something.netlify.app`). Paste it into a notepad — you need it for Step 5.
+
+---
+
+**Step 5 — Set FRONTEND_URL in Render (Render only)**
+
+1. Go back to [dashboard.render.com](https://dashboard.render.com) → your **API Web Service** (e.g. koboTrack-api).
+2. Open the **Environment** tab (left sidebar or top tabs).
+3. Find **FRONTEND_URL**. If it exists, click **Edit** (or the value). If it doesn’t exist, click **Add Environment Variable**.
+4. **Key:** `FRONTEND_URL`  
+   **Value:** the **Netlify site URL** you copied in Step 4 (e.g. `https://something.netlify.app`) — **no trailing slash**.
+5. Click **Save Changes**. Render will redeploy the API with the new variable. Wait for the deploy to finish (optional but recommended).
+
+---
+
+**Step 6 — Post-deploy checks (browser only)**
+
+1. Open your **Netlify site URL** in a browser (the one you set as FRONTEND_URL).
+2. **Register:** Create a new business and user; confirm you can **log in**.
+3. **Dashboard:** After login, open the dashboard and confirm it loads (numbers can be zero).
+4. **Invite (if you use SendGrid):** Send an invite; open the email and check the link uses your Netlify URL. Without SendGrid, use the invite link shown on screen and set a password.
+5. **Smoke test:** Open **Transactions**, **Expenses**, and **Export** and confirm the pages load without errors.
+6. **Document:** Write down the **live URLs** — Netlify URL = app, Render API URL = API — in your README or report.
+
+You’re done. No need to go back to earlier steps if you followed the order above.
+
+---
+
 ## Option B — Deploy with Railway (API + PostgreSQL)
 
 ---
