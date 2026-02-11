@@ -160,11 +160,11 @@ export default function ExpensesPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div>
+    <div className="page-content">
       <h1 className="page-title">{t('common.expenses')}</h1>
 
       {/* Create / edit form */}
-      <div className="card" style={{ marginBottom: 'var(--space-6)' }}>
+      <div className="card animate-card-in">
         <div className="card-header">
           <h2>{editingId ? t('expenses.editExpense') : t('expenses.addExpense')}</h2>
           {editingId && (
@@ -241,7 +241,7 @@ export default function ExpensesPage() {
       </div>
 
       {/* Expense history */}
-      <div className="card">
+      <div className="card animate-card-in-delay">
         <div className="card-header">
           <h2>{t('expenses.history')}</h2>
           <div className="card-header-right">
@@ -268,7 +268,7 @@ export default function ExpensesPage() {
           <p className="empty-state">{t('common.noDataYet')}</p>
         ) : (
           <>
-            <div className="table-scroll">
+            <div className="history-table-wrap table-scroll">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -334,6 +334,75 @@ export default function ExpensesPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <div className="history-cards" aria-label={t('expenses.history')}>
+              {expenses.map((exp) => (
+                <div key={exp.id} className="expense-card">
+                  <div className="expense-card-row">
+                    <span className="expense-card-label">{t('expenses.date')}</span>
+                    <span className="expense-card-value">{new Date(exp.date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="expense-card-row">
+                    <span className="expense-card-label">{t('expenses.description')}</span>
+                    <span className="expense-card-value">{exp.description}</span>
+                  </div>
+                  <div className="expense-card-row">
+                    <span className="expense-card-label">{t('expenses.category')}</span>
+                    <span className="expense-card-value">
+                      <span className={`category-badge category-${exp.category.toLowerCase()}`}>
+                        {getCategoryLabel(exp.category)}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="expense-card-row">
+                    <span className="expense-card-label">{t('expenses.amount')}</span>
+                    <span className="expense-card-value">{currency} {exp.amount.toFixed(2)}</span>
+                  </div>
+                  <div className="expense-card-row">
+                    <span className="expense-card-label">{t('expenses.recordedBy')}</span>
+                    <span className="expense-card-value">
+                      {exp.user?.firstName ? `${exp.user.firstName} ${exp.user.lastName ?? ''}`.trim() : (exp.user?.email ?? '—')}
+                    </span>
+                  </div>
+                  <div className="expense-card-actions">
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => startEdit(exp)}
+                    >
+                      {t('common.edit')}
+                    </button>
+                    {confirmDeleteId === exp.id ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDelete(exp.id)}
+                          disabled={deletingId === exp.id}
+                        >
+                          {deletingId === exp.id ? '…' : t('common.confirm')}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => setConfirmDeleteId(null)}
+                        >
+                          {t('common.cancel')}
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        onClick={() => setConfirmDeleteId(exp.id)}
+                      >
+                        {t('common.delete')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
 
             {totalPages > 1 && (

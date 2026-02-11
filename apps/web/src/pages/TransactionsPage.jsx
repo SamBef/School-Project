@@ -202,11 +202,11 @@ export default function TransactionsPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div>
+    <div className="page-content">
       <h1 className="page-title">{t('common.transactions')}</h1>
 
       {/* New transaction form */}
-      <div className="card" style={{ marginBottom: 'var(--space-6)' }}>
+      <div className="card animate-card-in">
         <div className="card-header">
           <h2>{t('transactions.newTransaction')}</h2>
         </div>
@@ -335,7 +335,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Transaction history */}
-      <div className="card">
+      <div className="card animate-card-in-delay">
         <div className="card-header">
           <h2>{t('transactions.history')}</h2>
           <span className="card-header-count">{totalCount} {t('transactions.total')}</span>
@@ -400,7 +400,7 @@ export default function TransactionsPage() {
           <p className="empty-state">{t('common.noDataYet')}</p>
         ) : (
           <>
-            <div className="table-scroll">
+            <div className="history-table-wrap table-scroll">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -444,6 +444,53 @@ export default function TransactionsPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+
+            <div className="history-cards" aria-label={t('transactions.history')}>
+              {transactions.map((tx) => {
+                const itemsList = Array.isArray(tx.items) ? tx.items : [];
+                const itemSummary = itemsList.map((i) => i.name).join(', ');
+                const hasForeignCurrency = !!tx.currencyCode;
+                return (
+                  <Link key={tx.id} to={`/transactions/${tx.id}`} className="transaction-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <span className="transaction-card-link">
+                      #{tx.receipt?.receiptNumber ?? '—'}
+                    </span>
+                    <div className="transaction-card-row">
+                      <span className="transaction-card-label">{t('transactions.date')}</span>
+                      <span className="transaction-card-value">{new Date(tx.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="transaction-card-row">
+                      <span className="transaction-card-label">{t('transactions.items')}</span>
+                      <span className="transaction-card-value truncate" title={itemSummary}>{itemSummary || '—'}</span>
+                    </div>
+                    <div className="transaction-card-row">
+                      <span className="transaction-card-label">{t('transactions.paymentMethod')}</span>
+                      <span className="transaction-card-value">{t(`paymentMethods.${tx.paymentMethod}`)}</span>
+                    </div>
+                    <div className="transaction-card-row">
+                      <span className="transaction-card-label">{t('transactions.amount')} ({baseCurrency})</span>
+                      <span className="transaction-card-value">{baseCurrency} {tx.total.toFixed(2)}</span>
+                    </div>
+                    <div className="transaction-card-row">
+                      <span className="transaction-card-label">{t('transactions.paid')}</span>
+                      <span className="transaction-card-value">
+                        {hasForeignCurrency ? (
+                          <span className="foreign-currency-tag">{tx.currencyCode} {tx.originalTotal?.toFixed(2)}</span>
+                        ) : (
+                          <span className="base-currency-tag">{baseCurrency}</span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="transaction-card-row">
+                      <span className="transaction-card-label">{t('transactions.recordedBy')}</span>
+                      <span className="transaction-card-value">
+                        {tx.user?.firstName ? `${tx.user.firstName} ${tx.user.lastName ?? ''}`.trim() : (tx.user?.email ?? '—')}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
 
             {totalPages > 1 && (

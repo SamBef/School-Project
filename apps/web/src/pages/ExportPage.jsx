@@ -46,10 +46,10 @@ export default function ExportPage() {
   }
 
   return (
-    <div>
+    <div className="page-content">
       <h1 className="page-title">{t('common.export')}</h1>
 
-      <div className="card" style={{ maxWidth: '36rem', margin: '0 auto' }}>
+      <div className="card animate-card-in" style={{ maxWidth: '36rem', margin: '0 auto' }}>
         <div className="card-header">
           <h2>{t('export.generateReport')}</h2>
         </div>

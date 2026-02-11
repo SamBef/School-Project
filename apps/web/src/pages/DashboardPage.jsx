@@ -42,8 +42,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div>
-      <div className="dashboard-header">
+    <div className="page-content">
+      <div className="dashboard-header animate-fade-in">
         <h1>{t('common.welcome')}, {user?.firstName ?? user?.email?.split('@')[0]}</h1>
         <p>{business?.name ? `${business.name} — ${business.primaryLocation}` : t('auth.dashboard')}</p>
       </div>
@@ -55,7 +55,7 @@ export default function DashboardPage() {
           {loadError && <p className="form-error" role="alert">{loadError}</p>}
 
           {/* Today's stats */}
-          <div className="stats-grid">
+          <div className="stats-grid animate-fade-in" style={{ animationDelay: '0.05s', animationFillMode: 'both' }}>
             <div className="stat-card">
               <p className="stat-card-label">{t('dashboard.todayTransactions')}</p>
               <p className="stat-card-value">{stats?.today?.transactionCount ?? 0}</p>
