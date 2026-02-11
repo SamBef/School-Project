@@ -28,6 +28,8 @@ const RANGE_PRESETS = [
   { value: 7, labelKey: 'analysis.last7Days' },
   { value: 30, labelKey: 'analysis.last30Days' },
   { value: 90, labelKey: 'analysis.last90Days' },
+  { value: 365, labelKey: 'analysis.last1Year' },
+  { value: 730, labelKey: 'analysis.last2Years' },
 ];
 
 const CATEGORY_I18N = {
