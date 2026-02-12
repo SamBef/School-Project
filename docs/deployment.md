@@ -111,12 +111,15 @@ Do these in sequence. Have these ready before you start: **Render External Datab
 
 **Step 5 — Set FRONTEND_URL in Render (Render only)**
 
-1. Go back to [dashboard.render.com](https://dashboard.render.com) → your **API Web Service** (e.g. koboTrack-api).
-2. Open the **Environment** tab (left sidebar or top tabs).
-3. Find **FRONTEND_URL**. If it exists, click **Edit** (or the value). If it doesn’t exist, click **Add Environment Variable**.
-4. **Key:** `FRONTEND_URL`  
-   **Value:** the **Netlify site URL** you copied in Step 4 (e.g. `https://something.netlify.app`) — **no trailing slash**.
-5. Click **Save Changes**. Render will redeploy the API with the new variable. Wait for the deploy to finish (optional but recommended).
+Do this so the API allows requests from your Netlify site (CORS) and uses the correct URL in invite/reset emails.
+
+1. **Open Render:** Go to [dashboard.render.com](https://dashboard.render.com) in your browser and sign in if needed.
+2. **Open your API service:** On the dashboard you’ll see a list of services. Click the **API Web Service** you created in Step 2 (e.g. **koboTrack-api** or the name you gave it). Do **not** click the PostgreSQL database.
+3. **Open Environment:** On the service page you’ll see tabs or a left sidebar (Overview, Logs, **Environment**, Metrics, Settings, etc.). Click **Environment**.
+4. **Add or edit FRONTEND_URL:**
+   - If **FRONTEND_URL** is already in the list: click its **value** (or the **Edit** / pencil icon next to it). In the **Value** field, type or paste your **Netlify site URL** from Step 4 (e.g. `https://kobo-safe.netlify.app`). **No trailing slash.** Click **Save** or **Update**.
+   - If **FRONTEND_URL** is not in the list: click **Add Environment Variable** (or **+ Add**). In **Key**, type exactly: **`FRONTEND_URL`**. In **Value**, paste your **Netlify site URL** from Step 4 (e.g. `https://kobo-safe.netlify.app`). **No trailing slash.** Click **Save** or **Add**.
+5. **Confirm:** The **Environment** tab should show **FRONTEND_URL** with your Netlify URL as the value. Render will redeploy the API automatically; you can go to the **Logs** or **Events** tab to see the new deploy. Wait for it to finish (optional but recommended) before testing the app in Step 6.
 
 ---
 
