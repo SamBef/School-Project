@@ -28,9 +28,21 @@ function getAuthHeaders() {
 }
 
 async function request(path, options = {}) {
+  if (!BASE_URL || !BASE_URL.startsWith('http')) {
+    throw new Error(
+      'API URL is not configured. Set VITE_API_URL in Netlify (Site configuration → Environment variables) to your Render API URL (e.g. https://school-project.onrender.com), then redeploy the site.'
+    );
+  }
   const url = `${BASE_URL}${path}`;
   const headers = getAuthHeaders();
-  const res = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
+  let res;
+  try {
+    res = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
+  } catch (err) {
+    const hint =
+      'Check that VITE_API_URL in Netlify matches your Render API URL (no trailing slash) and that you redeployed after setting it. If the API sleeps on Render, wait 30–60 seconds and try again.';
+    throw new Error(`Cannot reach the API at ${url}. ${hint}`);
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

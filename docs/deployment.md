@@ -6,7 +6,7 @@ KoboTrack deployment: **Netlify** (frontend) plus either **Render** or **Railway
 
 ## Option A — Deploy with Render (API + PostgreSQL)
 
-Use this if you prefer Render over Railway (e.g. after Railway CLI upload 404). Netlify stays the same for the frontend.
+Use this if you prefer Render over Railway (e.g. after Railway CLI upload 404). Netlify stays the same for the    frontend.
 
 ### Render Step 1 — Create PostgreSQL and get the database URL
 
@@ -443,6 +443,20 @@ If you prefer to deploy and set variables from your machine:
 You can also run the script: from repo root, **`.\scripts\deploy-railway.ps1`** (after you’ve run `railway login` and **`railway link` from `apps\api`** and selected the API service). To set FRONTEND_URL at deploy time: **`.\scripts\deploy-railway.ps1 -FrontendUrl "https://your-site.netlify.app"`**
 
 **If you get “Failed to upload code with status code 404”:** **Workaround:** Your API service was created from **Deploy from GitHub repo**. Railway does not accept CLI uploads for those services. Use GitHub as the source: push your code to GitHub, then in Railway open the API service → **Deployments** → **Redeploy** (or **Deploy latest commit**) to trigger a new build from the repo. Set Variables and Generate domain in the dashboard. Use **`railway variables set`** from `apps\api` to change env vars; use **`railway redeploy`** to trigger a redeploy from GitHub (no upload).
+
+---
+
+## Troubleshooting: “Failed to fetch” on login
+
+If the main app (Netlify) shows **“Failed to fetch”** when you try to log in, the browser cannot reach the API or the request is blocked. The app now shows a clearer message when it can:
+
+- **“API URL is not configured…”** → The built site has no API URL. In **Netlify** → your site → **Site configuration** → **Environment variables**, add **VITE_API_URL** = your **Render API URL** (e.g. `https://school-project.onrender.com`), **no trailing slash**. Then **Deploys** → **Trigger deploy** → **Clear cache and deploy site** so the new value is baked into the build.
+- **“Cannot reach the API at https://…”** → The URL is set but the request fails (network error or CORS). Do all of the following:
+  1. **Render API URL:** In Render → **School-Project** (API service) → copy the service URL from the top (e.g. `https://school-project.onrender.com`). Open **that URL + /health** in a new tab (e.g. `https://school-project.onrender.com/health`). You should see `{"status":"ok",...}`. If it doesn’t load or times out, the API may be sleeping (free tier); wait 30–60 seconds and try again, then try login again.
+  2. **VITE_API_URL:** In Netlify → **Environment variables**, **VITE_API_URL** must be **exactly** that Render URL (no trailing slash). If you changed it, **redeploy** (Clear cache and deploy site).
+  3. **FRONTEND_URL (CORS):** In Render → **School-Project** → **Environment**, **FRONTEND_URL** must be **exactly** your main app URL (e.g. `https://kobo-track.netlify.app`), **no trailing slash**. Save and wait for the API to redeploy.
+
+After any change to env vars on Netlify, always **trigger a new deploy** so the frontend is rebuilt with the correct API URL.
 
 ---
 
