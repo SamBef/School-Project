@@ -136,6 +136,83 @@ You’re done. No need to go back to earlier steps if you followed the order abo
 
 ---
 
+### Host the admin app (Render + Netlify)
+
+Use this when your API is on **Render** (Option A). The admin app is a **second Netlify site** from the same repo, plus one env var on Render and one admin user.
+
+**Before you start:** Have your **Render API URL** (e.g. `https://school-project.onrender.com`). You’ll get the **admin site URL** after Step 1.
+
+---
+
+**Admin Step 1 — Deploy the admin app on Netlify (second site)**
+
+1. Open [netlify.com](https://www.netlify.com) and sign in with **GitHub**.
+2. **Add new site** → **Import an existing project** → **GitHub** → select the **same repo** (e.g. **SamBef/School-Project** or **School-Project**). Do **not** edit your existing main site (kobo-track); you are creating a **new** site.
+3. **Configure the build (important):**
+   - **Branch to deploy:** `main`.
+   - **Base directory:** **`apps/admin`** (required — same idea as `apps/web` for the main app).
+   - **Build command:** `npm run build`
+   - **Publish directory:** **`apps/admin/dist`**
+4. **Environment variables** → **Add a variable** or **Add variable** → **New variable**:
+   - **Key:** `VITE_API_URL`
+   - **Value:** your **Render API URL** (e.g. `https://school-project.onrender.com`) — **no trailing slash**. Same URL as the main app uses.
+5. Click **Deploy site** (or **Deploy**). Wait until the build finishes (green “Published” or “Site is live”).
+6. Copy your **admin site URL** from the top of the page (e.g. `https://koboTrack-admin.netlify.app` or a random name). Paste it into a notepad — you need it for Admin Step 2 and to log in later.
+
+---
+
+**Admin Step 2 — Allow the admin app in the API (Render CORS)**
+
+1. Open [dashboard.render.com](https://dashboard.render.com) and sign in.
+2. Click your **API Web Service** (e.g. **School-Project**).
+3. Open the **Environment** tab.
+4. **Add Environment Variable** (or edit if it exists):
+   - **Key:** `ADMIN_FRONTEND_URL`
+   - **Value:** the **admin Netlify URL** from Admin Step 1 (e.g. `https://koboTrack-admin.netlify.app`) — **no trailing slash**.
+5. Click **Save**. Render will redeploy the API. Wait for the deploy to finish so the admin app can call the API (CORS).
+
+---
+
+**Admin Step 3 — Create an admin user (one-time)**
+
+The admin app needs at least one admin account. Create it from your PC using the production database.
+
+1. Get the **External Database URL** from Render: **Render** → your **PostgreSQL** service → **Info** or **Connect** → copy **External Database URL**.
+2. Open **PowerShell** and go to the API folder:
+   ```powershell
+   cd c:\Users\User\Desktop\DTTRASM\apps\api
+   ```
+3. Set the production database URL for this run (paste your **Render External Database URL** between the quotes):
+   ```powershell
+   $env:DATABASE_URL="postgresql://..."
+   $env:ADMIN_EMAIL="your-admin@example.com"
+   $env:ADMIN_INITIAL_PASSWORD="YourSecurePassword"
+   ```
+   Replace with your real email and a strong password.
+4. Run the create-admin script:
+   ```powershell
+   node scripts/create-admin.js
+   ```
+   You should see “Admin created for …” or “Admin already exists for …”.
+5. Clear the env vars so later commands don’t use production:
+   ```powershell
+   Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
+   Remove-Item Env:ADMIN_EMAIL -ErrorAction SilentlyContinue
+   Remove-Item Env:ADMIN_INITIAL_PASSWORD -ErrorAction SilentlyContinue
+   ```
+
+---
+
+**Admin Step 4 — Log in to the admin app**
+
+1. Open your **admin site URL** (from Admin Step 1) in a browser.
+2. Log in with the **email** and **password** you set in Admin Step 3.
+3. Confirm the dashboard loads (companies table, platform stats). You can open a company to see detail and activity.
+
+You’re done. Bookmark the admin site URL for future use.
+
+---
+
 ## Option B — Deploy with Railway (API + PostgreSQL)
 
 ---
@@ -296,34 +373,11 @@ After this, redeploy or restart the API service in Railway so it starts with the
 
 ---
 
-## Admin app — How to deploy it
+## Admin app — How to deploy it (reference)
 
-**Where:** Netlify again, as a **second site** (separate from the main web app). Then Railway API variables.
+For **Render (Option A)**, use the full walkthrough: **Host the admin app (Render + Netlify)** above (Admin Steps 1–4).
 
-**How:**
-
-1. **Create a second Netlify site** (same as Step 4, but different settings):
-   - In Netlify: **Add new site** → **Import an existing project** → **GitHub** → select the **same repo** (e.g. SamBef/School-Project).
-2. **Use admin build settings:**
-   - **Base directory:** **`apps/admin`**
-   - **Build command:** `npm run build`
-   - **Publish directory:** **`apps/admin/dist`**
-3. **Environment variable:**
-   - **Key:** `VITE_API_URL`  
-     **Value:** The **same** Railway API URL as the main app (e.g. `https://your-api-name.up.railway.app`) — no trailing slash.
-4. **Deploy** and note the **admin site URL** (e.g. `https://your-admin-site.netlify.app`).
-
-5. **Allow the admin app in the API (CORS):**
-   - In **Railway** → your **API service** → **Variables**.
-   - Add (or edit): **`ADMIN_FRONTEND_URL`** = your **admin Netlify URL** (e.g. `https://your-admin-site.netlify.app`). No trailing slash.
-   - Save; redeploy the API if it doesn’t auto-redeploy.
-
-6. **Create an admin user** (one-time): The API has an admin table; you must create an admin account. From your machine, with production `DATABASE_URL` in `apps/api/.env`, run (or use Railway’s script runner if available):
-   ```powershell
-   cd c:\Users\User\Desktop\DTTRASM\apps\api
-   $env:ADMIN_EMAIL="your-admin@example.com"; $env:ADMIN_INITIAL_PASSWORD="YourSecurePassword"; node scripts/create-admin.js
-   ```
-   Then open the admin site URL, log in with that email and password, and confirm the dashboard and company list load.
+For **Railway (Option B)**: Create a **second Netlify site** from the same repo with **Base directory** `apps/admin`, **Publish directory** `apps/admin/dist`, and **VITE_API_URL** = your Railway API URL. Then in **Railway** → API service → **Variables**, add **ADMIN_FRONTEND_URL** = your admin Netlify URL (no trailing slash). Create an admin user once: from your machine set `DATABASE_URL` (production), `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`, then run `node scripts/create-admin.js` from `apps/api`.
 
 ---
 
