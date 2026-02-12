@@ -98,9 +98,9 @@ Do these in sequence. Have these ready before you start: **Render External Datab
 1. Open [netlify.com](https://www.netlify.com) and sign in with **GitHub**.
 2. **Add new site** → **Import an existing project** → **GitHub** → select your KoboTrack repo (e.g. **SamBef/School-Project**).
 3. **Branch to deploy:** `main`. Click **Options** or **Edit** next to build settings.
-4. **Base directory:** type **`apps/web`**.
+4. **Base directory:** type **`apps/web`**. (Required: without this, Netlify builds from repo root and runs the root `npm run build`, which builds both web and API; the API build fails on Netlify and the deploy fails.)
 5. **Build command:** `npm run build`
-6. **Publish directory:** `apps/web/dist`
+6. **Publish directory:** `apps/web/dist` (or **`dist`** if your UI treats it relative to Base directory)
 7. Expand **Environment variables** → **Add a variable** or **Add variable** → **New variable**.
 8. **Key:** `VITE_API_URL`  
    **Value:** your **Render API URL** (e.g. `https://koboTrack-api.onrender.com`) — **no trailing slash**.
