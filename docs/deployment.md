@@ -175,31 +175,78 @@ Use this when your API is on **Render** (Option A). The admin app is a **second 
 
 **Admin Step 3 — Create an admin user (one-time)**
 
-The admin app needs at least one admin account. Create it from your PC using the production database.
+The admin app needs at least one admin account. You create it from your PC by running a script that writes to the **production** database on Render. Do this once; then you can log in to the admin site with that email and password.
 
-1. Get the **External Database URL** from Render: **Render** → your **PostgreSQL** service → **Info** or **Connect** → copy **External Database URL**.
-2. Open **PowerShell** and go to the API folder:
+---
+
+**3a — Get the External Database URL from Render**
+
+1. Open [dashboard.render.com](https://dashboard.render.com) and sign in.
+2. On the dashboard you’ll see your services. Click the **PostgreSQL** service (your database), **not** the **School-Project** (API) service.
+3. On the database page, open the **Info** tab (or **Connect**). Find **External Database URL** (or **Connection string (external)**). It starts with `postgresql://` and is different from the Internal URL.
+4. Click to **copy** the full External Database URL and paste it into a notepad. You’ll use it in step 3c.
+
+---
+
+**3b — Open PowerShell and go to the API folder**
+
+1. On your PC, open **PowerShell** (Windows key → type “PowerShell” → open it).
+2. Run:
    ```powershell
    cd c:\Users\User\Desktop\DTTRASM\apps\api
    ```
-3. Set the production database URL for this run (paste your **Render External Database URL** between the quotes):
+   (If your project is elsewhere, use that path instead.) You should now be in the `apps\api` folder.
+
+---
+
+**3c — Set the three environment variables (one command per line)**
+
+Run these three commands in **the same PowerShell window**, one after the other. Replace the placeholders with your real values.
+
+1. **DATABASE_URL** — paste your **Render External Database URL** between the quotes (the one you copied in 3a):
    ```powershell
-   $env:DATABASE_URL="postgresql://..."
+   $env:DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
+   ```
+   Use your full URL; it’s usually long and may contain special characters. Keep the quotes.
+
+2. **ADMIN_EMAIL** — the email you want to use to log in to the admin app:
+   ```powershell
    $env:ADMIN_EMAIL="your-admin@example.com"
+   ```
+   Replace with your real email (e.g. `samuelsefa004@gmail.com`).
+
+3. **ADMIN_INITIAL_PASSWORD** — the password you want for that admin account (choose a strong one):
+   ```powershell
    $env:ADMIN_INITIAL_PASSWORD="YourSecurePassword"
    ```
-   Replace with your real email and a strong password.
-4. Run the create-admin script:
+   Replace with your real password. Avoid spaces in the password when typing in PowerShell, or put it in quotes if it has spaces.
+
+---
+
+**3d — Run the create-admin script**
+
+1. In the **same** PowerShell window (still in `apps\api`), run:
    ```powershell
    node scripts/create-admin.js
    ```
-   You should see “Admin created for …” or “Admin already exists for …”.
-5. Clear the env vars so later commands don’t use production:
-   ```powershell
-   Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
-   Remove-Item Env:ADMIN_EMAIL -ErrorAction SilentlyContinue
-   Remove-Item Env:ADMIN_INITIAL_PASSWORD -ErrorAction SilentlyContinue
-   ```
+2. You should see either:
+   - **“Admin created for your-admin@example.com”** — success; that email is now an admin.
+   - **“Admin already exists for your-admin@example.com”** — that admin was created earlier; you can still use it to log in.
+3. If you see an error (e.g. “Can’t reach database” or “Set ADMIN_EMAIL and ADMIN_INITIAL_PASSWORD”), check that you ran all three `$env:...` commands in 3c and that `DATABASE_URL` is the **External** URL from Render.
+
+---
+
+**3e — Clear the environment variables (so you don’t use production by mistake later)**
+
+Run these three commands in the same PowerShell window:
+
+```powershell
+Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
+Remove-Item Env:ADMIN_EMAIL -ErrorAction SilentlyContinue
+Remove-Item Env:ADMIN_INITIAL_PASSWORD -ErrorAction SilentlyContinue
+```
+
+After this, the admin account is ready. Go to **Admin Step 4** and log in to the admin site with the email and password you set in 3c.
 
 ---
 
