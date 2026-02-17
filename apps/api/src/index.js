@@ -27,6 +27,11 @@ function asyncHandler(fn) {
 }
 
 const corsOrigins = [config.frontendUrl, config.adminFrontendUrl].filter(Boolean);
+if (corsOrigins.length) {
+  console.log('CORS allowed origins:', corsOrigins.join(', '));
+} else {
+  console.warn('CORS: no FRONTEND_URL or ADMIN_FRONTEND_URL set; allowing all origins');
+}
 app.use(cors({ origin: corsOrigins.length ? corsOrigins : true, credentials: true }));
 app.use(compression());
 app.use(express.json({ limit: '5mb' }));

@@ -1,4 +1,4 @@
-# Deployment
+# Deployment 
 
 KoboTrack deployment: **Netlify** (frontend) plus either **Render** or **Railway** (API + PostgreSQL). Follow one runbook in order.
 
@@ -455,6 +455,8 @@ If the main app (Netlify) shows **“Failed to fetch”** when you try to log in
   1. **Render API URL:** In Render → **School-Project** (API service) → copy the service URL from the top (e.g. `https://school-project.onrender.com`). Open **that URL + /health** in a new tab (e.g. `https://school-project.onrender.com/health`). You should see `{"status":"ok",...}`. If it doesn’t load or times out, the API may be sleeping (free tier); wait 30–60 seconds and try again, then try login again.
   2. **VITE_API_URL:** In Netlify → **Environment variables**, **VITE_API_URL** must be **exactly** that Render URL (no trailing slash). If you changed it, **redeploy** (Clear cache and deploy site).
   3. **FRONTEND_URL (CORS):** In Render → **School-Project** → **Environment**, **FRONTEND_URL** must be **exactly** your main app URL (e.g. `https://kobo-track.netlify.app`), **no trailing slash**. Save and wait for the API to redeploy.
+
+**If the console says "blocked by CORS policy: No 'Access-Control-Allow-Origin' header":** That means the API is not allowing your frontend origin. Set **FRONTEND_URL** on Render to **exactly** `https://kobo-track.netlify.app` (no trailing slash), save, wait for redeploy, then check **Logs** for the line `CORS allowed origins: https://kobo-track.netlify.app`. If the API crashes on startup, fix those errors first so it can respond to requests with CORS headers.
 
 After any change to env vars on Netlify, always **trigger a new deploy** so the frontend is rebuilt with the correct API URL.
 
