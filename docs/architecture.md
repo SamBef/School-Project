@@ -41,7 +41,7 @@ DTTRASM/
 | Database | PostgreSQL |
 | ORM | Prisma |
 | Auth | JWT, bcrypt; SendGrid for invite and password-reset emails |
-| Hosting | Netlify (web), Railway (api + PostgreSQL) |
+| Hosting | Vercel (web), Render or Railway (api + PostgreSQL) |
 
 ---
 

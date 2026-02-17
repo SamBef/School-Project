@@ -1,12 +1,12 @@
-# Deployment 
+# Deployment
 
-KoboTrack deployment: **Netlify** (frontend) plus either **Render** or **Railway** (API + PostgreSQL). Follow one runbook in order.
+KoboTrack deployment: **Vercel** (frontend) plus either **Render** or **Railway** (API + PostgreSQL). Follow one runbook in order.
 
 ---
 
 ## Option A — Deploy with Render (API + PostgreSQL)
 
-Use this if you prefer Render over Railway (e.g. after Railway CLI upload 404). Netlify stays the same for the    frontend.
+Use this for the API and database. The frontend is deployed on **Vercel** (Step 4).
 
 ### Render Step 1 — Create PostgreSQL and get the database URL
 
@@ -32,9 +32,9 @@ Use this if you prefer Render over Railway (e.g. after Railway CLI upload 404). 
 5. **Environment variables** — Add:
    - **`DATABASE_URL`** — Paste the **Internal Database URL** from Step 1 (Render will also offer to link the database; use the internal URL).
    - **`JWT_SECRET`** — Long random string (e.g. from PowerShell: `[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }) -as [byte[]])`).
-   - **`FRONTEND_URL`** — Leave empty for now; set after Netlify deploy (Step 4).
+   - **`FRONTEND_URL`** — Leave empty for now; set after Vercel deploy (Step 4).
    - **`SENDGRID_API_KEY`** and **`SENDGRID_FROM_EMAIL`** — Optional.
-6. Click **Create Web Service**. Render will build and deploy. The service URL will be like **`https://koboTrack-api.onrender.com`** (or similar). Copy it (no trailing slash) — you’ll use it for Netlify and for `FRONTEND_URL`.
+6. Click **Create Web Service**. Render will build and deploy. The service URL will be like **`https://koboTrack-api.onrender.com`** (or similar). Copy it (no trailing slash) — you’ll use it for Vercel and for `FRONTEND_URL`.
 
 ### Render Step 3 — Apply the database schema
 
@@ -47,18 +47,18 @@ Use this if you prefer Render over Railway (e.g. after Railway CLI upload 404). 
 3. Revert `apps/api/.env` to your local DB URL afterward if you use one.
 4. In Render, the API service may auto-redeploy; if the first deploy failed, trigger **Manual Deploy** from the dashboard.
 
-### Render Step 4 — Netlify (frontend)
+### Render Step 4 — Vercel (frontend)
 
-Same as the main runbook: **Add new site** → **Import from GitHub** → repo → **Base directory:** `apps/web`, **Build command:** `npm run build`, **Publish directory:** `apps/web/dist`. Add **`VITE_API_URL`** = your **Render** API URL (e.g. `https://koboTrack-api.onrender.com`), no trailing slash. Deploy and copy your Netlify site URL.
+**Add new project** → **Import Git Repository** → select your KoboTrack repo. **Root Directory:** `apps/web`. **Framework Preset:** Vite (or leave auto). **Build Command:** `npm run build`. **Output Directory:** `dist`. **Environment variable:** `VITE_API_URL` = your **Render** API URL (e.g. `https://koboTrack-api.onrender.com`), no trailing slash. Deploy and copy your Vercel site URL (e.g. `https://kobo-track.vercel.app`).
 
 ### Render Step 5 — Wire frontend URL into API
 
 1. In **Render** → your API **Web Service** → **Environment**.
-2. Add or edit **`FRONTEND_URL`** = your Netlify site URL (e.g. `https://your-site.netlify.app`), no trailing slash. Save. Render will redeploy with the new variable.
+2. Add or edit **`FRONTEND_URL`** = your **Vercel** site URL (e.g. `https://kobo-track.vercel.app`), no trailing slash. Save. Render will redeploy with the new variable.
 
 ### Render Step 6 — Post-deploy checks
 
-Same as the main runbook: open the Netlify URL, register, log in, check Dashboard, invite (if SendGrid), smoke-test Transactions/Expenses/Export. Document the live URLs.
+Open the **Vercel** URL, register, log in, check Dashboard, invite (if SendGrid), smoke-test Transactions/Expenses/Export. Document the live URLs (Vercel URL = app, Render API URL = API).
 
 **Render free tier:** The API may spin down after idle time; the first request can take 30–60 seconds (cold start). Subsequent requests are faster.
 
@@ -93,71 +93,66 @@ Do these in sequence. Have these ready before you start: **Render External Datab
 
 ---
 
-**Step 4 — Deploy the frontend on Netlify (Netlify only)**
+**Step 4 — Deploy the frontend on Vercel (Vercel only)**
 
-1. Open [netlify.com](https://www.netlify.com) and sign in with **GitHub**.
-2. **Add new site** → **Import an existing project** → **GitHub** → select your KoboTrack repo (e.g. **SamBef/School-Project**).
-3. **Branch to deploy:** `main`. Click **Options** or **Edit** next to build settings.
-4. **Base directory:** type **`apps/web`**. (Required: without this, Netlify builds from repo root and runs the root `npm run build`, which builds both web and API; the API build fails on Netlify and the deploy fails.)
-5. **Build command:** `npm run build`
-6. **Publish directory:** `apps/web/dist` (or **`dist`** if your UI treats it relative to Base directory)
-7. Expand **Environment variables** → **Add a variable** or **Add variable** → **New variable**.
-8. **Key:** `VITE_API_URL`  
-   **Value:** your **Render API URL** (e.g. `https://koboTrack-api.onrender.com`) — **no trailing slash**.
-9. Click **Deploy site** (or **Deploy**). Wait until the build finishes (green “Published” or “Site is live”).
-10. Copy your **Netlify site URL** from the top of the page (e.g. `https://something.netlify.app`). Paste it into a notepad — you need it for Step 5.
+1. Open [vercel.com](https://vercel.com) and sign in with **GitHub**.
+2. **Add New** → **Project** (or **Import Git Repository**). Select your KoboTrack repo (e.g. **SamBef/School-Project**).
+3. **Configure Project:**  
+   - **Root Directory:** click **Edit** and set to **`apps/web`** (required for the monorepo).  
+   - **Framework Preset:** Vite (auto-detected or select Vite).  
+   - **Build Command:** `npm run build`  
+   - **Output Directory:** `dist`  
+4. **Environment Variables** → **Add** → **Key:** `VITE_API_URL`, **Value:** your **Render API URL** (e.g. `https://koboTrack-api.onrender.com`), **no trailing slash**. Apply to Production (and Preview if you want).
+5. Click **Deploy**. Wait until the build finishes.
+6. Copy your **Vercel site URL** from the dashboard (e.g. `https://kobo-track.vercel.app` or `https://your-project.vercel.app`). Paste it into a notepad — you need it for Step 5.
 
 ---
 
 **Step 5 — Set FRONTEND_URL in Render (Render only)**
 
-Do this so the API allows requests from your Netlify site (CORS) and uses the correct URL in invite/reset emails.
+Do this so the API allows requests from your Vercel site (CORS) and uses the correct URL in invite/reset emails.
 
 1. **Open Render:** Go to [dashboard.render.com](https://dashboard.render.com) in your browser and sign in if needed.
 2. **Open your API service:** On the dashboard you’ll see a list of services. Click the **API Web Service** you created in Step 2 (e.g. **koboTrack-api** or the name you gave it). Do **not** click the PostgreSQL database.
 3. **Open Environment:** On the service page you’ll see tabs or a left sidebar (Overview, Logs, **Environment**, Metrics, Settings, etc.). Click **Environment**.
 4. **Add or edit FRONTEND_URL:**
-   - If **FRONTEND_URL** is already in the list: click its **value** (or the **Edit** / pencil icon next to it). In the **Value** field, type or paste your **Netlify site URL** from Step 4 (e.g. `https://kobo-safe.netlify.app`). **No trailing slash.** Click **Save** or **Update**.
-   - If **FRONTEND_URL** is not in the list: click **Add Environment Variable** (or **+ Add**). In **Key**, type exactly: **`FRONTEND_URL`**. In **Value**, paste your **Netlify site URL** from Step 4 (e.g. `https://kobo-safe.netlify.app`). **No trailing slash.** Click **Save** or **Add**.
-5. **Confirm:** The **Environment** tab should show **FRONTEND_URL** with your Netlify URL as the value. Render will redeploy the API automatically; you can go to the **Logs** or **Events** tab to see the new deploy. Wait for it to finish (optional but recommended) before testing the app in Step 6.
+   - If **FRONTEND_URL** is already in the list: click its **value** (or the **Edit** / pencil icon next to it). In the **Value** field, type or paste your **Vercel site URL** from Step 4 (e.g. `https://kobo-track.vercel.app`). **No trailing slash.** Click **Save** or **Update**.
+   - If **FRONTEND_URL** is not in the list: click **Add Environment Variable** (or **+ Add**). In **Key**, type exactly: **`FRONTEND_URL`**. In **Value**, paste your **Vercel site URL** from Step 4 (e.g. `https://kobo-track.vercel.app`). **No trailing slash.** Click **Save** or **Add**.
+5. **Confirm:** The **Environment** tab should show **FRONTEND_URL** with your Vercel URL as the value. Render will redeploy the API automatically; you can go to the **Logs** or **Events** tab to see the new deploy. Wait for it to finish (optional but recommended) before testing the app in Step 6.
 
 ---
 
 **Step 6 — Post-deploy checks (browser only)**
 
-1. Open your **Netlify site URL** in a browser (the one you set as FRONTEND_URL).
+1. Open your **Vercel site URL** in a browser (the one you set as FRONTEND_URL).
 2. **Register:** Create a new business and user; confirm you can **log in**.
 3. **Dashboard:** After login, open the dashboard and confirm it loads (numbers can be zero).
-4. **Invite (if you use SendGrid):** Send an invite; open the email and check the link uses your Netlify URL. Without SendGrid, use the invite link shown on screen and set a password.
+4. **Invite (if you use SendGrid):** Send an invite; open the email and check the link uses your Vercel URL. Without SendGrid, use the invite link shown on screen and set a password.
 5. **Smoke test:** Open **Transactions**, **Expenses**, and **Export** and confirm the pages load without errors.
-6. **Document:** Write down the **live URLs** — Netlify URL = app, Render API URL = API — in your README or report.
+6. **Document:** Write down the **live URLs** — Vercel URL = app, Render API URL = API — in your README or report.
 
 You’re done. No need to go back to earlier steps if you followed the order above.
 
 ---
 
-### Host the admin app (Render + Netlify)
+### Host the admin app (Render + Vercel)
 
-Use this when your API is on **Render** (Option A). The admin app is a **second Netlify site** from the same repo, plus one env var on Render and one admin user.
+Use this when your API is on **Render** (Option A). The admin app is a **second Vercel project** from the same repo, plus one env var on Render and one admin user.
 
 **Before you start:** Have your **Render API URL** (e.g. `https://school-project.onrender.com`). You’ll get the **admin site URL** after Step 1.
 
 ---
 
-**Admin Step 1 — Deploy the admin app on Netlify (second site)**
+**Admin Step 1 — Deploy the admin app on Vercel (second project)**
 
-1. Open [netlify.com](https://www.netlify.com) and sign in with **GitHub**.
-2. **Add new site** → **Import an existing project** → **GitHub** → select the **same repo** (e.g. **SamBef/School-Project** or **School-Project**). Do **not** edit your existing main site (kobo-track); you are creating a **new** site.
-3. **Configure the build (important):**
-   - **Branch to deploy:** `main`.
-   - **Base directory:** **`apps/admin`** (required — same idea as `apps/web` for the main app).
-   - **Build command:** `npm run build`
-   - **Publish directory:** **`apps/admin/dist`**
-4. **Environment variables** → **Add a variable** or **Add variable** → **New variable**:
-   - **Key:** `VITE_API_URL`
-   - **Value:** your **Render API URL** (e.g. `https://school-project.onrender.com`) — **no trailing slash**. Same URL as the main app uses.
-5. Click **Deploy site** (or **Deploy**). Wait until the build finishes (green “Published” or “Site is live”).
-6. Copy your **admin site URL** from the top of the page (e.g. `https://koboTrack-admin.netlify.app` or a random name). Paste it into a notepad — you need it for Admin Step 2 and to log in later.
+1. Open [vercel.com](https://vercel.com) and sign in with **GitHub**.
+2. **Add New** → **Project** → select the **same repo** (e.g. **SamBef/School-Project**). Do **not** use your existing main app project; create a **new** project for the admin app.
+3. **Configure Project:**
+   - **Root Directory:** set to **`apps/admin`** (required for the monorepo).
+   - **Framework Preset:** Vite. **Build Command:** `npm run build`. **Output Directory:** `dist`.
+4. **Environment Variables** → **Add** → **Key:** `VITE_API_URL`, **Value:** your **Render API URL** (same as main app), **no trailing slash**.
+5. Click **Deploy**. Wait until the build finishes.
+6. Copy your **admin site URL** (e.g. `https://kobo-track-admin.vercel.app`). Paste it into a notepad — you need it for Admin Step 2 and to log in later.
 
 ---
 
@@ -168,7 +163,7 @@ Use this when your API is on **Render** (Option A). The admin app is a **second 
 3. Open the **Environment** tab.
 4. **Add Environment Variable** (or edit if it exists):
    - **Key:** `ADMIN_FRONTEND_URL`
-   - **Value:** the **admin Netlify URL** from Admin Step 1 (e.g. `https://koboTrack-admin.netlify.app`) — **no trailing slash**.
+   - **Value:** the **admin Vercel URL** from Admin Step 1 (e.g. `https://kobo-track-admin.vercel.app`) — **no trailing slash**.
 5. Click **Save**. Render will redeploy the API. Wait for the deploy to finish so the admin app can call the API (CORS).
 
 ---
@@ -326,7 +321,7 @@ You now have a project and a PostgreSQL database. Next: add the API service.
 5. **Give the API a public URL:**
    - In **Settings**, find **Networking** or **Public networking**.
    - Click **Generate domain** (or **Enable public access**). Railway will assign a URL like `https://something.up.railway.app`.
-   - Copy that **full URL** (no trailing slash) and save it — you’ll use it in Netlify and for `FRONTEND_URL` later.
+   - Copy that **full URL** (no trailing slash) and save it — you’ll use it in Vercel and for `FRONTEND_URL` later.
 
 6. Trigger a **Deploy** (or wait for auto-deploy). The first deploy may fail until you run Step 3 (database schema). That’s expected.
 
@@ -360,34 +355,22 @@ After this, redeploy or restart the API service in Railway so it starts with the
 
 ---
 
-## Step 4 — How to deploy the frontend on Netlify
+## Step 4 — How to deploy the frontend on Vercel
 
-**Where:** Netlify dashboard, then your GitHub repo.
+**Where:** Vercel dashboard, then your GitHub repo.
 
 **How:**
 
-1. Open [netlify.com](https://www.netlify.com) and sign in (e.g. **Log in with GitHub**).
-2. **Create a new site:**
-   - Click **Add new site** → **Import an existing project** (or **Import from Git**).
-   - Choose **GitHub**. Authorize Netlify if asked.
-   - Pick the **GitHub account** and the **repository** (e.g. SamBef/School-Project). Click it.
+1. Open [vercel.com](https://vercel.com) and sign in (e.g. **Continue with GitHub**).
+2. **Add New** → **Project** → **Import Git Repository** → select your KoboTrack repo (e.g. **SamBef/School-Project**).
 
-3. **Configure the build (important):**
-   - **Branch to deploy:** `main` (or your default branch).
-   - **Base directory:** Click **Options** or **Edit settings**, then set **Base directory** to: **`apps/web`**.
-   - **Build command:** `npm run build`
-   - **Publish directory:** `apps/web/dist`
-   - Leave other fields as default unless you use a different branch.
+3. **Configure Project:** **Root Directory:** set to **`apps/web`**. **Framework Preset:** Vite. **Build Command:** `npm run build`. **Output Directory:** `dist`.
 
-4. **Add the API URL before first deploy:**
-   - Expand **Environment variables** (or **Advanced build settings** → **Environment variables**).
-   - Click **Add a variable** or **New variable**.
-   - **Key:** `VITE_API_URL`  
-     **Value:** Your **API** public URL — **Render** (e.g. `https://koboTrack-api.onrender.com`) or **Railway** (e.g. `https://your-api-name.up.railway.app`) — **no trailing slash**.
+4. **Environment Variables** → **Add** → **Key:** `VITE_API_URL`, **Value:** your **API** public URL (Render or Railway), **no trailing slash**. Apply to Production (and Preview if desired).
 
-5. Click **Deploy site** (or **Deploy**). Wait until the build finishes (green “Published” or “Site is live”).
+5. Click **Deploy**. Wait until the build finishes (green “Published” or “Site is live”).
 
-6. Copy your **site URL** (e.g. `https://random-name-123.netlify.app`) from the top of the site dashboard or the deploy summary. You’ll use it in Step 5.
+6. Copy your **site URL** (e.g. `https://kobo-track.vercel.app`) from the dashboard. You’ll use it in Step 5.
 
 ---
 
@@ -400,31 +383,31 @@ After this, redeploy or restart the API service in Railway so it starts with the
 1. Go back to [railway.app](https://railway.app) and open the **same project**.
 2. Click the **API service** (the one you added from GitHub), not the PostgreSQL service.
 3. Open the **Variables** tab.
-4. Find **`FRONTEND_URL`** and set its value to your **Netlify site URL** (e.g. `https://random-name-123.netlify.app`). No trailing slash. If the variable didn’t exist, add it with **New Variable**.
-5. Save. Railway often auto-redeploys when variables change; if not, use **Redeploy** or **Deploy** so the API restarts with the new `FRONTEND_URL`. CORS and email links will then use the Netlify URL.
+4. Find **`FRONTEND_URL`** and set its value to your **Vercel site URL** (e.g. `https://kobo-track.vercel.app`). No trailing slash. If the variable didn’t exist, add it with **New Variable**.
+5. Save. Railway often auto-redeploys when variables change; if not, use **Redeploy** or **Deploy** so the API restarts with the new `FRONTEND_URL`. CORS and email links will then use the Vercel URL.
 
 ---
 
 ## Step 6 — How to do post-deploy checks
 
-**Where:** In your browser, on the live Netlify URL.
+**Where:** In your browser, on the live Vercel URL.
 
 **How:**
 
-1. Open the **Netlify site URL** (from Step 4) in a browser.
+1. Open the **Vercel site URL** (from Step 4) in a browser.
 2. **Register:** Use “Register” or “Sign up”, create a business and user, and confirm you can **log in**.
 3. **Dashboard:** After login, open the dashboard and confirm it loads (numbers can be zero).
-4. **Invite (if you use SendGrid):** Send an invite to an email; open the email and check the link points to your Netlify URL (not localhost). If you don’t use SendGrid, use the invite link shown on screen and set a password.
+4. **Invite (if you use SendGrid):** Send an invite to an email; open the email and check the link points to your Vercel URL (not localhost). If you don’t use SendGrid, use the invite link shown on screen and set a password.
 5. **Quick smoke test:** Open **Transactions**, **Expenses**, and **Export** and confirm pages load without errors.
-6. **Document:** Write down the **live URLs** (Netlify URL = main app, Railway URL = API) in your README or report.
+6. **Document:** Write down the **live URLs** (Vercel URL = main app, Railway URL = API) in your README or report.
 
 ---
 
 ## Admin app — How to deploy it (reference)
 
-For **Render (Option A)**, use the full walkthrough: **Host the admin app (Render + Netlify)** above (Admin Steps 1–4).
+For **Render (Option A)**, use the full walkthrough: **Host the admin app (Render + Vercel)** above (Admin Steps 1–4).
 
-For **Railway (Option B)**: Create a **second Netlify site** from the same repo with **Base directory** `apps/admin`, **Publish directory** `apps/admin/dist`, and **VITE_API_URL** = your Railway API URL. Then in **Railway** → API service → **Variables**, add **ADMIN_FRONTEND_URL** = your admin Netlify URL (no trailing slash). Create an admin user once: from your machine set `DATABASE_URL` (production), `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`, then run `node scripts/create-admin.js` from `apps/api`.
+For **Railway (Option B)**: Create a **second Vercel project** from the same repo with **Root Directory** `apps/admin`, **Output Directory** `dist`, and **VITE_API_URL** = your Railway API URL. Then in **Railway** → API service → **Variables**, add **ADMIN_FRONTEND_URL** = your admin Vercel URL (no trailing slash). Create an admin user once: from your machine set `DATABASE_URL` (production), `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`, then run `node scripts/create-admin.js` from `apps/api`.
 
 ---
 
@@ -436,11 +419,11 @@ If you prefer to deploy and set variables from your machine:
 2. **Log in** (one time; opens browser): run **`railway login`** in PowerShell or CMD and complete the login in the browser.
 3. **Link the API service** (one time): run **`cd apps\api`** then **`railway link`**. Select your **workspace**, **project** (e.g. joyful-exploration), **environment** (e.g. production), and — when the CLI asks — the **service** (e.g. eloquent-stillness). Linking from `apps/api` and selecting the API service avoids “Failed to upload code 404” when you deploy.
 4. **Deploy:** from the repo root run **`.\scripts\deploy-railway.ps1`** (the script runs `railway up` from `apps/api`). Or run **`cd apps\api`** then **`railway up`**.
-5. **Set FRONTEND_URL:** after your Netlify site is live, run  
-   **`railway variables set FRONTEND_URL=https://your-site.netlify.app`** (use your real Netlify URL, no trailing slash).
+5. **Set FRONTEND_URL:** after your Vercel site is live, run  
+   **`railway variables set FRONTEND_URL=https://your-project.vercel.app`** (use your real Vercel URL, no trailing slash).
 6. **Generate domain (if not done):** in the Railway dashboard → API service → Settings → Networking → **Generate domain**, or run **`railway domain`** if the CLI supports it.
 
-You can also run the script: from repo root, **`.\scripts\deploy-railway.ps1`** (after you’ve run `railway login` and **`railway link` from `apps\api`** and selected the API service). To set FRONTEND_URL at deploy time: **`.\scripts\deploy-railway.ps1 -FrontendUrl "https://your-site.netlify.app"`**
+You can also run the script: from repo root, **`.\scripts\deploy-railway.ps1`** (after you’ve run `railway login` and **`railway link` from `apps\api`** and selected the API service). To set FRONTEND_URL at deploy time: **`.\scripts\deploy-railway.ps1 -FrontendUrl "https://your-project.vercel.app"`**
 
 **If you get “Failed to upload code with status code 404”:** **Workaround:** Your API service was created from **Deploy from GitHub repo**. Railway does not accept CLI uploads for those services. Use GitHub as the source: push your code to GitHub, then in Railway open the API service → **Deployments** → **Redeploy** (or **Deploy latest commit**) to trigger a new build from the repo. Set Variables and Generate domain in the dashboard. Use **`railway variables set`** from `apps\api` to change env vars; use **`railway redeploy`** to trigger a redeploy from GitHub (no upload).
 
@@ -448,30 +431,30 @@ You can also run the script: from repo root, **`.\scripts\deploy-railway.ps1`** 
 
 ## Troubleshooting: “Failed to fetch” on login
 
-If the main app (Netlify) shows **“Failed to fetch”** when you try to log in, the browser cannot reach the API or the request is blocked. The app now shows a clearer message when it can:
+If the main app (Vercel) shows **“Failed to fetch”** when you try to log in, the browser cannot reach the API or the request is blocked. The app now shows a clearer message when it can:
 
-- **“API URL is not configured…”** → The built site has no API URL. In **Netlify** → your site → **Site configuration** → **Environment variables**, add **VITE_API_URL** = your **Render API URL** (e.g. `https://school-project.onrender.com`), **no trailing slash**. Then **Deploys** → **Trigger deploy** → **Clear cache and deploy site** so the new value is baked into the build.
+- **“API URL is not configured…”** → The built site has no API URL. In **Vercel** → your project → **Settings** → **Environment Variables**, add **VITE_API_URL** = your **Render API URL** (e.g. `https://school-project.onrender.com`), **no trailing slash**. Then **Redeploy** the project (or push a new commit) so the new value is baked into the build.
 - **“Cannot reach the API at https://…”** → The URL is set but the request fails (network error or CORS). Do all of the following:
   1. **Render API URL:** In Render → **School-Project** (API service) → copy the service URL from the top (e.g. `https://school-project.onrender.com`). Open **that URL + /health** in a new tab (e.g. `https://school-project.onrender.com/health`). You should see `{"status":"ok",...}`. If it doesn’t load or times out, the API may be sleeping (free tier); wait 30–60 seconds and try again, then try login again.
-  2. **VITE_API_URL:** In Netlify → **Environment variables**, **VITE_API_URL** must be **exactly** that Render URL (no trailing slash). If you changed it, **redeploy** (Clear cache and deploy site).
-  3. **FRONTEND_URL (CORS):** In Render → **School-Project** → **Environment**, **FRONTEND_URL** must be **exactly** your main app URL (e.g. `https://kobo-track.netlify.app`), **no trailing slash**. Save and wait for the API to redeploy.
+  2. **VITE_API_URL:** In Vercel → **Environment Variables**, **VITE_API_URL** must be **exactly** that Render URL (no trailing slash). If you changed it, **redeploy** the project.
+  3. **FRONTEND_URL (CORS):** In Render → **School-Project** → **Environment**, **FRONTEND_URL** must be **exactly** your main app URL (e.g. `https://kobo-track.vercel.app`), **no trailing slash**. Save and wait for the API to redeploy.
 
-**If the console says "blocked by CORS policy: No 'Access-Control-Allow-Origin' header":** That means the API is not allowing your frontend origin. Set **FRONTEND_URL** on Render to **exactly** `https://kobo-track.netlify.app` (no trailing slash), save, wait for redeploy, then check **Logs** for the line `CORS allowed origins: https://kobo-track.netlify.app`. If the API crashes on startup, fix those errors first so it can respond to requests with CORS headers.
+**If the console says "blocked by CORS policy: No 'Access-Control-Allow-Origin' header":** Set **FRONTEND_URL** on Render to **exactly** your Vercel URL (e.g. `https://kobo-track.vercel.app`), no trailing slash, save, wait for redeploy, then check **Logs** for `CORS allowed origins: https://kobo-track.vercel.app`. If the API crashes on startup, fix those errors first.
 
-After any change to env vars on Netlify, always **trigger a new deploy** so the frontend is rebuilt with the correct API URL.
+After any change to env vars on Vercel, **redeploy** the project so the frontend is rebuilt with the correct API URL.
 
 ---
 
 ## Reference: build and env
 
-### Frontend (Netlify)
+### Frontend (Vercel)
 
 | Setting            | Value               |
 |--------------------|---------------------|
-| Base directory     | `apps/web`          |
+| Root Directory     | `apps/web`          |
 | Build command      | `npm run build`     |
-| Publish directory  | `apps/web/dist`     |
-| Env var            | `VITE_API_URL` = Railway API URL (no trailing slash) |
+| Output Directory   | `dist`              |
+| Env var            | `VITE_API_URL` = Render or Railway API URL (no trailing slash) |
 
 ### Backend (Railway)
 

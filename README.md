@@ -42,7 +42,7 @@ kobotrack/
 | Backend  | Node.js, Express |
 | Database | PostgreSQL (Prisma ORM) |
 | Auth     | JWT, bcrypt; SendGrid for invite & password-reset emails |
-| Hosting  | Netlify (web), Railway (api + PostgreSQL) |
+| Hosting  | Vercel (web), Render or Railway (api + PostgreSQL) |
 
 ---
 
@@ -96,7 +96,7 @@ kobotrack/
 ## Deliverables
 
 - Repo link
-- Deployed URL (Netlify + Railway)
+- Deployed URL (Vercel + Render or Railway)
 - Demo video (5–10 minutes)
 - Full documentation (docs/ + README + REPORT.md and report PDF)
 

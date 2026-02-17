@@ -1,6 +1,6 @@
 # Phase 6: Testing & Deployment — Plan
 
-Phase 6 from the roadmap (Weeks 12–14): manual test cases per role, bug fixes, cross-browser/responsive checks, deploy to Netlify + Railway, env setup, and final E2E walkthrough.
+Phase 6 from the roadmap (Weeks 12–14): manual test cases per role, bug fixes, cross-browser/responsive checks, deploy to Vercel + Render or Railway, env setup, and final E2E walkthrough.
 
 ---
 
@@ -9,7 +9,7 @@ Phase 6 from the roadmap (Weeks 12–14): manual test cases per role, bug fixes,
 1. Write manual test cases for every feature and walk through them as each role.
 2. Fix any bugs — pay special attention to RBAC and data accuracy.
 3. Test on different browsers (Chrome, Firefox, Safari) and screen sizes.
-4. Choose a hosting platform and deploy the app (we use Netlify + Railway).
+4. Choose a hosting platform and deploy the app (we use Vercel + Render or Railway).
 5. Set up environment variables for database and secrets on the hosting platform.
 6. Do a final end-to-end walkthrough before sharing with real users.
 
@@ -79,9 +79,9 @@ Then proceed to manual testing.
 | 4.2 | Add API service from repo (root `apps/api`); set env vars; use `npm start` (runs `node src/index.js`). | deployment.md |
 | 4.3 | Run Prisma: `npx prisma generate` and `npx prisma db push` (or `migrate deploy`) against production DB. | deployment.md |
 | 4.4 | Expose API; verify health/root endpoint. | — |
-| 4.5 | Connect repo to Netlify; base dir `apps/web`, build `npm run build`, publish `apps/web/dist`. | deployment.md |
-| 4.6 | Set Netlify env: `VITE_API_URL` = Railway API URL; deploy. | deployment.md |
-| 4.7 | Set API env: `FRONTEND_URL` = Netlify URL (CORS + email links). | deployment.md |
+| 4.5 | Connect repo to Vercel; root dir `apps/web`, build `npm run build`, output `dist`. | deployment.md |
+| 4.6 | Set Vercel env: `VITE_API_URL` = Render or Railway API URL; deploy. | deployment.md |
+| 4.7 | Set API env: `FRONTEND_URL` = Vercel URL (CORS + email links). | deployment.md |
 
 **Output:** Live frontend and API; DB migrated; envs set.
 
@@ -119,7 +119,7 @@ Then proceed to manual testing.
 1. **Manual testing (1)** — Run phase-6-test-cases as Owner, Manager, Cashier; fix anything that’s clearly broken.
 2. **Bug fixes (2)** — Address RBAC and data accuracy; re-test.
 3. **Cross-browser (3)** — Quick pass in 2–3 browsers and 2–3 widths.
-4. **Deploy (4)** — Railway then Netlify; env vars; DB migrate.
+4. **Deploy (4)** — Render or Railway then Vercel; env vars; DB migrate.
 5. **Post-deploy (5)** — Full E2E on live URLs.
 6. **Docs (6)** — URLs, report, optional video.
 
@@ -131,4 +131,4 @@ Then proceed to manual testing.
 - [Phase 3 run and test](phase-3-run-and-test.md) — Feature-level steps.
 - [Phase 2 run and test](phase-2-run-and-test.md) — Auth and invite.
 - [Testing](testing.md) — Strategy and RBAC focus.
-- [Deployment](deployment.md) — Netlify and Railway steps.
+- [Deployment](deployment.md) — Vercel and Render or Railway steps.

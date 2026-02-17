@@ -22,7 +22,7 @@ This folder contains detailed documentation for the SME Transaction & Receipt Ma
 | [Architecture](architecture.md) | Monorepo structure, frontend/backend overview, data flow |
 | [API reference](api.md) | Endpoints, request/response shapes, auth |
 | [Database schema](database.md) | Tables, relationships, Prisma schema |
-| [Deployment](deployment.md) | Netlify (web), Railway (api + PostgreSQL), env vars |
+| [Deployment](deployment.md) | Vercel (web), Render or Railway (api + PostgreSQL), env vars |
 | [Testing](testing.md) | Manual and automated test approach |
 | [Admin](admin.md) | Platform admin app — manage companies (summary only, confidentiality preserved) |
 | [Report](report.md) | University-style report (same content as root REPORT.md and report PDF) |

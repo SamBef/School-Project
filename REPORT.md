@@ -43,7 +43,7 @@
 
 ## 7. Deployment and operations
 
-[To be completed: Netlify (frontend), Railway (backend + PostgreSQL), environment variables, SendGrid.]
+[To be completed: Vercel (frontend), Render or Railway (backend + PostgreSQL), environment variables, SendGrid.]
 
 ---
 
