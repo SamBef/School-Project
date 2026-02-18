@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAdminAuth } from './context/AdminAuthContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import CreateCompanyPage from './pages/CreateCompanyPage';
 
 const CompanyDetailPage = lazy(() => import('./pages/CompanyDetailPage'));
 
@@ -25,6 +26,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/companies/new"
+        element={
+          <ProtectedRoute>
+            <CreateCompanyPage />
           </ProtectedRoute>
         }
       />

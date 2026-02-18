@@ -2,6 +2,8 @@
 
 The admin app is a **separate web app** for platform administrators. It lets you view and monitor companies (businesses) using KoboTrack **without exposing confidential data**: only aggregate counts and last activity are shown. No transaction details, expense details, or user PII.
 
+**Database:** The admin app does not connect to the database directly. It uses the **same API** as the main app. The API uses the database configured in `apps/api/.env` (**Supabase** or other PostgreSQL). Admin users and company data all live in that same database.
+
 ---
 
 ## Purpose
@@ -14,9 +16,9 @@ The admin app is a **separate web app** for platform administrators. It lets you
 
 ## Setup
 
-### 1. Database
+### 1. Database (Supabase / same as main app)
 
-The API uses an `Admin` model. After pulling the latest code:
+The API uses an `Admin` model and the same database as the main app (e.g. **Supabase** via `apps/api/.env`). After pulling the latest code:
 
 ```bash
 npm run db:generate

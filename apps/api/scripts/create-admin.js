@@ -1,10 +1,17 @@
 /**
  * One-off script to create a platform admin.
  * Run from apps/api: ADMIN_EMAIL=you@example.com ADMIN_INITIAL_PASSWORD=yourSecret node scripts/create-admin.js
- * Requires DATABASE_URL and JWT_SECRET in .env (or env). After creating, remove ADMIN_INITIAL_PASSWORD from env.
+ * Uses the same database as the API (apps/api/.env: DATABASE_URL = Supabase or other PostgreSQL).
  */
 
-import 'dotenv/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const apiRoot = path.resolve(__dirname, '..');
+dotenv.config({ path: path.join(apiRoot, '.env') });
+
 import bcrypt from 'bcrypt';
 import { PrismaClient } from '@prisma/client';
 

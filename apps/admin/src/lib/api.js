@@ -37,4 +37,32 @@ export const api = {
     if (!res.ok) throw new Error(data.message || `Request failed: ${res.status}`);
     return data;
   },
+
+  async patch(path, body) {
+    const token = getToken();
+    const res = await fetch(`${BASE}${path}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || `Request failed: ${res.status}`);
+    return data;
+  },
+
+  async delete(path) {
+    const token = getToken();
+    const res = await fetch(`${BASE}${path}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: 'include',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || `Request failed: ${res.status}`);
+    return data;
+  },
 };

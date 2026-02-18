@@ -11,6 +11,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 import { getExchangeRate, getAllRates } from '../services/exchange.js';
 import * as stockService from '../services/stock.js';
+import { logActivity } from '../services/activityLog.js';
 
 const router = Router();
 
@@ -202,6 +203,14 @@ router.post(
 
         return { transaction, receipt };
       });
+
+      logActivity({
+        businessId: req.user.businessId,
+        userId: req.user.id,
+        action: 'transaction.created',
+        entityType: 'Transaction',
+        entityId: result.transaction.id,
+      }).catch(() => {});
 
       res.status(201).json({
         transaction: {

@@ -8,6 +8,17 @@ dotenv.config({ path: path.join(process.cwd(), '.env') });
 dotenv.config({ path: apiEnvPath, override: true });
 import './lib/db-env.js';
 
+// Log uncaught errors so "failed running src/index.js" shows the real cause
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection at', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';

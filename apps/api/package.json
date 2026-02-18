@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
+    "db:clear": "node scripts/clear-database.js",
     "admin:create": "node scripts/create-admin.js",
     "test": "node --test src/",
     "test:smoke": "node scripts/smoke-test-api.js",

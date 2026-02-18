@@ -73,10 +73,12 @@ model Business {
   baseCurrencyCode    String    @default("USD") // e.g. USD, EUR, GHS
   defaultLocationId   String?   // inventory: default sell-from location
   globalMinStock      Decimal?  @db.Decimal(12, 4) // optional global low-stock threshold
+  deactivatedAt      DateTime? // when set, business is deactivated (users cannot log in)
   createdAt           DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
   users            User[]
+  activityLogs     ActivityLog[]
   transactions     Transaction[]
   expenses         Expense[]
   units            Unit[]
@@ -106,10 +108,12 @@ model User {
   inviteTokenExpiry  DateTime?
   resetToken         String?
   resetTokenExpiry   DateTime?
+  deactivatedAt     DateTime?  // when set, user cannot log in (distinct from delete)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
   business         Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  activityLogs      ActivityLog[]
   transactions     Transaction[]
   expenses         Expense[]
   returns          Return[]
@@ -386,4 +390,19 @@ model Admin {
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// Audit/activity log for admin visibility (e.g. login, transaction created, user invited)
+model ActivityLog {
+  id         String   @id @default(uuid())
+  businessId String
+  userId     String?  // null for business-level actions
+  action     String   // e.g. "user.login", "transaction.created", "user.invited"
+  entityType String?  // e.g. "Transaction", "User", "Expense"
+  entityId   String?
+  metadata   Json?    // optional extra data
+  createdAt  DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
 
@@ -87,6 +88,9 @@ export default function DashboardPage() {
       </header>
 
       <main className="admin-main" role="main">
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <Link to="/companies/new" className="btn btn-primary">Create company</Link>
+        </div>
         {stats && (
           <div className="admin-stats">
             <div className="admin-stat">
@@ -159,6 +163,7 @@ export default function DashboardPage() {
                     <th>Transactions</th>
                     <th>Expenses</th>
                     <th>Last activity</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -175,6 +180,7 @@ export default function DashboardPage() {
                       <td>{b.transactionCount}</td>
                       <td>{b.expenseCount}</td>
                       <td>{formatDate(b.lastActivityAt)}</td>
+                      <td>{b.deactivatedAt ? <span className="badge badge-inactive">Deactivated</span> : <span className="badge badge-active">Active</span>}</td>
                     </tr>
                   ))}
                 </tbody>

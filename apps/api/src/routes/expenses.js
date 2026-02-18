@@ -8,6 +8,7 @@ import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
+import { logActivity } from '../services/activityLog.js';
 
 const router = Router();
 
@@ -53,6 +54,13 @@ router.post(
           userId: req.user.id,
         },
       });
+      logActivity({
+        businessId: req.user.businessId,
+        userId: req.user.id,
+        action: 'expense.created',
+        entityType: 'Expense',
+        entityId: expense.id,
+      }).catch(() => {});
 
       res.status(201).json({
         ...expense,

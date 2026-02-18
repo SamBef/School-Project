@@ -11,6 +11,7 @@ import { config } from '../config.js';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import { sendPasswordResetEmail } from '../services/email.js';
+import { logActivity } from '../services/activityLog.js';
 
 const router = Router();
 
@@ -115,6 +116,14 @@ router.post('/login', wrap(optionalAuth), async (req, res) => {
       res.status(401).json({ message: 'Invalid email or password.' });
       return;
     }
+    if (user.deactivatedAt) {
+      res.status(401).json({ message: 'This account has been deactivated. Contact your administrator.' });
+      return;
+    }
+    if (user.business?.deactivatedAt) {
+      res.status(401).json({ message: 'This company has been deactivated. Contact the platform administrator.' });
+      return;
+    }
     if (!user.passwordHash) {
       res.status(401).json({ message: 'This account has not been activated yet. Check your email for the invite link to set your password.' });
       return;
@@ -124,6 +133,7 @@ router.post('/login', wrap(optionalAuth), async (req, res) => {
       res.status(401).json({ message: 'Invalid email or password.' });
       return;
     }
+    logActivity({ businessId: user.businessId, userId: user.id, action: 'user.login' }).catch(() => {});
     const token = signToken({ userId: user.id, email: user.email, role: user.role, businessId: user.businessId });
     res.json({
       token,

@@ -248,7 +248,7 @@ Reply with a single JSON object only.`;
 
   const content = await chat(systemPrompt, userContent, 200);
   try {
-    const parsed = JSON.parse(content.replace(/^[^{]*|[^}]*$/g, '').trim() || '{}';
+    const parsed = JSON.parse((content.replace(/^[^{]*|[^}]*$/g, '').trim() || '{}'));
     const out = typeof parsed === 'string' ? {} : parsed;
     return {
       suggestedName: out.suggestedName ?? undefined,
@@ -297,7 +297,7 @@ JSON only.`;
 
   const content = await chat(systemPrompt, userContent, 150);
   try {
-    const out = JSON.parse(content.replace(/^[^{]*|[^}]*$/g, '').trim() || {};
+    const out = JSON.parse((content.replace(/^[^{]*|[^}]*$/g, '').trim() || '{}'));
     return {
       suggestedTags: Array.isArray(out.suggestedTags) ? out.suggestedTags.slice(0, 4) : undefined,
       isRecurring: Boolean(out.isRecurring),
@@ -325,7 +325,7 @@ If the text is empty or not a receipt, return { items: [] }.`;
 
   const content = await chat(systemPrompt, userContent, 800);
   try {
-    const out = JSON.parse(content.replace(/^[^{]*|[^}]*$/g, '').trim() || {};
+    const out = JSON.parse((content.replace(/^[^{]*|[^}]*$/g, '').trim() || '{}'));
     const items = Array.isArray(out.items)
       ? out.items.map((i) => ({
           name: String(i.name || '').trim() || 'Item',
