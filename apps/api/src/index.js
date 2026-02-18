@@ -1,4 +1,10 @@
-import 'dotenv/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
+
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
@@ -11,6 +17,7 @@ import dashboardRoutes from './routes/dashboard.js';
 import exportRoutes from './routes/export.js';
 import businessRoutes from './routes/business.js';
 import analysisRoutes from './routes/analysis.js';
+import inventoryRoutes from './routes/inventory/index.js';
 import adminRoutes from './routes/admin/index.js';
 
 const app = express();
@@ -48,6 +55,7 @@ app.use('/dashboard', asyncHandler(dashboardRoutes));
 app.use('/export', asyncHandler(exportRoutes));
 app.use('/business', asyncHandler(businessRoutes));
 app.use('/analysis', asyncHandler(analysisRoutes));
+app.use('/inventory', asyncHandler(inventoryRoutes));
 app.use('/admin', asyncHandler(adminRoutes));
 
 app.use((err, req, res, next) => {
@@ -55,23 +63,16 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong. Please try again.' });
 });
 
-const MAX_PORT_ATTEMPTS = 11; // 3000..3010
-
-function startServer(portToTry, attempt = 0) {
-  if (attempt >= MAX_PORT_ATTEMPTS) {
-    console.error('No available port in range 3000–3010. Stop other processes or set PORT.');
-    process.exit(1);
-  }
-  const server = app.listen(portToTry, () => {
-    console.log(`KoboTrack API listening on port ${portToTry}`);
+function startServer(portToUse) {
+  const server = app.listen(portToUse, () => {
+    console.log(`KoboTrack API listening on port ${portToUse}`);
   });
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-      console.warn(`Port ${portToTry} in use, trying ${portToTry + 1}`);
-      startServer(portToTry + 1, attempt + 1);
-    } else {
-      throw err;
+      console.error(`Port ${portToUse} is in use. Stop the process using it, or set PORT to another value (e.g. in apps/api/.env).`);
+      process.exit(1);
     }
+    throw err;
   });
 }
 
