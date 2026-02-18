@@ -64,6 +64,13 @@ export default function AnalysisPage() {
   const [restockLoading, setRestockLoading] = useState(false);
   const [restockError, setRestockError] = useState('');
   const [restockData, setRestockData] = useState(null);
+  const [koboaiConfigured, setKoboaiConfigured] = useState(null);
+
+  useEffect(() => {
+    if (isOwner) {
+      api.get('/health').then((h) => setKoboaiConfigured(h.koboaiConfigured === true)).catch(() => {});
+    }
+  }, [isOwner]);
 
   function getDateRange() {
     const dateTo = new Date();
@@ -99,7 +106,7 @@ export default function AnalysisPage() {
     } catch (err) {
       const msg = err.message || '';
       setRestockError(
-        msg.includes('not available') ? t('analysis.insightsUnavailable') : (msg || t('analysis.insightsError'))
+        (msg.includes('not available') || msg.includes('not set up')) ? t('analysis.insightsUnavailable') : (msg || t('analysis.insightsError'))
       );
     } finally {
       setRestockLoading(false);
@@ -337,6 +344,11 @@ export default function AnalysisPage() {
             <p className="card-header-desc">
               {t('analysis.restockingInsightsDesc')}
             </p>
+            {koboaiConfigured === false && (
+              <p className="form-hint form-hint-error" role="status" style={{ marginBottom: 'var(--space-2)' }}>
+                {t('analysis.insightsUnavailable')}
+              </p>
+            )}
             <button
               type="button"
               className="btn btn-primary"

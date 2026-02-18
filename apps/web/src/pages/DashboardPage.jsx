@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [insightsError, setInsightsError] = useState('');
   const [strategicData, setStrategicData] = useState(null);
+  const [koboaiConfigured, setKoboaiConfigured] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -50,6 +51,12 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    if (canUseKoboAI) {
+      api.get('/health').then((h) => setKoboaiConfigured(h.koboaiConfigured === true)).catch(() => {});
+    }
+  }, [canUseKoboAI]);
+
+  useEffect(() => {
     if (!loading) {
       api.get('/transactions?limit=5')
         .then((res) => setRecentTransactions(res.transactions || []))
@@ -69,7 +76,7 @@ export default function DashboardPage() {
     } catch (err) {
       const msg = err.message || '';
       setInsightsError(
-        msg.includes('not available') ? t('dashboard.insightsUnavailable') : (msg || t('dashboard.insightsError'))
+        (msg.includes('not available') || msg.includes('not set up')) ? t('dashboard.insightsUnavailable') : (msg || t('dashboard.insightsError'))
       );
     } finally {
       setInsightsLoading(false);
@@ -279,6 +286,11 @@ export default function DashboardPage() {
                 <p className="card-header-desc">
                   {t('koboai.tagline')} — Porter&apos;s Five Forces, SWOT, and market context for your location and products.
                 </p>
+                {koboaiConfigured === false && (
+                  <p className="form-hint form-hint-error" role="status" style={{ marginBottom: 'var(--space-2)' }}>
+                    {t('dashboard.insightsUnavailable')}
+                  </p>
+                )}
                 <button
                   type="button"
                   className="btn btn-primary"

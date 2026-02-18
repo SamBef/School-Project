@@ -185,7 +185,7 @@ export default function ExpensesPage() {
     } catch (err) {
       const msg = err.message || '';
       setSuggestError(
-        msg.includes('not available') ? t('expenses.suggestCategoryUnavailable') : (msg || t('expenses.suggestCategoryFailed'))
+        (msg.includes('not available') || msg.includes('not set up')) ? t('expenses.suggestCategoryUnavailable') : (msg || t('expenses.suggestCategoryFailed'))
       );
     } finally {
       setSuggestLoading(false);

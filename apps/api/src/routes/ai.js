@@ -54,7 +54,7 @@ router.post(
     } catch (err) {
       if (err.statusCode === 503) {
         return res.status(503).json({
-          message: 'KoboAI is not available. Contact your administrator to enable it.',
+          message: 'KoboAI is not set up on this server. Your administrator can enable it by configuring the API key.',
         });
       }
       if (err.statusCode === 429) {
@@ -165,7 +165,7 @@ router.post(
     } catch (err) {
       if (err.statusCode === 503) {
         return res.status(503).json({
-          message: 'KoboAI is not available. Contact your administrator to enable it.',
+          message: 'KoboAI is not set up on this server. Your administrator can enable it by configuring the API key.',
         });
       }
       if (err.statusCode === 429) {
@@ -216,7 +216,7 @@ router.post(
     } catch (err) {
       if (err.statusCode === 503) {
         return res.status(503).json({
-          message: 'KoboAI is not available. Contact your administrator to enable it.',
+          message: 'KoboAI is not set up on this server. Your administrator can enable it by configuring the API key.',
         });
       }
       if (err.statusCode === 429) {
