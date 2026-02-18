@@ -48,7 +48,8 @@ app.use(compression());
 app.use(express.json({ limit: '5mb' }));
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'kobotrack-api' });
+  const koboaiConfigured = Boolean(config.openaiApiKey && config.openaiApiKey.trim().length > 0);
+  res.json({ status: 'ok', service: 'kobotrack-api', koboaiConfigured });
 });
 
 app.use('/auth', asyncHandler(authRoutes));
@@ -70,7 +71,9 @@ app.use((err, req, res, next) => {
 
 function startServer(portToUse) {
   const server = app.listen(portToUse, () => {
+    const koboaiOk = Boolean(config.openaiApiKey && config.openaiApiKey.trim().length > 0);
     console.log(`KoboTrack API listening on port ${portToUse}`);
+    console.log(`KoboAI configured: ${koboaiOk ? 'yes' : 'no'}`);
   });
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {

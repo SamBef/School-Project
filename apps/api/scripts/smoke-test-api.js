@@ -34,10 +34,14 @@ async function main() {
   let passed = 0;
   let failed = 0;
 
-  // 1. Health
+  // 1. Health (includes koboaiConfigured)
   try {
     const { status, body } = await fetchJson('/health');
-    if (ok('GET /health', status === 200 && body?.status === 'ok')) passed++; else failed++;
+    const healthOk = status === 200 && body?.status === 'ok';
+    if (ok('GET /health', healthOk)) passed++; else failed++;
+    if (healthOk && typeof body.koboaiConfigured === 'boolean') {
+      console.log(`    → koboaiConfigured: ${body.koboaiConfigured}`);
+    }
   } catch (err) {
     console.log(`  [FAIL] GET /health — ${err.message}`);
     failed++;
@@ -222,6 +226,65 @@ async function main() {
     console.log(`  [FAIL] GET /transactions (no token) — ${err.message}`);
     failed++;
   }
+
+  // 9. GET /analysis (Owner/Manager)
+  if (token) {
+    try {
+      const dateTo = new Date().toISOString().slice(0, 10);
+      const dateFrom = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const { status, body } = await fetchJson(`/analysis?dateFrom=${dateFrom}&dateTo=${dateTo}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const valid = status === 200 && body && typeof body.currency === 'string' && Array.isArray(body.timeSeries);
+      if (ok('GET /analysis', valid)) passed++; else failed++;
+      if (!valid && body?.message) console.log(`    → ${body.message}`);
+    } catch (err) {
+      console.log(`  [FAIL] GET /analysis — ${err.message}`);
+      failed++;
+    }
+  }
+
+  // 10. POST /ai/suggest-expense-category (Owner only; 503 if no key is ok)
+  if (token) {
+    try {
+      const { status, body } = await fetchJson('/ai/suggest-expense-category', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description: 'Electricity bill January' }),
+      });
+      const success = status === 200 && body?.category;
+      const unavailable = status === 503 && body?.message;
+      if (ok('POST /ai/suggest-expense-category', success || unavailable, success ? body.category : status === 503 ? 'unavailable' : body?.message || String(status))) passed++; else failed++;
+    } catch (err) {
+      console.log(`  [FAIL] POST /ai/suggest-expense-category — ${err.message}`);
+      failed++;
+    }
+  }
+
+  // 11. POST /ai/insights/strategic (Owner only; 503 if no key is ok)
+  if (token) {
+    try {
+      const { status, body } = await fetchJson('/ai/insights/strategic', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const success = status === 200 && (body?.insights || body?.frameworks);
+      const unavailable = status === 503 && body?.message;
+      if (ok('POST /ai/insights/strategic', success || unavailable, success ? 'ok' : status === 503 ? 'unavailable' : body?.message || String(status))) passed++; else failed++;
+    } catch (err) {
+      console.log(`  [FAIL] POST /ai/insights/strategic — ${err.message}`);
+      failed++;
+    }
+  }
+
+  // 12. Manager/Cashier cannot call AI → 403 (optional: create another user with role MANAGER and try)
+  // Skip for brevity; smoke test uses Owner token.
 
   console.log('\n---');
   console.log(`Total: ${passed} passed, ${failed} failed`);

@@ -23,6 +23,6 @@ export const config = {
   sendgridApiKey: process.env.SENDGRID_API_KEY ?? '',
   sendgridFromEmail: process.env.SENDGRID_FROM_EMAIL ?? '',
 
-  // AI (optional) — e.g. OpenAI for suggest-expense-category
-  openaiApiKey: process.env.OPENAI_API_KEY ?? '',
+  // AI (optional) — e.g. OpenAI for suggest-expense-category (trimmed so no newline breaks it)
+  openaiApiKey: (process.env.OPENAI_API_KEY ?? '').trim(),
 };
