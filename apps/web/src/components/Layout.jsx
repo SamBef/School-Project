@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { t, getLocale, setLocale, loadLocale, SUPPORTED_LOCALES } from '../i18n';
 
 function getRoleBadgeClass(role) {
@@ -34,13 +35,20 @@ function getInitials(user) {
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [navOpen, setNavOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [localeOpen, setLocaleOpen] = useState(false);
 
-  // Close nav panel on route change
+  // Close nav panel and dropdowns on route change
   useEffect(() => {
     setNavOpen(false);
+    setMoreOpen(false);
+    setUserMenuOpen(false);
+    setLocaleOpen(false);
   }, [location.pathname]);
 
   // Prevent body scroll when panel is open
@@ -53,15 +61,44 @@ export default function Layout({ children }) {
     return () => { document.body.style.overflow = ''; };
   }, [navOpen]);
 
+  // Close dropdowns on Escape
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        setMoreOpen(false);
+        setUserMenuOpen(false);
+        setLocaleOpen(false);
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // Close dropdowns on click outside
+  useEffect(() => {
+    if (!moreOpen && !userMenuOpen && !localeOpen) return;
+    function onPointerDown(e) {
+      const target = e.target;
+      if (!target.closest('.nav-dropdown') && !target.closest('.user-menu') && !target.closest('.header-locale')) {
+        setMoreOpen(false);
+        setUserMenuOpen(false);
+        setLocaleOpen(false);
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [moreOpen, userMenuOpen, localeOpen]);
+
   function handleLogout() {
     setNavOpen(false);
+    setUserMenuOpen(false);
     logout();
     navigate('/login', { replace: true });
   }
 
-  async function handleLocaleChange(e) {
-    const locale = e.target.value;
+  async function handleLocaleChange(locale) {
     if (!SUPPORTED_LOCALES.includes(locale)) return;
+    setLocaleOpen(false);
     await loadLocale(locale);
     setLocale(locale);
     localStorage.setItem('kobotrack_locale', locale);
@@ -73,6 +110,8 @@ export default function Layout({ children }) {
   const canExpenses = role === 'OWNER' || role === 'MANAGER';
   const canExport = role === 'OWNER' || role === 'MANAGER';
   const canAnalysis = role === 'OWNER' || role === 'MANAGER';
+  const hasMoreItems = canExpenses || canExport || canAnalysis || canInvite;
+  const isMoreActive = ['/expenses', '/export', '/analysis', '/invite'].some((p) => location.pathname.startsWith(p));
 
   return (
     <div className="app-layout">
@@ -82,54 +121,161 @@ export default function Layout({ children }) {
           <span>{t('app.name')}</span>
         </Link>
 
-        {/* Desktop nav (hidden on mobile via CSS) */}
+        {/* Desktop nav: primary links + More dropdown (hidden on mobile via CSS) */}
         <nav className="layout-nav" aria-label="Main navigation">
           <NavLink to="/dashboard" end>{t('auth.dashboardNav')}</NavLink>
           <NavLink to="/transactions">{t('common.transactions')}</NavLink>
-          {canExpenses && <NavLink to="/expenses">{t('common.expenses')}</NavLink>}
-          {canExport && <NavLink to="/export">{t('common.export')}</NavLink>}
-          {canAnalysis && <NavLink to="/analysis">{t('analysis.title')}</NavLink>}
-          {canInvite && <NavLink to="/invite">{t('common.inviteWorker')}</NavLink>}
+          <NavLink to="/inventory" end={false}>{t('inventory.title')}</NavLink>
+          {hasMoreItems && (
+            <div className="nav-dropdown">
+              <button
+                type="button"
+                className={`nav-dropdown-trigger${isMoreActive ? ' active' : ''}`}
+                onClick={() => { setMoreOpen((o) => !o); setUserMenuOpen(false); }}
+                aria-expanded={moreOpen}
+                aria-haspopup="true"
+                aria-controls="nav-more-menu"
+                id="nav-more-button"
+              >
+                {t('nav.reportsAndTeam')}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              <ul
+                id="nav-more-menu"
+                className={`nav-dropdown-menu${moreOpen ? ' nav-dropdown-menu-open' : ''}`}
+                role="menu"
+                aria-labelledby="nav-more-button"
+              >
+                {canExpenses && <li role="none"><NavLink to="/expenses" role="menuitem">{t('common.expenses')}</NavLink></li>}
+                {canExport && <li role="none"><NavLink to="/export" role="menuitem">{t('common.export')}</NavLink></li>}
+                {canAnalysis && <li role="none"><NavLink to="/analysis" role="menuitem">{t('analysis.title')}</NavLink></li>}
+                {canInvite && <li role="none"><NavLink to="/invite" role="menuitem">{t('common.inviteWorker')}</NavLink></li>}
+              </ul>
+            </div>
+          )}
         </nav>
 
         <div className="header-right">
-          <label htmlFor="locale-select" className="visually-hidden">{t('common.language')}</label>
-          <select
-            id="locale-select"
-            className="locale-select"
-            value={getLocale()}
-            onChange={handleLocaleChange}
-            aria-label={t('common.language')}
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            aria-label={theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark')}
+            title={theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark')}
           >
-            <option value="en">EN</option>
-            <option value="fr">FR</option>
-            <option value="es">ES</option>
-          </select>
-
-          <Link to="/profile" className="header-user" aria-label="View profile">
-            {user?.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt=""
-                className="header-user-avatar header-user-avatar-img"
-                aria-hidden="true"
-              />
+            {theme === 'dark' ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
             ) : (
-              <div className="header-user-avatar" aria-hidden="true">
-                {getInitials(user)}
-              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
             )}
-            <div className="header-user-info">
-              <span className="header-user-email">{getUserDisplayName(user)}</span>
-              <span className={getRoleBadgeClass(role)}>{getRoleLabel(role)}</span>
-            </div>
-          </Link>
-
-          <button type="button" className="btn btn-ghost" onClick={handleLogout}>
-            {t('auth.signOut')}
           </button>
+          <div className="header-locale">
+            <button
+              type="button"
+              className="locale-dropdown-trigger"
+              onClick={() => { setLocaleOpen((o) => !o); setMoreOpen(false); setUserMenuOpen(false); }}
+              aria-expanded={localeOpen}
+              aria-haspopup="listbox"
+              aria-label={t('common.language')}
+              id="locale-dropdown-button"
+            >
+              <svg className="header-locale-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+              <span className="locale-dropdown-value">{getLocale().toUpperCase()}</span>
+              <svg className="locale-dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div
+              id="locale-dropdown-list"
+              className={`locale-dropdown-menu${localeOpen ? ' locale-dropdown-menu-open' : ''}`}
+              role="listbox"
+              aria-labelledby="locale-dropdown-button"
+              aria-activedescendant={localeOpen ? `locale-option-${getLocale()}` : undefined}
+            >
+              {SUPPORTED_LOCALES.map((loc) => (
+                <button
+                  key={loc}
+                  type="button"
+                  role="option"
+                  id={`locale-option-${loc}`}
+                  aria-selected={getLocale() === loc}
+                  className={`locale-dropdown-item${getLocale() === loc ? ' locale-dropdown-item-selected' : ''}`}
+                  onClick={() => handleLocaleChange(loc)}
+                >
+                  {loc.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          {/* Hamburger toggle — visible on mobile only */}
+          <span className="header-right-divider" aria-hidden="true" />
+
+          <div className="user-menu">
+            <button
+              type="button"
+              className="header-user-trigger"
+              onClick={() => { setUserMenuOpen((o) => !o); setMoreOpen(false); }}
+              aria-expanded={userMenuOpen}
+              aria-haspopup="true"
+              aria-controls="user-menu-panel"
+              aria-label="Account menu"
+            >
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt=""
+                  className="header-user-avatar header-user-avatar-img"
+                  aria-hidden="true"
+                />
+              ) : (
+                <div className="header-user-avatar" aria-hidden="true">
+                  {getInitials(user)}
+                </div>
+              )}
+              <div className="header-user-info">
+                <span className="header-user-name">{getUserDisplayName(user)}</span>
+                <span className={getRoleBadgeClass(role)} aria-label={t('common.role') + ': ' + getRoleLabel(role)}>
+                  {getRoleLabel(role)}
+                </span>
+              </div>
+              <svg className="user-menu-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div
+              id="user-menu-panel"
+              className={`user-menu-panel${userMenuOpen ? ' user-menu-panel-open' : ''}`}
+              role="menu"
+              aria-label="Account actions"
+            >
+              <Link to="/profile" role="menuitem" className="user-menu-item" onClick={() => setUserMenuOpen(false)}>
+                {t('common.profile')}
+              </Link>
+              <button type="button" role="menuitem" className="user-menu-item user-menu-item-signout" onClick={handleLogout}>
+                {t('auth.signOut')}
+              </button>
+            </div>
+          </div>
+
+          {/* Hamburger — visible on mobile only */}
           <button
             type="button"
             className="mobile-menu-toggle"
@@ -172,12 +318,20 @@ export default function Layout({ children }) {
         </div>
 
         <nav className="mobile-nav-links" aria-label="Mobile navigation">
+          <span className="mobile-nav-group-label" aria-hidden="true">{t('nav.main')}</span>
           <NavLink to="/dashboard" end>{t('auth.dashboardNav')}</NavLink>
           <NavLink to="/transactions">{t('common.transactions')}</NavLink>
-          {canExpenses && <NavLink to="/expenses">{t('common.expenses')}</NavLink>}
-          {canExport && <NavLink to="/export">{t('common.export')}</NavLink>}
-          {canAnalysis && <NavLink to="/analysis">{t('analysis.title')}</NavLink>}
+          <NavLink to="/inventory" end={false}>{t('inventory.title')}</NavLink>
+          {(canExpenses || canExport || canAnalysis) && (
+            <>
+              <span className="mobile-nav-group-label" aria-hidden="true">{t('nav.reportsAndTeam')}</span>
+              {canExpenses && <NavLink to="/expenses">{t('common.expenses')}</NavLink>}
+              {canExport && <NavLink to="/export">{t('common.export')}</NavLink>}
+              {canAnalysis && <NavLink to="/analysis">{t('analysis.title')}</NavLink>}
+            </>
+          )}
           {canInvite && <NavLink to="/invite">{t('common.inviteWorker')}</NavLink>}
+          <span className="mobile-nav-group-label" aria-hidden="true">{t('nav.account')}</span>
           <NavLink to="/profile">{t('common.profile')}</NavLink>
         </nav>
 

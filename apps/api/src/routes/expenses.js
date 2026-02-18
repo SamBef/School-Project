@@ -80,9 +80,15 @@ router.get(
       const take = Math.min(parseInt(limit, 10) || 50, 200);
       const skip = parseInt(offset, 10) || 0;
 
+      if (category && !VALID_CATEGORIES.includes(category)) {
+        return res.status(400).json({
+          message: `Invalid category. Must be one of: ${VALID_CATEGORIES.join(', ')}.`,
+        });
+      }
+
       const where = { businessId: req.user.businessId };
 
-      if (category && VALID_CATEGORIES.includes(category)) {
+      if (category) {
         where.category = category;
       }
 

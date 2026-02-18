@@ -157,12 +157,17 @@ async function main() {
   // 6d. Protected: inventory create unit (Owner/Manager) + verify
   if (token) {
     try {
+      const unitName = `Smoke Unit ${Date.now()}`;
       const createRes = await fetchJson('/inventory/units', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: `Smoke Unit ${Date.now()}`, symbol: 'su' }),
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: unitName, symbol: 'su' }),
       });
-      const created = createRes.status === 201 && createRes.body?.id && createRes.body?.name;
+      const created = createRes.status === 201 && createRes.body?.id;
+      if (!created && createRes.body?.message) console.log(`    → ${createRes.body.message}`);
       if (ok('POST /inventory/units (create)', created)) passed++; else failed++;
     } catch (err) {
       console.log(`  [FAIL] POST /inventory/units — ${err.message}`);

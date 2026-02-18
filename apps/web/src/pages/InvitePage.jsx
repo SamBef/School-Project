@@ -10,6 +10,7 @@ import { api } from '../lib/api';
 import { t } from '../i18n';
 import { isValidEmail } from '../lib/validate';
 import Spinner from '../components/Spinner';
+import CustomSelect from '../components/CustomSelect';
 
 function StatusBadge({ status }) {
   const isActive = status === 'active';
@@ -342,15 +343,17 @@ export default function InvitePage() {
 
             <div className="form-group" style={{ width: '8rem', marginBottom: 0, flexShrink: 0 }}>
               <label htmlFor="invite-role" className="visually-hidden">{t('common.role')}</label>
-              <select
+              <CustomSelect
                 id="invite-role"
                 value={role}
-                onChange={(e) => setRole(e.target.value)}
+                onChange={setRole}
+                placeholder={t('common.role')}
                 disabled={loading}
-              >
-                <option value="MANAGER">{t('common.manager')}</option>
-                <option value="CASHIER">{t('common.cashier')}</option>
-              </select>
+                options={[
+                  { value: 'MANAGER', label: t('common.manager') },
+                  { value: 'CASHIER', label: t('common.cashier') },
+                ]}
+              />
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ width: 'auto', flexShrink: 0 }} disabled={loading}>

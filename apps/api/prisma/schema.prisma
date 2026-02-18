@@ -1,13 +1,15 @@
 // KoboTrack — PostgreSQL schema (Prisma)
 // One business per owner; RBAC: OWNER, MANAGER, CASHIER
+// DIRECT_URL: use same as DATABASE_URL for local; for Neon use the direct (non-pooler) URL.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
@@ -32,21 +34,61 @@ enum ExpenseCategory {
   MISCELLANEOUS
 }
 
-model Business {
-  id                String   @id @default(uuid())
-  name              String
-  email             String
-  phone             String
-  primaryLocation   String   // city/town
-  address           String?
-  logoUrl           String?
-  baseCurrencyCode  String   @default("USD") // e.g. USD, EUR, GHS
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+enum TransactionStatus {
+  DRAFT
+  CONFIRMED
+  CANCELLED
+}
 
-  users         User[]
-  transactions  Transaction[]
-  expenses      Expense[]
+enum StockMovementType {
+  SALE
+  RETURN_RESTOCK
+  RETURN_DISCARD
+  RECEIVE
+  ADJUSTMENT
+  INITIAL_STOCK
+  RESERVATION_RELEASED
+}
+
+enum ReturnCondition {
+  RESTOCK
+  DISCARD
+}
+
+enum AdjustmentReason {
+  DAMAGE
+  LOSS
+  COUNT_CORRECTION
+  OTHER
+}
+
+model Business {
+  id                  String    @id @default(uuid())
+  name                String
+  email               String
+  phone               String
+  primaryLocation     String    // city/town
+  address             String?
+  logoUrl             String?
+  baseCurrencyCode    String    @default("USD") // e.g. USD, EUR, GHS
+  defaultLocationId   String?   // inventory: default sell-from location
+  globalMinStock      Decimal?  @db.Decimal(12, 4) // optional global low-stock threshold
+  createdAt           DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  users            User[]
+  transactions     Transaction[]
+  expenses         Expense[]
+  units            Unit[]
+  locations        Location[]
+  products         Product[]
+  suppliers        Supplier[]
+  returnReasons    ReturnReason[]
+  stockMovements   StockMovement[]
+  returns          Return[]
+  receiveStock     ReceiveStock[]
+  stockAdjustments StockAdjustment[]
+  defaultLocation  Location?  @relation("BusinessDefaultLocation", fields: [defaultLocationId], references: [id], onDelete: SetNull)
 }
 
 model User {
@@ -67,26 +109,36 @@ model User {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  business     Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
-  expenses     Expense[]
+  business         Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  transactions     Transaction[]
+  expenses         Expense[]
+  returns          Return[]
+  receiveStock     ReceiveStock[]
+  stockAdjustments StockAdjustment[]
 }
 
 model Transaction {
-  id              String        @id @default(uuid())
+  id              String            @id @default(uuid())
   businessId      String
   userId          String
-  items           Json          // [{ name, quantity, unitPrice }]
-  total           Decimal       @db.Decimal(12, 2)  // amount in base currency
+  status          TransactionStatus @default(CONFIRMED) // DRAFT → reserve; CONFIRMED → deduct; legacy rows stay CONFIRMED
+  locationId      String?           // sell-from location; null = legacy
+  items           Json              // legacy: [{ name, quantity, unitPrice }]; new: [{ productId, name, quantity, unitId?, unitPrice }]
+  total           Decimal           @db.Decimal(12, 2)  // amount in base currency
   paymentMethod   PaymentMethod
-  currencyCode    String?       // currency used for payment (null = base currency)
-  originalTotal   Decimal?      @db.Decimal(12, 2)  // total in payment currency
-  exchangeRate    Decimal?      @db.Decimal(18, 8)  // 1 payment currency = X base currency
-  createdAt       DateTime      @default(now())
+  currencyCode    String?           // currency used for payment (null = base currency)
+  originalTotal   Decimal?          @db.Decimal(12, 2)  // total in payment currency
+  exchangeRate    Decimal?          @db.Decimal(18, 8)  // 1 payment currency = X base currency
+  createdAt       DateTime          @default(now())
+  confirmedAt    DateTime?          // set when status → CONFIRMED
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  receipt  Receipt?
+  business  Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location  Location?  @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  receipt   Receipt?
+  returns   Return[]
+
+  @@index([businessId, status])
 }
 
 model Receipt {
@@ -112,6 +164,219 @@ model Expense {
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// —— Inventory ——
+
+model Unit {
+  id         String   @id @default(uuid())
+  businessId String
+  name       String   // e.g. "Piece", "Box", "Kg"
+  symbol     String?  // e.g. "pc", "box", "kg"
+  createdAt  DateTime @default(now())
+
+  business   Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  products   Product[]     @relation("ProductPrimaryUnit")
+  productUnits ProductUnit[]
+}
+
+model Location {
+  id         String   @id @default(uuid())
+  businessId String
+  name       String
+  address    String?
+  isDefault  Boolean  @default(false) // one per business
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business           Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessAsDefault   Business[]        @relation("BusinessDefaultLocation")
+  stockLevels         StockLevel[]
+  transactions       Transaction[]
+  stockMovements     StockMovement[]
+  receiveStock       ReceiveStock[]
+  stockAdjustments   StockAdjustment[]
+}
+
+model Product {
+  id              String   @id @default(uuid())
+  businessId      String
+  name            String
+  sku             String?   // optional
+  primaryUnitId   String
+  minStock        Decimal?  @db.Decimal(12, 4) // per-product low-stock threshold; null = use global or none
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  business        Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  primaryUnit     Unit              @relation("ProductPrimaryUnit", fields: [primaryUnitId], references: [id], onDelete: Restrict)
+  alternateUnits  ProductUnit[]
+  stockLevels     StockLevel[]
+  stockMovements  StockMovement[]
+  supplierProducts SupplierProduct[]
+  receiveStockLines ReceiveStockLine[]
+  stockAdjustments StockAdjustment[]
+  returnLines       ReturnLine[]
+}
+
+model ProductUnit {
+  id         String   @id @default(uuid())
+  productId  String
+  unitId     String
+  factor     Decimal  @db.Decimal(18, 6) // e.g. 1 box = 12 pieces → factor 12 when unit is box
+  createdAt  DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  unit    Unit    @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, unitId])
+}
+
+model StockLevel {
+  id               String   @id @default(uuid())
+  productId        String
+  locationId       String
+  quantity         Decimal   @db.Decimal(18, 6)
+  reservedQuantity Decimal   @db.Decimal(18, 6) @default(0)
+  updatedAt        DateTime  @updatedAt
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, locationId])
+  @@index([locationId])
+  @@index([productId])
+}
+
+model StockMovement {
+  id            String            @id @default(uuid())
+  businessId    String
+  productId     String
+  locationId    String
+  quantityDelta Decimal           @db.Decimal(18, 6) // negative = out, positive = in
+  type          StockMovementType
+  referenceType String?           // "transaction", "return", "receive", "adjustment"
+  referenceId   String?
+  userId        String?
+  createdAt     DateTime          @default(now())
+
+  business  Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  location  Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([productId, createdAt])
+  @@index([businessId, type])
+}
+
+model ReturnReason {
+  id         String   @id @default(uuid())
+  businessId String
+  code       String   // e.g. DEFECTIVE, WRONG_ITEM
+  label      String
+  createdAt  DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  returnLines ReturnLine[]
+}
+
+model Return {
+  id             String    @id @default(uuid())
+  businessId     String
+  transactionId  String
+  userId         String
+  processedAt    DateTime  @default(now())
+
+  business    Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lines       ReturnLine[]
+}
+
+model ReturnLine {
+  id             String          @id @default(uuid())
+  returnId       String
+  productId      String
+  returnReasonId String
+  quantity       Decimal         @db.Decimal(18, 6)
+  condition      ReturnCondition // RESTOCK or DISCARD
+  createdAt      DateTime        @default(now())
+
+  return_       Return       @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  returnReason  ReturnReason @relation(fields: [returnReasonId], references: [id], onDelete: Restrict)
+}
+
+model Supplier {
+  id         String   @id @default(uuid())
+  businessId String
+  name       String
+  contactPhone String?
+  contactEmail String?
+  address    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business   Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  products   SupplierProduct[]
+  receiveStock ReceiveStock[]
+}
+
+model SupplierProduct {
+  id         String   @id @default(uuid())
+  supplierId String
+  productId  String
+  createdAt  DateTime @default(now())
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierId, productId])
+}
+
+model ReceiveStock {
+  id          String   @id @default(uuid())
+  businessId  String
+  locationId  String
+  supplierId  String
+  userId      String
+  receivedAt DateTime @default(now())
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  business Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  location Location            @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  supplier Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lines    ReceiveStockLine[]
+}
+
+model ReceiveStockLine {
+  id            String   @id @default(uuid())
+  receiveId     String
+  productId     String
+  quantity      Decimal  @db.Decimal(18, 6)
+  unitId        String?  // optional; if null use product primary unit
+  createdAt     DateTime @default(now())
+
+  receive ReceiveStock @relation(fields: [receiveId], references: [id], onDelete: Cascade)
+  product Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model StockAdjustment {
+  id          String           @id @default(uuid())
+  businessId  String
+  locationId  String
+  productId   String
+  userId      String
+  quantityDelta Decimal        @db.Decimal(18, 6) // + or -
+  reason      AdjustmentReason
+  notes       String?
+  createdAt   DateTime         @default(now())
+
+  business  Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  location  Location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // Platform admin — separate from business users; for managing companies on the platform

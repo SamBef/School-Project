@@ -10,6 +10,7 @@ import { prisma } from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 import { getExchangeRate, getAllRates } from '../services/exchange.js';
+import * as stockService from '../services/stock.js';
 
 const router = Router();
 
@@ -48,17 +49,16 @@ router.get(
 
 /**
  * POST /transactions
- * Body: { items: [{ name, quantity, unitPrice }], paymentMethod, currencyCode? }
- * Any authenticated user can create a transaction.
- * If currencyCode differs from business base currency, conversion is applied.
- * Auto-generates a receipt with the next sequential number for the business.
+ * Body: { items: [{ name, quantity, unitPrice }] | [{ productId, name, quantity, unitId?, unitPrice }], paymentMethod, currencyCode?, status?, locationId? }
+ * - Legacy: no productId in items → CONFIRMED, no locationId, receipt created.
+ * - New (inventory): items have productId → require locationId; status DRAFT (reserve) or CONFIRMED (deduct + receipt).
  */
 router.post(
   '/',
   wrap(requireAuth),
   async (req, res) => {
     try {
-      const { items, paymentMethod, currencyCode } = req.body;
+      const { items, paymentMethod, currencyCode, status, locationId } = req.body;
 
       if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ message: 'At least one line item is required.' });
@@ -67,6 +67,37 @@ router.post(
       const validMethods = ['CASH', 'CARD', 'MOBILE_MONEY', 'BANK_TRANSFER', 'OTHER'];
       if (!paymentMethod || !validMethods.includes(paymentMethod)) {
         return res.status(400).json({ message: `Payment method must be one of: ${validMethods.join(', ')}.` });
+      }
+
+      const hasProductItems = items.some((i) => i.productId);
+      const requestedStatus = status === 'DRAFT' ? 'DRAFT' : 'CONFIRMED';
+
+      if (hasProductItems && !locationId) {
+        return res.status(400).json({ message: 'Location is required when selling products (inventory).' });
+      }
+      if (hasProductItems) {
+        const lines = await stockService.getLinesInPrimaryUnit(req.user.businessId, items, prisma);
+        if (lines.length === 0) {
+          return res.status(400).json({ message: 'At least one valid product line is required.' });
+        }
+        const location = await prisma.location.findFirst({
+          where: { id: locationId, businessId: req.user.businessId },
+        });
+        if (!location) {
+          return res.status(404).json({ message: 'Location not found.' });
+        }
+        for (const line of lines) {
+          const avail = await stockService.getAvailableQuantity(line.productId, locationId, prisma);
+          if (avail < line.quantity) {
+            const product = await prisma.product.findFirst({
+              where: { id: line.productId, businessId: req.user.businessId },
+              select: { name: true },
+            });
+            return res.status(400).json({
+              message: `Insufficient stock for ${product?.name ?? 'product'}. Available: ${avail}, requested: ${line.quantity}.`,
+            });
+          }
+        }
       }
 
       // Validate each line item
@@ -83,10 +114,7 @@ router.post(
         }
       }
 
-      // Calculate total in the payment currency
       const rawTotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-
-      // Determine business base currency
       const business = await prisma.business.findUnique({
         where: { id: req.user.businessId },
         select: { baseCurrencyCode: true },
@@ -101,52 +129,76 @@ router.post(
       let recordedCurrency = null;
 
       if (isDifferentCurrency) {
-        // Get rate: 1 paymentCurrency = X baseCurrency
         const rate = await getExchangeRate(paymentCurrency, baseCurrency);
-
         if (!rate) {
           return res.status(400).json({
             message: `Could not fetch exchange rate for ${paymentCurrency} → ${baseCurrency}. Check the currency code or try again.`,
           });
         }
-
         originalTotal = rawTotal;
         exchangeRate = rate;
-        total = Math.round(rawTotal * rate * 100) / 100; // Convert to base currency, round to 2 decimals
+        total = Math.round(rawTotal * rate * 100) / 100;
         recordedCurrency = paymentCurrency;
       }
 
-      // Determine next receipt number for this business
       const lastReceipt = await prisma.receipt.findFirst({
-        where: {
-          transaction: { businessId: req.user.businessId },
-        },
+        where: { transaction: { businessId: req.user.businessId } },
         orderBy: { receiptNumber: 'desc' },
       });
       const nextReceiptNumber = (lastReceipt?.receiptNumber ?? 0) + 1;
 
-      // Create atomically
       const result = await prisma.$transaction(async (tx) => {
+        const isLegacy = !hasProductItems;
+        const effectiveStatus = isLegacy ? 'CONFIRMED' : requestedStatus;
         const transaction = await tx.transaction.create({
           data: {
             businessId: req.user.businessId,
             userId: req.user.id,
+            status: effectiveStatus,
+            locationId: hasProductItems ? locationId : null,
             items,
             total,
             paymentMethod,
             currencyCode: recordedCurrency,
             originalTotal,
             exchangeRate,
+            confirmedAt: effectiveStatus === 'CONFIRMED' ? new Date() : null,
           },
         });
 
-        const receipt = await tx.receipt.create({
-          data: {
-            transactionId: transaction.id,
-            receiptNumber: nextReceiptNumber,
-            format: 'standard',
-          },
-        });
+        if (hasProductItems) {
+          const lines = await stockService.getLinesInPrimaryUnit(req.user.businessId, items, tx);
+          if (effectiveStatus === 'DRAFT') {
+            const reserveResult = await stockService.reserveStock(
+              req.user.businessId,
+              locationId,
+              lines,
+              transaction.id,
+              tx
+            );
+            if (!reserveResult.ok) throw new Error(reserveResult.message);
+          } else {
+            await stockService.confirmAndDeduct(
+              req.user.businessId,
+              locationId,
+              lines,
+              transaction.id,
+              req.user.id,
+              tx
+            );
+          }
+        }
+
+        let receipt = null;
+        if (effectiveStatus === 'CONFIRMED') {
+          receipt = await tx.receipt.create({
+            data: {
+              transactionId: transaction.id,
+              receiptNumber: nextReceiptNumber,
+              format: 'standard',
+            },
+          });
+        }
 
         return { transaction, receipt };
       });
@@ -162,7 +214,7 @@ router.post(
       });
     } catch (err) {
       console.error('create transaction error', err);
-      res.status(500).json({ message: 'Failed to create transaction. Please try again.' });
+      res.status(500).json({ message: err.message || 'Failed to create transaction. Please try again.' });
     }
   }
 );
@@ -214,6 +266,7 @@ router.get(
           include: {
             receipt: { select: { id: true, receiptNumber: true, format: true } },
             user: { select: { email: true, firstName: true, lastName: true, role: true } },
+            location: { select: { id: true, name: true } },
           },
           orderBy: { createdAt: 'desc' },
           take,
@@ -241,6 +294,130 @@ router.get(
 );
 
 /**
+ * POST /transactions/:id/confirm
+ * Confirm a DRAFT transaction: deduct stock, create receipt. Owner, Manager, or creating user.
+ */
+router.post(
+  '/:id/confirm',
+  wrap(requireAuth),
+  async (req, res) => {
+    try {
+      const transaction = await prisma.transaction.findFirst({
+        where: { id: req.params.id, businessId: req.user.businessId },
+      });
+      if (!transaction) return res.status(404).json({ message: 'Transaction not found.' });
+      if (transaction.status !== 'DRAFT') {
+        return res.status(400).json({ message: 'Only draft transactions can be confirmed.' });
+      }
+      if (!transaction.locationId) {
+        return res.status(400).json({ message: 'Transaction has no location. Cannot confirm.' });
+      }
+      const items = transaction.items;
+      if (!Array.isArray(items) || !items.some((i) => i.productId)) {
+        return res.status(400).json({ message: 'Transaction has no product lines. Cannot confirm.' });
+      }
+      const lines = await stockService.getLinesInPrimaryUnit(req.user.businessId, items, prisma);
+      if (lines.length === 0) return res.status(400).json({ message: 'No valid product lines.' });
+
+      const lastReceipt = await prisma.receipt.findFirst({
+        where: { transaction: { businessId: req.user.businessId } },
+        orderBy: { receiptNumber: 'desc' },
+      });
+      const nextReceiptNumber = (lastReceipt?.receiptNumber ?? 0) + 1;
+
+      await prisma.$transaction(async (tx) => {
+        await stockService.confirmAndDeduct(
+          req.user.businessId,
+          transaction.locationId,
+          lines,
+          transaction.id,
+          req.user.id,
+          tx
+        );
+        await tx.transaction.update({
+          where: { id: transaction.id },
+          data: { status: 'CONFIRMED', confirmedAt: new Date() },
+        });
+        await tx.receipt.create({
+          data: {
+            transactionId: transaction.id,
+            receiptNumber: nextReceiptNumber,
+            format: 'standard',
+          },
+        });
+      });
+
+      const updated = await prisma.transaction.findFirst({
+        where: { id: transaction.id, businessId: req.user.businessId },
+        include: {
+          receipt: true,
+          user: { select: { email: true, firstName: true, lastName: true, role: true } },
+          location: { select: { id: true, name: true } },
+        },
+      });
+      res.json({
+        ...updated,
+        total: Number(updated.total),
+        originalTotal: updated.originalTotal ? Number(updated.originalTotal) : null,
+        exchangeRate: updated.exchangeRate ? Number(updated.exchangeRate) : null,
+      });
+    } catch (err) {
+      console.error('confirm transaction error', err);
+      res.status(500).json({ message: err.message || 'Failed to confirm transaction.' });
+    }
+  }
+);
+
+/**
+ * POST /transactions/:id/cancel
+ * Cancel a DRAFT transaction: release reserved stock, set status CANCELLED.
+ */
+router.post(
+  '/:id/cancel',
+  wrap(requireAuth),
+  async (req, res) => {
+    try {
+      const transaction = await prisma.transaction.findFirst({
+        where: { id: req.params.id, businessId: req.user.businessId },
+      });
+      if (!transaction) return res.status(404).json({ message: 'Transaction not found.' });
+      if (transaction.status !== 'DRAFT') {
+        return res.status(400).json({ message: 'Only draft transactions can be cancelled.' });
+      }
+      if (!transaction.locationId) {
+        await prisma.transaction.update({
+          where: { id: transaction.id },
+          data: { status: 'CANCELLED' },
+        });
+        return res.json({ message: 'Draft cancelled.' });
+      }
+      const items = transaction.items;
+      const lines = Array.isArray(items)
+        ? await stockService.getLinesInPrimaryUnit(req.user.businessId, items, prisma)
+        : [];
+      await prisma.$transaction(async (tx) => {
+        if (lines.length > 0) {
+          await stockService.releaseReservation(
+            req.user.businessId,
+            transaction.locationId,
+            lines,
+            tx
+          );
+        }
+        await tx.transaction.update({
+          where: { id: transaction.id },
+          data: { status: 'CANCELLED' },
+        });
+      });
+      res.json({ message: 'Draft cancelled.' });
+    } catch (err) {
+      console.error('cancel transaction error', err);
+      res.status(500).json({ message: err.message || 'Failed to cancel transaction.' });
+    }
+  }
+);
+
+/**
  * GET /transactions/:id
  * Returns a single transaction with receipt and line items.
  */
@@ -254,6 +431,7 @@ router.get(
         include: {
           receipt: true,
           user: { select: { email: true, firstName: true, lastName: true, role: true } },
+          location: { select: { id: true, name: true } },
         },
       });
 
@@ -276,7 +454,7 @@ router.get(
 
 /**
  * DELETE /transactions/:id
- * Owner and Manager only.
+ * Owner and Manager only. For DRAFT, releases reserved stock then deletes.
  */
 router.delete(
   '/:id',
@@ -290,6 +468,20 @@ router.delete(
 
       if (!transaction) {
         return res.status(404).json({ message: 'Transaction not found.' });
+      }
+
+      if (transaction.status === 'DRAFT' && transaction.locationId && Array.isArray(transaction.items)) {
+        const lines = await stockService.getLinesInPrimaryUnit(req.user.businessId, transaction.items, prisma);
+        if (lines.length > 0) {
+          await prisma.$transaction(async (tx) => {
+            await stockService.releaseReservation(
+              req.user.businessId,
+              transaction.locationId,
+              lines,
+              tx
+            );
+          });
+        }
       }
 
       await prisma.transaction.delete({ where: { id: transaction.id } });

@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { t } from '../i18n';
 import PasswordInput from '../components/PasswordInput';
+import CustomSelect from '../components/CustomSelect';
 
 const CURRENCIES = [
   { code: 'USD', label: 'USD — US Dollar' },
@@ -567,16 +568,13 @@ export default function ProfilePage() {
                 <span className="info-label">{t('common.currency')}</span>
                 {isOwner ? (
                   <div className="currency-selector">
-                    <select
+                    <CustomSelect
+                      id="profile-currency"
                       value={currency}
-                      onChange={(e) => { setCurrency(e.target.value); clearMessages(); }}
+                      onChange={(v) => { setCurrency(v); clearMessages(); }}
                       disabled={savingCurrency}
-                      aria-label={t('common.currency')}
-                    >
-                      {CURRENCIES.map((c) => (
-                        <option key={c.code} value={c.code}>{c.label}</option>
-                      ))}
-                    </select>
+                      options={CURRENCIES.map((c) => ({ value: c.code, label: c.label }))}
+                    />
                     {hasCurrencyChanged && (
                       <button
                         type="button"

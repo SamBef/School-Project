@@ -10,6 +10,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 import Spinner from '../components/Spinner';
+import CustomSelect from '../components/CustomSelect';
 
 const PAYMENT_METHOD_KEYS = ['CASH', 'CARD', 'MOBILE_MONEY', 'BANK_TRANSFER', 'OTHER'];
 
@@ -277,32 +278,32 @@ export default function TransactionsPage() {
           <div className="transaction-footer">
             <div className="form-group transaction-payment-select">
               <label htmlFor="paymentMethod">{t('transactions.paymentMethod')}</label>
-              <select
+              <CustomSelect
                 id="paymentMethod"
                 value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
+                onChange={setPaymentMethod}
+                placeholder={t('transactions.paymentMethod')}
                 disabled={submitting}
-              >
-                {PAYMENT_METHOD_KEYS.map((key) => (
-                  <option key={key} value={key}>{t(`paymentMethods.${key}`)}</option>
-                ))}
-              </select>
+                options={PAYMENT_METHOD_KEYS.map((key) => ({
+                  value: key,
+                  label: t(`paymentMethods.${key}`),
+                }))}
+              />
             </div>
 
             <div className="form-group transaction-payment-select">
               <label htmlFor="paymentCurrency">{t('transactions.paymentCurrency')}</label>
-              <select
+              <CustomSelect
                 id="paymentCurrency"
                 value={paymentCurrency}
-                onChange={(e) => setPaymentCurrency(e.target.value)}
+                onChange={setPaymentCurrency}
+                placeholder={t('transactions.paymentCurrency')}
                 disabled={submitting || ratesLoading}
-              >
-                {currencyOptions.map((code) => (
-                  <option key={code} value={code}>
-                    {code}{code === baseCurrency ? ` (${t('transactions.base')})` : ''}
-                  </option>
-                ))}
-              </select>
+                options={currencyOptions.map((code) => ({
+                  value: code,
+                  label: `${code}${code === baseCurrency ? ` (${t('transactions.base')})` : ''}`,
+                }))}
+              />
             </div>
 
             <div className="transaction-total">
@@ -351,16 +352,20 @@ export default function TransactionsPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={t('transactions.searchPlaceholder')}
             />
-            <select
+            <CustomSelect
               className="filter-select"
+              id="filter-method"
               value={filterMethod}
-              onChange={(e) => { setFilterMethod(e.target.value); setPage(0); }}
-            >
-              <option value="">{t('transactions.allMethods')}</option>
-              {PAYMENT_METHOD_KEYS.map((key) => (
-                <option key={key} value={key}>{t(`paymentMethods.${key}`)}</option>
-              ))}
-            </select>
+              onChange={(v) => { setFilterMethod(v); setPage(0); }}
+              placeholder={t('transactions.allMethods')}
+              options={[
+                { value: '', label: t('transactions.allMethods') },
+                ...PAYMENT_METHOD_KEYS.map((key) => ({
+                  value: key,
+                  label: t(`paymentMethods.${key}`),
+                })),
+              ]}
+            />
           </div>
           <div className="filter-row">
             <div className="filter-date-group">

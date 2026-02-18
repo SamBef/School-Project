@@ -3,7 +3,10 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
+const apiEnvPath = path.resolve(__dirname, '..', '.env');
+dotenv.config({ path: path.join(process.cwd(), '.env') });
+dotenv.config({ path: apiEnvPath, override: true });
+import './lib/db-env.js';
 
 import express from 'express';
 import cors from 'cors';
@@ -18,6 +21,7 @@ import exportRoutes from './routes/export.js';
 import businessRoutes from './routes/business.js';
 import analysisRoutes from './routes/analysis.js';
 import inventoryRoutes from './routes/inventory/index.js';
+import aiRoutes from './routes/ai.js';
 import adminRoutes from './routes/admin/index.js';
 
 const app = express();
@@ -56,6 +60,7 @@ app.use('/export', asyncHandler(exportRoutes));
 app.use('/business', asyncHandler(businessRoutes));
 app.use('/analysis', asyncHandler(analysisRoutes));
 app.use('/inventory', asyncHandler(inventoryRoutes));
+app.use('/ai', asyncHandler(aiRoutes));
 app.use('/admin', asyncHandler(adminRoutes));
 
 app.use((err, req, res, next) => {

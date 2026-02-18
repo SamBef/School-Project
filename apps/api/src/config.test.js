@@ -16,4 +16,8 @@ describe('config', () => {
     assert.strictEqual(typeof config.frontendUrl, 'string');
     assert(config.frontendUrl.length > 0);
   });
+
+  it('exposes jwtSecret as a string', () => {
+    assert.strictEqual(typeof config.jwtSecret, 'string');
+  });
 });

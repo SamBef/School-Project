@@ -44,7 +44,7 @@ Before large feature work (e.g. AI integration), run the full API smoke test to 
    Or set `API_URL` if the API runs elsewhere: `API_URL=http://localhost:3003 node scripts/smoke-test-api.js`.
 4. **Expect:** all checks to pass (health, register, login, dashboard, inventory locations/units/products/create unit/alerts, expenses, transactions, and unauthenticated 401).
 
-**Requirements:** The API must have a valid `DATABASE_URL` and `JWT_SECRET` in `apps/api/.env`. The API loads `.env` from `apps/api` even when started from the repo root. If you see a TLS error on Windows (e.g. "No credentials are available in the security package"), ensure your database is reachable; for cloud Postgres you may need to adjust SSL params in `DATABASE_URL` (see your provider’s docs).
+**Requirements:** The API must have `DATABASE_URL`, `DIRECT_URL` (can match `DATABASE_URL`), and `JWT_SECRET` in `apps/api/.env`. If you see a TLS error on Windows, set `DATABASE_INSECURE_SSL=1` in `.env` for local dev only (see docs/setup.md).
 
 If any check fails, fix the failing endpoint or environment (e.g. database, env vars) before proceeding.
 

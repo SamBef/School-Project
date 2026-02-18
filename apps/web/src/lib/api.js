@@ -27,10 +27,18 @@ function getAuthHeaders() {
   };
 }
 
+function getConnectionHint(url) {
+  const isLocal = url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1');
+  if (isLocal) {
+    return 'Make sure the API is running (e.g. run "npm run dev" in apps/api). Check apps/web/.env has VITE_API_URL=http://localhost:3003 (or the port your API uses).';
+  }
+  return 'Check that VITE_API_URL is set to your API URL (no trailing slash). In Vercel: Settings → Environment Variables. If the API sleeps on Render, wait 30–60 seconds and try again.';
+}
+
 async function request(path, options = {}) {
   if (!BASE_URL || !BASE_URL.startsWith('http')) {
     throw new Error(
-      'API URL is not configured. Set VITE_API_URL in Netlify (Site configuration → Environment variables) to your Render API URL (e.g. https://school-project.onrender.com), then redeploy the site.'
+      'API URL is not configured. Set VITE_API_URL in apps/web/.env for local dev (e.g. http://localhost:3003). For production, set it in Vercel (or your host) to your API URL, then redeploy.'
     );
   }
   const url = `${BASE_URL}${path}`;
@@ -39,8 +47,7 @@ async function request(path, options = {}) {
   try {
     res = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
   } catch (err) {
-    const hint =
-      'Check that VITE_API_URL in Netlify matches your Render API URL (no trailing slash) and that you redeployed after setting it. If the API sleeps on Render, wait 30–60 seconds and try again.';
+    const hint = getConnectionHint(url);
     throw new Error(`Cannot reach the API at ${url}. ${hint}`);
   }
 
@@ -95,6 +102,48 @@ export const api = {
   patch: (path, body) => request(path, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: (path) => request(path, { method: 'DELETE' }),
   download: downloadFile,
+
+  inventory: {
+    getUnits: () => request('/inventory/units').then((r) => r.units),
+    getLocations: () => request('/inventory/locations').then((r) => r.locations),
+    getProducts: (params) => {
+      const q = new URLSearchParams(params).toString();
+      return request(`/inventory/products${q ? `?${q}` : ''}`);
+    },
+    getStockLevels: (params) => {
+      const q = new URLSearchParams(params).toString();
+      return request(`/inventory/stock-levels${q ? `?${q}` : ''}`);
+    },
+    getLowStockAlerts: () => request('/inventory/alerts/low-stock').then((r) => r.alerts),
+    getReturnReasons: () => request('/inventory/return-reasons').then((r) => r.returnReasons),
+    getSuppliers: () => request('/inventory/suppliers').then((r) => r.suppliers),
+    getReceiveHistory: (params) => {
+      const q = new URLSearchParams(params).toString();
+      return request(`/inventory/receive${q ? `?${q}` : ''}`);
+    },
+    getReturns: (params) => {
+      const q = new URLSearchParams(params).toString();
+      return request(`/inventory/returns${q ? `?${q}` : ''}`);
+    },
+    getMovementReport: (params) => {
+      const q = new URLSearchParams(params).toString();
+      return request(`/inventory/reports/movements${q ? `?${q}` : ''}`);
+    },
+    createUnit: (body) => api.post('/inventory/units', body),
+    createLocation: (body) => api.post('/inventory/locations', body),
+    getProduct: (id) => request(`/inventory/products/${id}`),
+    createProduct: (body) => api.post('/inventory/products', body),
+    setInitialStock: (productId, body) => api.post(`/inventory/products/${productId}/initial-stock`, body),
+    updateProduct: (id, body) => api.patch(`/inventory/products/${id}`, body),
+    deleteProduct: (id) => api.delete(`/inventory/products/${id}`),
+    createSupplier: (body) => api.post('/inventory/suppliers', body),
+    receiveStock: (body) => api.post('/inventory/receive', body),
+    getAdjustments: (params) => {
+      const q = new URLSearchParams(params).toString();
+      return request(`/inventory/adjustments${q ? `?${q}` : ''}`);
+    },
+    createAdjustment: (body) => api.post('/inventory/adjustments', body),
+  },
 };
 
 export { BASE_URL };

@@ -1,6 +1,6 @@
 # API reference
 
-KoboTrack REST API — base URL: `VITE_API_URL` (e.g. `http://localhost:3000`).
+KoboTrack REST API — base URL: `VITE_API_URL` (e.g. `http://localhost:3003`).
 
 All protected routes require header: `Authorization: Bearer <token>`.
 
@@ -44,6 +44,12 @@ All protected routes require header: `Authorization: Bearer <token>`.
 - **Delete:** `DELETE /expenses/:id` — Owner/Manager only.
 
 **Categories:** `RENT`, `STOCK_INVENTORY`, `UTILITIES`, `TRANSPORT`, `MISCELLANEOUS`
+
+---
+
+## AI (opt-in)
+
+- **Suggest expense category:** `POST /ai/suggest-expense-category` — body: `{ description }`. Owner/Manager only. Returns `{ category }` (one of the expense categories above). Requires `OPENAI_API_KEY` in API env; returns **503** when not configured, **429** on rate limit, **502** on provider error.
 
 ---
 

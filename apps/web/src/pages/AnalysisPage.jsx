@@ -23,6 +23,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 import Spinner from '../components/Spinner';
+import CustomSelect from '../components/CustomSelect';
 
 const RANGE_PRESETS = [
   { value: 7, labelKey: 'analysis.last7Days' },
@@ -99,19 +100,17 @@ export default function AnalysisPage() {
           <label htmlFor="analysis-range" className="visually-hidden">
             {t('analysis.period')}
           </label>
-          <select
+          <CustomSelect
             id="analysis-range"
             className="filter-select analysis-range-select"
-            value={rangeDays}
-            onChange={(e) => setRangeDays(Number(e.target.value))}
-            aria-label={t('analysis.period')}
-          >
-            {RANGE_PRESETS.map((p) => (
-              <option key={p.value} value={p.value}>
-                {t(p.labelKey)}
-              </option>
-            ))}
-          </select>
+            value={String(rangeDays)}
+            onChange={(v) => setRangeDays(Number(v))}
+            placeholder={t('analysis.period')}
+            options={RANGE_PRESETS.map((p) => ({
+              value: String(p.value),
+              label: t(p.labelKey),
+            }))}
+          />
         </div>
       </div>
 

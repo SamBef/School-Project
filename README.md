@@ -80,9 +80,11 @@ kobotrack/
 4. **Run locally**
 
    ```bash
-   npm run dev:api    # Terminal 1: API
+   npm run dev:api    # Terminal 1: API (must be running first)
    npm run dev:web    # Terminal 2: Web
    ```
+
+   If you see "Cannot reach the API", start the API in a separate terminal and ensure `VITE_API_URL` in `apps/web/.env` matches the API URL (e.g. `http://localhost:3000`).
 
 ---
 

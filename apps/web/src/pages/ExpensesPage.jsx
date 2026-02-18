@@ -9,6 +9,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 import Spinner from '../components/Spinner';
+import CustomSelect from '../components/CustomSelect';
 
 const CATEGORY_KEYS = [
   { value: 'RENT', i18nKey: 'expenses.categoryRent' },
@@ -56,6 +57,10 @@ export default function ExpensesPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
+  // AI suggest category
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [suggestError, setSuggestError] = useState('');
+
   useEffect(() => {
     loadExpenses();
   }, [page, filterCategory]);
@@ -85,6 +90,7 @@ export default function ExpensesPage() {
     setEditingId(null);
     setFormError('');
     setSuccessMessage('');
+    setSuggestError('');
   }
 
   function startEdit(expense) {
@@ -95,6 +101,7 @@ export default function ExpensesPage() {
     setDate(new Date(expense.date).toISOString().split('T')[0]);
     setFormError('');
     setSuccessMessage('');
+    setSuggestError('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -157,6 +164,33 @@ export default function ExpensesPage() {
     }
   }
 
+  async function handleSuggestCategory() {
+    if (!description.trim()) {
+      setSuggestError(t('expenses.descriptionRequired'));
+      return;
+    }
+    setSuggestError('');
+    setSuggestLoading(true);
+    const timeoutMs = 10000;
+    try {
+      const result = await Promise.race([
+        api.post('/ai/suggest-expense-category', { description: description.trim() }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(t('expenses.suggestCategoryTimeout'))), timeoutMs)
+        ),
+      ]);
+      const suggested = result?.category;
+      if (suggested) setCategory(suggested);
+    } catch (err) {
+      const msg = err.message || '';
+      setSuggestError(
+        msg.includes('not available') ? t('expenses.suggestCategoryUnavailable') : (msg || t('expenses.suggestCategoryFailed'))
+      );
+    } finally {
+      setSuggestLoading(false);
+    }
+  }
+
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
@@ -193,17 +227,38 @@ export default function ExpensesPage() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="exp-category">{t('expenses.category')}</label>
-              <select
+              <div className="form-group-label-row">
+                <label htmlFor="exp-category">{t('expenses.category')}</label>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm btn-suggest-category"
+                  onClick={handleSuggestCategory}
+                  disabled={submitting || suggestLoading || !description.trim()}
+                  aria-label={t('expenses.suggestCategory')}
+                  title={t('expenses.suggestCategory')}
+                >
+                  {suggestLoading ? (
+                    <span className="spinner-wrapper" aria-hidden="true">
+                      <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                    </span>
+                  ) : (
+                    t('expenses.suggestCategory')
+                  )}
+                </button>
+              </div>
+              {suggestError && (
+                <p className="form-hint form-hint-error" role="alert">
+                  {suggestError}
+                </p>
+              )}
+              <CustomSelect
                 id="exp-category"
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(v) => { setCategory(v); setSuggestError(''); }}
+                placeholder={t('expenses.category')}
                 disabled={submitting}
-              >
-                {CATEGORY_KEYS.map((c) => (
-                  <option key={c.value} value={c.value}>{t(c.i18nKey)}</option>
-                ))}
-              </select>
+                options={CATEGORY_KEYS.map((c) => ({ value: c.value, label: t(c.i18nKey) }))}
+              />
             </div>
 
             <div className="form-group">
@@ -245,17 +300,18 @@ export default function ExpensesPage() {
         <div className="card-header">
           <h2>{t('expenses.history')}</h2>
           <div className="card-header-right">
-            <select
+            <CustomSelect
               className="filter-select"
+              id="exp-filter-category"
               value={filterCategory}
-              onChange={(e) => { setFilterCategory(e.target.value); setPage(0); }}
-              aria-label={t('expenses.filterByCategory')}
-            >
-              <option value="">{t('expenses.allCategories')}</option>
-              {CATEGORY_KEYS.map((c) => (
-                <option key={c.value} value={c.value}>{t(c.i18nKey)}</option>
-              ))}
-            </select>
+              onChange={(v) => { setFilterCategory(v); setPage(0); }}
+              placeholder={t('expenses.allCategories')}
+              aria-describedby={undefined}
+              options={[
+                { value: '', label: t('expenses.allCategories') },
+                ...CATEGORY_KEYS.map((c) => ({ value: c.value, label: t(c.i18nKey) })),
+              ]}
+            />
             <span className="card-header-count">{totalCount} {t('expenses.total')}</span>
           </div>
         </div>

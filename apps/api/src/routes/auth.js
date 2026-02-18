@@ -131,7 +131,13 @@ router.post('/login', wrap(optionalAuth), async (req, res) => {
       business: user.business ? { id: user.business.id, name: user.business.name, email: user.business.email, phone: user.business.phone, primaryLocation: user.business.primaryLocation, baseCurrencyCode: user.business.baseCurrencyCode } : null,
     });
   } catch (err) {
-    console.error('auth login error', err);
+    console.error('auth login error', err?.message ?? err);
+    if (err?.message?.includes('column') || err?.code === 'P2021') {
+      res.status(503).json({
+        message: 'Database schema is out of date. Run the migration (see docs/inventory.md or run: npx prisma migrate deploy) then restart the API.',
+      });
+      return;
+    }
     res.status(500).json({ message: 'Sign in failed. Please try again.' });
   }
 });
@@ -252,7 +258,7 @@ router.get('/me', wrap(requireAuth), async (req, res) => {
     }
     res.json({
       user: toSafeUser(user),
-      business: user.business ? { id: user.business.id, name: user.business.name, email: user.business.email, phone: user.business.phone, primaryLocation: user.business.primaryLocation, baseCurrencyCode: user.business.baseCurrencyCode } : null,
+      business: user.business ? { id: user.business.id, name: user.business.name, email: user.business.email, phone: user.business.phone, primaryLocation: user.business.primaryLocation, baseCurrencyCode: user.business.baseCurrencyCode, defaultLocationId: user.business.defaultLocationId } : null,
     });
   } catch (err) {
     console.error('auth me error', err);

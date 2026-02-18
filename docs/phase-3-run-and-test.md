@@ -7,7 +7,7 @@ Step-by-step instructions to run and test all Phase 3 features locally.
 ## Prerequisites
 
 - Phase 2 completed and working (auth, user management)
-- Backend running at `http://localhost:3000`
+- Backend running at `http://localhost:3003`
 - Frontend running at `http://localhost:5173`
 - A registered business owner account
 - Database connected (Neon PostgreSQL)
