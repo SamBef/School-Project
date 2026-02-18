@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { t } from '../../i18n';
 import { api } from '../../lib/api';
 import Spinner from '../../components/Spinner';
+import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 
 function loadLocations(setLocations, setError, setLoading) {
   setLoading(true);
@@ -22,6 +23,16 @@ export default function InventoryLocationsPage() {
   const [formDefault, setFormDefault] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { getCurrentLocation, loading: locationLoading } = useCurrentLocation();
+
+  async function handleUseCurrentLocation() {
+    try {
+      const { address } = await getCurrentLocation();
+      if (address) setFormAddress(address);
+    } catch {
+      setSubmitError(t('common.error'));
+    }
+  }
 
   useEffect(() => {
     loadLocations(setLocations, setError, setLoading);
@@ -81,14 +92,26 @@ export default function InventoryLocationsPage() {
           </div>
           <div className="form-group">
             <label htmlFor="location-address">{t('inventory.address')}</label>
-            <input
-              id="location-address"
-              type="text"
-              value={formAddress}
-              onChange={(e) => setFormAddress(e.target.value)}
-              autoComplete="off"
-              placeholder="Street, city"
-            />
+            <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                id="location-address"
+                type="text"
+                value={formAddress}
+                onChange={(e) => setFormAddress(e.target.value)}
+                autoComplete="off"
+                placeholder="Street, city"
+                style={{ flex: '1 1 200px' }}
+              />
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={handleUseCurrentLocation}
+                disabled={submitting || locationLoading}
+                aria-label={t('common.useCurrentLocation')}
+              >
+                {locationLoading ? t('common.loading') : t('common.useCurrentLocation')}
+              </button>
+            </div>
           </div>
           <div className="form-group form-group-checkbox">
             <input

@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 import { isValidEmail } from '../lib/validate';
 import PasswordInput from '../components/PasswordInput';
+import { useCurrentLocation } from '../hooks/useCurrentLocation';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -28,6 +29,16 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { getCurrentLocation, loading: locationLoading } = useCurrentLocation();
+
+  async function handleUseCurrentLocation() {
+    try {
+      const { primaryLocation: loc } = await getCurrentLocation();
+      if (loc) handleChange('primaryLocation', loc);
+    } catch {
+      setError(t('common.error'));
+    }
+  }
 
   if (isAuthenticated) {
     navigate('/dashboard', { replace: true });
@@ -134,15 +145,27 @@ export default function RegisterPage() {
             </div>
             <div className="form-group">
               <label htmlFor="reg-primary-location">{t('auth.primaryLocation')}</label>
-              <input
-                id="reg-primary-location"
-                type="text"
-                value={form.primaryLocation}
-                onChange={(e) => handleChange('primaryLocation', e.target.value)}
-                required
-                disabled={loading}
-                placeholder="Lagos"
-              />
+              <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+                <input
+                  id="reg-primary-location"
+                  type="text"
+                  value={form.primaryLocation}
+                  onChange={(e) => handleChange('primaryLocation', e.target.value)}
+                  required
+                  disabled={loading}
+                  placeholder="Lagos"
+                  style={{ flex: '1 1 200px' }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={handleUseCurrentLocation}
+                  disabled={loading || locationLoading}
+                  aria-label={t('common.useCurrentLocation')}
+                >
+                  {locationLoading ? t('common.loading') : t('common.useCurrentLocation')}
+                </button>
+              </div>
             </div>
           </fieldset>
 

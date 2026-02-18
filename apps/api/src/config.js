@@ -3,11 +3,45 @@
  * Load .env from api package so JWT_SECRET and others are set regardless of cwd.
  */
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(__dirname, '..', '.env'), override: true });
+const apiEnvPath = path.resolve(__dirname, '..', '.env');
+const candidatePaths = [
+  apiEnvPath,
+  path.join(process.cwd(), 'apps', 'api', '.env'),
+  path.join(process.cwd(), '.env'),
+];
+
+for (const p of candidatePaths) {
+  if (fs.existsSync(p)) {
+    dotenv.config({ path: p, override: true });
+    break;
+  }
+}
+
+// If dotenv didn't load OPENAI_API_KEY (e.g. long line or parsing quirk), read file and extract it
+if (!(process.env.OPENAI_API_KEY ?? '').trim()) {
+  for (const p of candidatePaths) {
+    if (!fs.existsSync(p)) continue;
+    try {
+      const raw = fs.readFileSync(p, 'utf8');
+      // Capture rest of line (dotenv can fail on very long or special values)
+      const lineMatch = raw.match(/OPENAI_API_KEY\s*=\s*([^\r\n]+)/);
+      if (lineMatch && lineMatch[1]) {
+        const value = lineMatch[1].replace(/^["']|["']$/g, '').trim();
+        if (value.length > 10) {
+          process.env.OPENAI_API_KEY = value;
+          break;
+        }
+      }
+    } catch {
+      // ignore read errors
+    }
+  }
+}
 
 export const config = {
   port: parseInt(process.env.PORT ?? '3003', 10),

@@ -12,6 +12,7 @@ import { t } from '../i18n';
 import PasswordInput from '../components/PasswordInput';
 import CustomSelect from '../components/CustomSelect';
 import { clearOnboarding } from '../components/OnboardingModal';
+import { useCurrentLocation } from '../hooks/useCurrentLocation';
 
 const CURRENCIES = [
   { code: 'USD', label: 'USD — US Dollar' },
@@ -87,6 +88,18 @@ export default function ProfilePage() {
   // Shared feedback
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+
+  const { getCurrentLocation, loading: locationLoading } = useCurrentLocation();
+
+  async function handleUseCurrentLocation() {
+    try {
+      const { primaryLocation: loc, address: addr } = await getCurrentLocation();
+      if (loc) setBizLocation(loc);
+      if (addr) setBizAddress(addr);
+    } catch {
+      setErrorMsg(t('common.error'));
+    }
+  }
 
   const hasCurrencyChanged = currency !== (business?.baseCurrencyCode ?? 'USD');
 
@@ -552,6 +565,17 @@ export default function ProfilePage() {
                     placeholder={t('profile.addressPlaceholder')}
                     disabled={savingInfo}
                   />
+                </div>
+                <div className="form-group">
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={handleUseCurrentLocation}
+                    disabled={savingInfo || locationLoading}
+                    aria-label={t('common.useCurrentLocation')}
+                  >
+                    {locationLoading ? t('common.loading') : t('common.useCurrentLocation')}
+                  </button>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-3)' }}>

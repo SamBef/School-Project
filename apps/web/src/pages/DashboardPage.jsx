@@ -75,8 +75,12 @@ export default function DashboardPage() {
       setStrategicData(data);
     } catch (err) {
       const msg = err.message || '';
+      const is429 = err.status === 429 || msg.includes('Too many requests');
+      const isUnavailable = msg.includes('not available') || msg.includes('not set up');
       setInsightsError(
-        (msg.includes('not available') || msg.includes('not set up')) ? t('dashboard.insightsUnavailable') : (msg || t('dashboard.insightsError'))
+        isUnavailable ? t('dashboard.insightsUnavailable')
+          : is429 ? t('dashboard.insightsTooManyRequests')
+          : (msg || t('dashboard.insightsError'))
       );
     } finally {
       setInsightsLoading(false);

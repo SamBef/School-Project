@@ -105,8 +105,12 @@ export default function AnalysisPage() {
       setRestockData(result);
     } catch (err) {
       const msg = err.message || '';
+      const is429 = err.status === 429 || msg.includes('Too many requests');
+      const isUnavailable = msg.includes('not available') || msg.includes('not set up');
       setRestockError(
-        (msg.includes('not available') || msg.includes('not set up')) ? t('analysis.insightsUnavailable') : (msg || t('analysis.insightsError'))
+        isUnavailable ? t('analysis.insightsUnavailable')
+          : is429 ? t('analysis.insightsTooManyRequests')
+          : (msg || t('analysis.insightsError'))
       );
     } finally {
       setRestockLoading(false);

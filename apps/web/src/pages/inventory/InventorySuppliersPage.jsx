@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { t } from '../../i18n';
 import { api } from '../../lib/api';
 import Spinner from '../../components/Spinner';
+import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 
 function loadSuppliers(setSuppliers, setError, setLoading) {
   setLoading(true);
@@ -26,6 +27,16 @@ export default function InventorySuppliersPage() {
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const addressPrefilledRef = useRef(false);
+  const { getCurrentLocation, loading: locationLoading } = useCurrentLocation();
+
+  async function handleUseCurrentLocation() {
+    try {
+      const { address } = await getCurrentLocation();
+      if (address) setFormAddress(address);
+    } catch {
+      setSubmitError(t('common.error'));
+    }
+  }
 
   useEffect(() => {
     loadSuppliers(setSuppliers, setError, setLoading);
@@ -121,14 +132,26 @@ export default function InventorySuppliersPage() {
           </div>
           <div className="form-group">
             <label htmlFor="supplier-address">{t('inventory.address')}</label>
-            <input
-              id="supplier-address"
-              type="text"
-              value={formAddress}
-              onChange={(e) => setFormAddress(e.target.value)}
-              autoComplete="off"
-              placeholder="Optional"
-            />
+            <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                id="supplier-address"
+                type="text"
+                value={formAddress}
+                onChange={(e) => setFormAddress(e.target.value)}
+                autoComplete="off"
+                placeholder="Optional"
+                style={{ flex: '1 1 200px' }}
+              />
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={handleUseCurrentLocation}
+                disabled={submitting || locationLoading}
+                aria-label={t('common.useCurrentLocation')}
+              >
+                {locationLoading ? t('common.loading') : t('common.useCurrentLocation')}
+              </button>
+            </div>
           </div>
           {submitError && <p className="form-error" role="alert">{submitError}</p>}
           <button type="submit" className="btn btn-primary" disabled={submitting}>

@@ -184,8 +184,12 @@ export default function ExpensesPage() {
       if (suggested) setCategory(suggested);
     } catch (err) {
       const msg = err.message || '';
+      const is429 = err.status === 429 || msg.includes('Too many requests');
+      const isUnavailable = msg.includes('not available') || msg.includes('not set up');
       setSuggestError(
-        (msg.includes('not available') || msg.includes('not set up')) ? t('expenses.suggestCategoryUnavailable') : (msg || t('expenses.suggestCategoryFailed'))
+        isUnavailable ? t('expenses.suggestCategoryUnavailable')
+          : is429 ? t('expenses.suggestCategoryTooManyRequests')
+          : (msg || t('expenses.suggestCategoryFailed'))
       );
     } finally {
       setSuggestLoading(false);
