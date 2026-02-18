@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { t } from '../../i18n';
 import { api } from '../../lib/api';
 import Spinner from '../../components/Spinner';
@@ -14,6 +15,7 @@ function loadSuppliers(setSuppliers, setError, setLoading) {
 }
 
 export default function InventorySuppliersPage() {
+  const { business } = useAuth();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,10 +25,21 @@ export default function InventorySuppliersPage() {
   const [formAddress, setFormAddress] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const addressPrefilledRef = useRef(false);
 
   useEffect(() => {
     loadSuppliers(setSuppliers, setError, setLoading);
   }, []);
+
+  useEffect(() => {
+    if (business && !addressPrefilledRef.current) {
+      const defaultAddress = business.address?.trim() || business.primaryLocation || '';
+      if (defaultAddress) {
+        setFormAddress(defaultAddress);
+        addressPrefilledRef.current = true;
+      }
+    }
+  }, [business?.address, business?.primaryLocation]);
 
   async function handleAddSupplier(e) {
     e.preventDefault();

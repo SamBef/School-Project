@@ -260,6 +260,10 @@
     "sectionTeam": "Equipo",
     "sectionInventory": "Inventario",
     "sectionBusiness": "Datos del negocio",
+    "strategicInsights": "Insights estratégicos",
+    "generateStrategicInsights": "Generar insights estratégicos",
+    "insightsUnavailable": "Los insights de IA no están disponibles. Configura OPENAI_API_KEY para activarlos.",
+    "insightsError": "No se pudieron generar los insights. Inténtalo de nuevo.",
     "sectionRecentActivity": "Actividad reciente",
     "comingSoon": "Próxima fase",
     "phasePlaceholder": "Esta función estará disponible después de la Fase 3."
@@ -270,6 +274,8 @@
     "account": "Cuenta"
   },
   "profile": {
+    "address": "Dirección",
+    "addressPlaceholder": "ej. Calle, edificio, código postal",
     "currencyUpdated": "Moneda base actualizada exitosamente.",
     "businessUpdated": "Información del negocio actualizada exitosamente.",
     "editBusiness": "Editar información",
@@ -390,7 +396,15 @@
     "revenueExpensesOverTime": "Ingresos y gastos en el tiempo",
     "transactionsOverTime": "Transacciones por día",
     "expensesByCategory": "Gastos por categoría",
-    "noExpensesInPeriod": "No hay gastos en este período."
+    "noExpensesInPeriod": "No hay gastos en este período.",
+    "restockingInsights": "Insights de reposición y productos",
+    "generateRestockingInsights": "Generar insights de reposición",
+    "insightsUnavailable": "Los insights de IA no están disponibles. Configura OPENAI_API_KEY para activarlos.",
+    "insightsError": "No se pudieron generar los insights. Inténtalo de nuevo.",
+    "recommendationRestockUrgent": "Reponer urgentemente",
+    "recommendationUnderperformer": "Bajo rendimiento",
+    "recommendationReorderTiming": "Momento de reorden",
+    "recommendationHighMargin": "Oportunidad de alto margen"
   },
   "paymentMethods": {
     "CASH": "Efectivo",

@@ -86,7 +86,7 @@ router.post('/register', wrap(optionalAuth), async (req, res) => {
     res.status(201).json({
       token,
       user: toSafeUser(user),
-      business: { id: business.id, name: business.name, email: business.email, phone: business.phone, primaryLocation: business.primaryLocation, baseCurrencyCode: business.baseCurrencyCode },
+      business: { id: business.id, name: business.name, email: business.email, phone: business.phone, primaryLocation: business.primaryLocation, address: business.address ?? null, baseCurrencyCode: business.baseCurrencyCode },
     });
   } catch (err) {
     console.error('auth register error', err);
@@ -128,7 +128,7 @@ router.post('/login', wrap(optionalAuth), async (req, res) => {
     res.json({
       token,
       user: toSafeUser(user),
-      business: user.business ? { id: user.business.id, name: user.business.name, email: user.business.email, phone: user.business.phone, primaryLocation: user.business.primaryLocation, baseCurrencyCode: user.business.baseCurrencyCode } : null,
+      business: user.business ? { id: user.business.id, name: user.business.name, email: user.business.email, phone: user.business.phone, primaryLocation: user.business.primaryLocation, address: user.business.address ?? null, baseCurrencyCode: user.business.baseCurrencyCode } : null,
     });
   } catch (err) {
     console.error('auth login error', err?.message ?? err);
@@ -233,7 +233,7 @@ router.post('/set-password', async (req, res) => {
     res.json({
       token: jwtToken,
       user: toSafeUser(user),
-      business: user.business ? { id: user.business.id, name: user.business.name, email: user.business.email, phone: user.business.phone, primaryLocation: user.business.primaryLocation, baseCurrencyCode: user.business.baseCurrencyCode } : null,
+      business: user.business ? { id: user.business.id, name: user.business.name, email: user.business.email, phone: user.business.phone, primaryLocation: user.business.primaryLocation, address: user.business.address ?? null, baseCurrencyCode: user.business.baseCurrencyCode } : null,
       message: 'Account activated. You are signed in.',
     });
   } catch (err) {
@@ -258,7 +258,7 @@ router.get('/me', wrap(requireAuth), async (req, res) => {
     }
     res.json({
       user: toSafeUser(user),
-      business: user.business ? { id: user.business.id, name: user.business.name, email: user.business.email, phone: user.business.phone, primaryLocation: user.business.primaryLocation, baseCurrencyCode: user.business.baseCurrencyCode, defaultLocationId: user.business.defaultLocationId } : null,
+      business: user.business ? { id: user.business.id, name: user.business.name, email: user.business.email, phone: user.business.phone, primaryLocation: user.business.primaryLocation, address: user.business.address ?? null, baseCurrencyCode: user.business.baseCurrencyCode, defaultLocationId: user.business.defaultLocationId } : null,
     });
   } catch (err) {
     console.error('auth me error', err);

@@ -60,24 +60,58 @@ export default function AnalysisPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [restockLoading, setRestockLoading] = useState(false);
+  const [restockError, setRestockError] = useState('');
+  const [restockData, setRestockData] = useState(null);
 
-  useEffect(() => {
+  function getDateRange() {
     const dateTo = new Date();
     const dateFrom = new Date();
     dateFrom.setDate(dateFrom.getDate() - (rangeDays - 1));
     dateFrom.setHours(0, 0, 0, 0);
     dateTo.setHours(23, 59, 59, 999);
+    return {
+      dateFrom: dateFrom.toISOString().slice(0, 10),
+      dateTo: dateTo.toISOString().slice(0, 10),
+    };
+  }
 
+  useEffect(() => {
+    const { dateFrom, dateTo } = getDateRange();
     setLoading(true);
     setError('');
     api
-      .get(
-        `/analysis?dateFrom=${dateFrom.toISOString().slice(0, 10)}&dateTo=${dateTo.toISOString().slice(0, 10)}`
-      )
+      .get(`/analysis?dateFrom=${dateFrom}&dateTo=${dateTo}`)
       .then(setData)
       .catch((err) => setError(err.message || t('common.loadFailed')))
       .finally(() => setLoading(false));
   }, [rangeDays]);
+
+  async function handleGenerateRestockingInsights() {
+    const { dateFrom, dateTo } = getDateRange();
+    setRestockError('');
+    setRestockData(null);
+    setRestockLoading(true);
+    try {
+      const result = await api.post('/ai/insights/restocking', { dateFrom, dateTo });
+      setRestockData(result);
+    } catch (err) {
+      const msg = err.message || '';
+      setRestockError(
+        msg.includes('not available') ? t('analysis.insightsUnavailable') : (msg || t('analysis.insightsError'))
+      );
+    } finally {
+      setRestockLoading(false);
+    }
+  }
+
+  function getRecommendationLabel(type) {
+    if (type === 'RESTOCK_URGENT') return t('analysis.recommendationRestockUrgent');
+    if (type === 'UNDERPERFORMER') return t('analysis.recommendationUnderperformer');
+    if (type === 'REORDER_TIMING') return t('analysis.recommendationReorderTiming');
+    if (type === 'HIGH_MARGIN_OPPORTUNITY') return t('analysis.recommendationHighMargin');
+    return type;
+  }
 
   if (loading && !data) {
     return (
@@ -291,6 +325,64 @@ export default function AnalysisPage() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Restocking & product insights */}
+          <div className="card animate-card-in">
+            <div className="card-header">
+              <h2>{t('analysis.restockingInsights')}</h2>
+            </div>
+            <p className="card-header-desc">
+              AI recommendations for restock, underperformers, reorder timing, and high-margin opportunities based on the selected period.
+            </p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleGenerateRestockingInsights}
+              disabled={restockLoading}
+              aria-busy={restockLoading}
+            >
+              {restockLoading ? (
+                <>
+                  <span className="spinner-wrapper" aria-hidden="true">
+                    <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
+                  </span>
+                  {t('common.loading')}
+                </>
+              ) : (
+                t('analysis.generateRestockingInsights')
+              )}
+            </button>
+            {restockError && (
+              <p className="form-hint form-hint-error" role="alert" style={{ marginTop: 'var(--space-2)' }}>
+                {restockError}
+              </p>
+            )}
+            {restockData && (
+              <div className="insights-content" style={{ marginTop: 'var(--space-4)', textAlign: 'left' }}>
+                {restockData.insights && (
+                  <p className="insights-summary" style={{ whiteSpace: 'pre-wrap', marginBottom: 'var(--space-3)', lineHeight: 1.5 }}>
+                    {restockData.insights}
+                  </p>
+                )}
+                {Array.isArray(restockData.recommendations) && restockData.recommendations.length > 0 && (
+                  <ul className="insights-recommendations" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    {restockData.recommendations.map((rec, i) => (
+                      <li key={i} className="insights-recommendation" style={{ marginBottom: 'var(--space-2)', padding: 'var(--space-2)', background: 'var(--color-neutral-100)', borderRadius: 'var(--radius-md)' }}>
+                        <span className="insights-recommendation-type" style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
+                          {getRecommendationLabel(rec.type)}
+                          {rec.productName ? ` — ${rec.productName}` : ''}
+                          {rec.confidence ? ` (${rec.confidence})` : ''}
+                        </span>
+                        <p className="insights-recommendation-reasoning" style={{ margin: 'var(--space-1) 0 0', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
+                          {rec.reasoning}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         </>
       )}

@@ -657,6 +657,21 @@ img {
   color: var(--color-error, #b91c1c);
 }
 
+.insights-framework {
+  margin-bottom: var(--space-4);
+}
+.insights-framework-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-1);
+}
+.insights-framework-body {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
 /* Password input wrapper with visibility toggle */
 .password-wrapper {
   position: relative;

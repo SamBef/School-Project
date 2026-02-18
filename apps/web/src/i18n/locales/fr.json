@@ -260,6 +260,10 @@
     "sectionTeam": "Équipe",
     "sectionInventory": "Stock",
     "sectionBusiness": "Informations entreprise",
+    "strategicInsights": "Insights stratégiques",
+    "generateStrategicInsights": "Générer les insights stratégiques",
+    "insightsUnavailable": "Les insights IA ne sont pas disponibles. Configurez OPENAI_API_KEY pour les activer.",
+    "insightsError": "Impossible de générer les insights. Veuillez réessayer.",
     "sectionRecentActivity": "Activité récente",
     "comingSoon": "Prochaine phase",
     "phasePlaceholder": "Cette fonctionnalité sera disponible après la Phase 3."
@@ -270,6 +274,8 @@
     "account": "Compte"
   },
   "profile": {
+    "address": "Adresse",
+    "addressPlaceholder": "ex. Rue, bâtiment, code postal",
     "currencyUpdated": "Devise de base mise à jour avec succès.",
     "businessUpdated": "Informations de l'entreprise mises à jour avec succès.",
     "editBusiness": "Modifier les infos",
@@ -390,7 +396,15 @@
     "revenueExpensesOverTime": "Revenus et dépenses dans le temps",
     "transactionsOverTime": "Transactions par jour",
     "expensesByCategory": "Dépenses par catégorie",
-    "noExpensesInPeriod": "Aucune dépense sur cette période."
+    "noExpensesInPeriod": "Aucune dépense sur cette période.",
+    "restockingInsights": "Insights réapprovisionnement et produits",
+    "generateRestockingInsights": "Générer les insights de réapprovisionnement",
+    "insightsUnavailable": "Les insights IA ne sont pas disponibles. Configurez OPENAI_API_KEY pour les activer.",
+    "insightsError": "Impossible de générer les insights. Veuillez réessayer.",
+    "recommendationRestockUrgent": "Réapprovisionner en urgence",
+    "recommendationUnderperformer": "Sous-performant",
+    "recommendationReorderTiming": "Moment de réapprovisionnement",
+    "recommendationHighMargin": "Opportunité à forte marge"
   },
   "paymentMethods": {
     "CASH": "Espèces",

@@ -23,6 +23,9 @@ export default function DashboardPage() {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState('');
+  const [strategicData, setStrategicData] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -54,6 +57,23 @@ export default function DashboardPage() {
   }, [loading]);
 
   const currency = stats?.currency ?? business?.baseCurrencyCode ?? 'USD';
+
+  async function handleGenerateStrategicInsights() {
+    setInsightsError('');
+    setStrategicData(null);
+    setInsightsLoading(true);
+    try {
+      const data = await api.post('/ai/insights/strategic');
+      setStrategicData(data);
+    } catch (err) {
+      const msg = err.message || '';
+      setInsightsError(
+        msg.includes('not available') ? t('dashboard.insightsUnavailable') : (msg || t('dashboard.insightsError'))
+      );
+    } finally {
+      setInsightsLoading(false);
+    }
+  }
 
   function formatAmount(value) {
     if (value == null) return '—';
@@ -219,6 +239,52 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
+
+            {canExpenses && (
+              <div className="card dashboard-card-business">
+                <div className="card-header">
+                  <h2>{t('dashboard.strategicInsights')}</h2>
+                </div>
+                <p className="card-header-desc">
+                  Porter&apos;s Five Forces, SWOT, and market context for your location and products.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleGenerateStrategicInsights}
+                  disabled={insightsLoading}
+                  aria-busy={insightsLoading}
+                >
+                  {insightsLoading ? (
+                    <>
+                      <span className="spinner-wrapper" aria-hidden="true">
+                        <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
+                      </span>
+                      {t('common.loading')}
+                    </>
+                  ) : (
+                    t('dashboard.generateStrategicInsights')
+                  )}
+                </button>
+                {insightsError && (
+                  <p className="form-hint form-hint-error" role="alert" style={{ marginTop: 'var(--space-2)' }}>
+                    {insightsError}
+                  </p>
+                )}
+                {strategicData?.frameworks?.length > 0 && (
+                  <div className="insights-content" style={{ marginTop: 'var(--space-4)', textAlign: 'left' }}>
+                    {strategicData.frameworks.map((f, i) => (
+                      <div key={i} className="insights-framework">
+                        <h3 className="insights-framework-title">{f.name}</h3>
+                        <div className="insights-framework-body" style={{ whiteSpace: 'pre-wrap', fontSize: 'var(--text-sm)', lineHeight: 1.5 }}>
+                          {f.content}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {business && (
               <div className="card dashboard-card-business">

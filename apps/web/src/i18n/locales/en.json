@@ -260,6 +260,10 @@
     "sectionTeam": "Team",
     "sectionInventory": "Inventory",
     "sectionBusiness": "Business details",
+    "strategicInsights": "Strategic insights",
+    "generateStrategicInsights": "Generate strategic insights",
+    "insightsUnavailable": "AI insights are not available. Configure OPENAI_API_KEY to enable.",
+    "insightsError": "Could not generate insights. Try again later.",
     "sectionRecentActivity": "Recent activity",
     "comingSoon": "Coming in next phase",
     "phasePlaceholder": "This feature will be available once Phase 3 is complete."
@@ -270,6 +274,8 @@
     "account": "Account"
   },
   "profile": {
+    "address": "Address",
+    "addressPlaceholder": "e.g. Street, building, postal code",
     "currencyUpdated": "Base currency updated successfully.",
     "businessUpdated": "Business information updated successfully.",
     "editBusiness": "Edit business info",
@@ -390,7 +396,15 @@
     "revenueExpensesOverTime": "Revenue and expenses over time",
     "transactionsOverTime": "Transactions per day",
     "expensesByCategory": "Expenses by category",
-    "noExpensesInPeriod": "No expenses in this period."
+    "noExpensesInPeriod": "No expenses in this period.",
+    "restockingInsights": "Restocking & product insights",
+    "generateRestockingInsights": "Generate restocking insights",
+    "insightsUnavailable": "AI insights are not available. Configure OPENAI_API_KEY to enable.",
+    "insightsError": "Could not generate insights. Try again later.",
+    "recommendationRestockUrgent": "Restock urgently",
+    "recommendationUnderperformer": "Underperformer",
+    "recommendationReorderTiming": "Reorder timing",
+    "recommendationHighMargin": "High-margin opportunity"
   },
   "paymentMethods": {
     "CASH": "Cash",

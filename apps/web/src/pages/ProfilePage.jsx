@@ -71,6 +71,7 @@ export default function ProfilePage() {
   const [bizEmail, setBizEmail] = useState(business?.email ?? '');
   const [bizPhone, setBizPhone] = useState(business?.phone ?? '');
   const [bizLocation, setBizLocation] = useState(business?.primaryLocation ?? '');
+  const [bizAddress, setBizAddress] = useState(business?.address ?? '');
   const [savingInfo, setSavingInfo] = useState(false);
 
   // Password change state
@@ -208,6 +209,7 @@ export default function ProfilePage() {
     setBizEmail(business?.email ?? '');
     setBizPhone(business?.phone ?? '');
     setBizLocation(business?.primaryLocation ?? '');
+    setBizAddress(business?.address ?? '');
     setEditingInfo(true);
     clearMessages();
   }
@@ -227,6 +229,7 @@ export default function ProfilePage() {
         email: bizEmail,
         phone: bizPhone,
         primaryLocation: bizLocation,
+        address: bizAddress.trim() || undefined,
       });
       await refreshUser();
       setEditingInfo(false);
@@ -536,6 +539,17 @@ export default function ProfilePage() {
                     disabled={savingInfo}
                   />
                 </div>
+                <div className="form-group">
+                  <label htmlFor="biz-address">{t('profile.address')}</label>
+                  <input
+                    id="biz-address"
+                    type="text"
+                    value={bizAddress}
+                    onChange={(e) => setBizAddress(e.target.value)}
+                    placeholder={t('profile.addressPlaceholder')}
+                    disabled={savingInfo}
+                  />
+                </div>
               </div>
               <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-3)' }}>
                 <button type="submit" className="btn btn-primary btn-sm" disabled={savingInfo}>
@@ -564,6 +578,12 @@ export default function ProfilePage() {
                 <span className="info-label">{t('common.location')}</span>
                 <span className="info-value">{business.primaryLocation}</span>
               </li>
+              {business.address && (
+                <li>
+                  <span className="info-label">{t('profile.address')}</span>
+                  <span className="info-value">{business.address}</span>
+                </li>
+              )}
               <li>
                 <span className="info-label">{t('common.currency')}</span>
                 {isOwner ? (

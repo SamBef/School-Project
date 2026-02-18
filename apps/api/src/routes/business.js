@@ -17,7 +17,7 @@ function wrap(fn) {
 
 /**
  * PATCH /business
- * Body: { baseCurrencyCode?, name?, email?, phone?, primaryLocation? }
+ * Body: { baseCurrencyCode?, name?, email?, phone?, primaryLocation?, address? }
  * Owner only. Updates the business's settings and info.
  */
 router.patch(
@@ -26,7 +26,7 @@ router.patch(
   requireRole(['OWNER']),
   async (req, res) => {
     try {
-      const { baseCurrencyCode, name, email, phone, primaryLocation } = req.body;
+      const { baseCurrencyCode, name, email, phone, primaryLocation, address } = req.body;
       const updateData = {};
 
       // Handle currency update
@@ -66,6 +66,9 @@ router.patch(
         }
         updateData.primaryLocation = primaryLocation.trim();
       }
+      if (address !== undefined) {
+        updateData.address = address?.trim() || null;
+      }
 
       if (Object.keys(updateData).length === 0) {
         return res.status(400).json({ message: 'No valid fields to update.' });
@@ -82,6 +85,7 @@ router.patch(
         email: business.email,
         phone: business.phone,
         primaryLocation: business.primaryLocation,
+        address: business.address ?? null,
         baseCurrencyCode: business.baseCurrencyCode,
       });
     } catch (err) {
