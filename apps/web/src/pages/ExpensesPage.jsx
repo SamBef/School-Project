@@ -29,8 +29,9 @@ function todayISO() {
 }
 
 export default function ExpensesPage() {
-  const { business } = useAuth();
+  const { user, business } = useAuth();
   const currency = business?.baseCurrencyCode ?? 'USD';
+  const isOwner = user?.role === 'OWNER';
 
   // Form state
   const [description, setDescription] = useState('');
@@ -227,29 +228,35 @@ export default function ExpensesPage() {
             </div>
 
             <div className="form-group">
-              <div className="form-group-label-row">
-                <label htmlFor="exp-category">{t('expenses.category')}</label>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm btn-suggest-category"
-                  onClick={handleSuggestCategory}
-                  disabled={submitting || suggestLoading || !description.trim()}
-                  aria-label={t('koboai.suggestCategory')}
-                  title={t('koboai.suggestCategory')}
-                >
-                  {suggestLoading ? (
-                    <span className="spinner-wrapper" aria-hidden="true">
-                      <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
-                    </span>
-                  ) : (
-                    t('koboai.suggestCategory')
+              {isOwner ? (
+                <>
+                  <div className="form-group-label-row">
+                    <label htmlFor="exp-category">{t('expenses.category')}</label>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm btn-suggest-category"
+                      onClick={handleSuggestCategory}
+                      disabled={submitting || suggestLoading || !description.trim()}
+                      aria-label={t('koboai.suggestCategory')}
+                      title={t('koboai.suggestCategory')}
+                    >
+                      {suggestLoading ? (
+                        <span className="spinner-wrapper" aria-hidden="true">
+                          <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                        </span>
+                      ) : (
+                        t('koboai.suggestCategory')
+                      )}
+                    </button>
+                  </div>
+                  {suggestError && (
+                    <p className="form-hint form-hint-error" role="alert">
+                      {suggestError}
+                    </p>
                   )}
-                </button>
-              </div>
-              {suggestError && (
-                <p className="form-hint form-hint-error" role="alert">
-                  {suggestError}
-                </p>
+                </>
+              ) : (
+                <label htmlFor="exp-category">{t('expenses.category')}</label>
               )}
               <CustomSelect
                 id="exp-category"

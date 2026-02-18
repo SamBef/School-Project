@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const canInvite = role === 'OWNER';
   const canExpenses = role === 'OWNER' || role === 'MANAGER';
   const canExport = role === 'OWNER' || role === 'MANAGER';
+  const canUseKoboAI = role === 'OWNER';
 
   const [teamCount, setTeamCount] = useState({ total: 0, active: 0, pending: 0 });
   const [stats, setStats] = useState(null);
@@ -270,7 +271,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {canExpenses && (
+            {canUseKoboAI && (
               <div className="card dashboard-card-insights">
                 <div className="card-header">
                   <h2>{t('koboai.strategicInsights')}</h2>

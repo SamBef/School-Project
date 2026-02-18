@@ -1,6 +1,6 @@
 /**
  * AI routes — user-triggered AI features (suggest category, restocking insights, strategic insights).
- * All routes require auth; Owner/Manager only. Returns 503 when OPENAI_API_KEY is not set.
+ * Owner only. Returns 503 when KoboAI is not configured (no API key).
  */
 
 import { Router } from 'express';
@@ -41,7 +41,7 @@ function toDateRange(req) {
 router.post(
   '/suggest-expense-category',
   wrap(requireAuth),
-  requireRole(['OWNER', 'MANAGER']),
+  requireRole(['OWNER']),
   async (req, res) => {
     const description = req.body?.description?.trim();
     if (!description) {
@@ -54,7 +54,7 @@ router.post(
     } catch (err) {
       if (err.statusCode === 503) {
         return res.status(503).json({
-          message: 'Suggest category is not available. Configure OPENAI_API_KEY to enable it.',
+          message: 'KoboAI is not available. Contact your administrator to enable it.',
         });
       }
       if (err.statusCode === 429) {
@@ -78,7 +78,7 @@ router.post(
 router.post(
   '/insights/restocking',
   wrap(requireAuth),
-  requireRole(['OWNER', 'MANAGER']),
+  requireRole(['OWNER']),
   async (req, res) => {
     try {
       const { businessId } = req.user;
@@ -165,7 +165,7 @@ router.post(
     } catch (err) {
       if (err.statusCode === 503) {
         return res.status(503).json({
-          message: 'AI insights are not available. Configure OPENAI_API_KEY to enable them.',
+          message: 'KoboAI is not available. Contact your administrator to enable it.',
         });
       }
       if (err.statusCode === 429) {
@@ -189,7 +189,7 @@ router.post(
 router.post(
   '/insights/strategic',
   wrap(requireAuth),
-  requireRole(['OWNER', 'MANAGER']),
+  requireRole(['OWNER']),
   async (req, res) => {
     try {
       const { businessId } = req.user;
@@ -216,7 +216,7 @@ router.post(
     } catch (err) {
       if (err.statusCode === 503) {
         return res.status(503).json({
-          message: 'AI insights are not available. Configure OPENAI_API_KEY to enable them.',
+          message: 'KoboAI is not available. Contact your administrator to enable it.',
         });
       }
       if (err.statusCode === 429) {

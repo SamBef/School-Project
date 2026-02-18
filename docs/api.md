@@ -56,9 +56,9 @@ All protected routes require header: `Authorization: Bearer <token>`.
 
 ## AI (opt-in)
 
-- **Suggest expense category:** `POST /ai/suggest-expense-category` — body: `{ description }`. Owner/Manager only. Returns `{ category }` (one of the expense categories above). Requires `OPENAI_API_KEY` in API env; returns **503** when not configured, **429** on rate limit, **502** on provider error.
-- **Restocking insights:** `POST /ai/insights/restocking` — body: `{ dateFrom?, dateTo? }` (YYYY-MM-DD; default last 30 days). Owner/Manager only. Returns `{ insights: string, recommendations: Array<{ type, productName?, reasoning, confidence? }> }`. 503/429/502 as above.
-- **Strategic insights:** `POST /ai/insights/strategic` — no body. Owner/Manager only. Uses business location and product list from DB. Returns `{ insights: string, frameworks: Array<{ name, content }> }` (e.g. Porter's Five Forces, SWOT). 503/429/502 as above.
+- **Suggest expense category:** `POST /ai/suggest-expense-category` — body: `{ description }`. **Owner only.** Returns `{ category }` (one of the expense categories above). Returns **503** when KoboAI is not configured (user-facing message: contact administrator).
+- **Restocking insights:** `POST /ai/insights/restocking` — body: `{ dateFrom?, dateTo? }` (YYYY-MM-DD; default last 30 days). **Owner only.** Returns `{ insights, recommendations }`. 503/429/502 as above.
+- **Strategic insights:** `POST /ai/insights/strategic` — no body. **Owner only.** Uses business location and product list from DB. Returns `{ insights, frameworks }` (e.g. Porter's Five Forces, SWOT). 503/429/502 as above.
 
 ---
 

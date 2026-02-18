@@ -53,8 +53,9 @@ const CHART_COLORS = {
 };
 
 export default function AnalysisPage() {
-  const { business } = useAuth();
+  const { user, business } = useAuth();
   const currency = business?.baseCurrencyCode ?? 'USD';
+  const isOwner = user?.role === 'OWNER';
 
   const [rangeDays, setRangeDays] = useState(30);
   const [data, setData] = useState(null);
@@ -327,7 +328,8 @@ export default function AnalysisPage() {
             </div>
           </div>
 
-          {/* Restocking & product insights */}
+          {/* Restocking & product insights — Owner only */}
+          {isOwner && (
           <div className="card animate-card-in">
             <div className="card-header">
               <h2>{t('koboai.restockingInsights')}</h2>
@@ -384,6 +386,7 @@ export default function AnalysisPage() {
               </div>
             )}
           </div>
+          )}
         </>
       )}
     </div>

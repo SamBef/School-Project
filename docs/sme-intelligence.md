@@ -6,7 +6,8 @@ AI-powered strategic and operational insights for the business management platfo
 
 ## Principles
 
-- **Opt-in** — All AI features work only when `OPENAI_API_KEY` is set; otherwise the UI shows "Unavailable" or hides the action.
+- **Owner only** — The SME intelligence layer (KoboAI) is available only to the account owner. Managers and cashiers do not see or call AI features.
+- **Opt-in** — AI features work only when the API key is set; otherwise the UI shows "KoboAI is not available. Contact your administrator to enable it."
 - **User-triggered** — Insights are generated when the user requests them (e.g. "Generate insights"); no background polling.
 - **Data-grounded** — Every recommendation ties back to a specific data point or framework; tone is professional and concise.
 - **Location-aware** — Business `primaryLocation` (and address) is used as default where relevant and is passed to AI for geo-contextualized insights.
