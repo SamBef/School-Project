@@ -27,6 +27,36 @@
     "switchToLight": "Passer en mode clair",
     "switchToDark": "Passer en mode sombre"
   },
+  "onboarding": {
+    "skip": "Passer le tour",
+    "next": "Suivant",
+    "back": "Retour",
+    "getStarted": "Commencer",
+    "progressLabel": "Étape du tour",
+    "welcomeTitle": "Bienvenue sur KoboTrack",
+    "welcomeBody": "Ce court tour vous montrera où enregistrer les ventes, les dépenses, l'inventaire et comment KoboAI peut vous aider. Vous pouvez passer à tout moment.",
+    "dashboardTitle": "Votre tableau de bord",
+    "dashboardBody": "Le tableau de bord affiche les revenus, dépenses et bénéfice net du jour et total. Utilisez les Actions rapides pour aller aux Transactions, Dépenses ou Inventaire.",
+    "transactionsTitle": "Enregistrer les ventes",
+    "transactionsBody": "Allez dans Transactions pour créer une vente. Ajoutez des lignes, choisissez le mode de paiement et confirmez. Un reçu est généré automatiquement.",
+    "expensesTitle": "Enregistrer les dépenses",
+    "expensesBody": "Dans Rapports et équipe → Dépenses vous enregistrez les coûts (loyer, services, stock, etc.). KoboAI peut suggérer une catégorie à partir de la description — cherchez « Suggerer une catégorie ».",
+    "inventoryTitle": "Gérer l'inventaire",
+    "inventoryBody": "L'inventaire permet de définir produits, emplacements et unités ; recevoir du stock des fournisseurs ; et voir les alertes de stock bas.",
+    "analysisTitle": "Graphiques et insights",
+    "analysisBody": "L'analyse montre les revenus et dépenses dans le temps et les dépenses par catégorie. Utilisez le sélecteur de période (7 jours, 30 jours, etc.).",
+    "koboaiTitle": "KoboAI — votre conseiller",
+    "koboaiBody": "KoboAI est votre conseiller dans l'app. Sur le tableau de bord, utilisez « Générer les insights stratégiques » pour Porter et SWOT. Dans Analyse, « Générer les insights de réapprovisionnement » pour les recommandations. Tout est optionnel et basé sur vos données.",
+    "doneTitle": "C'est parti",
+    "doneBody": "Utilisez les menus pour enregistrer ventes et dépenses, et essayer KoboAI quand vous voulez. Vous pouvez passer ce tour plus tard en cliquant sur Passer."
+  },
+  "koboai": {
+    "name": "KoboAI",
+    "tagline": "Votre conseiller business",
+    "suggestCategory": "KoboAI suggère la catégorie",
+    "strategicInsights": "Insights stratégiques par KoboAI",
+    "restockingInsights": "Insights réapprovisionnement par KoboAI"
+  },
   "common": {
     "save": "Enregistrer",
     "cancel": "Annuler",
@@ -291,7 +321,10 @@
     "changeAvatar": "Changer la photo de profil",
     "removeAvatar": "Supprimer la photo",
     "avatarUpdated": "Photo de profil mise à jour.",
-    "avatarRemoved": "Photo de profil supprimée."
+    "avatarRemoved": "Photo de profil supprimée.",
+    "help": "Aide",
+    "helpTourDesc": "Revoir le tour pour savoir où enregistrer ventes et dépenses, et comment KoboAI peut vous aider.",
+    "showTourAgain": "Revoir le tour"
   },
   "transactions": {
     "newTransaction": "Nouvelle transaction",

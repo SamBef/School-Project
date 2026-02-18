@@ -271,6 +271,17 @@ img {
   to { opacity: 1; }
 }
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .animate-card-in {
   animation: cardEnter var(--transition-enter) both;
 }
@@ -670,6 +681,105 @@ img {
   font-size: var(--text-sm);
   line-height: 1.5;
   color: var(--text-primary);
+}
+
+/* Onboarding modal (one-time tour) */
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--color-overlay, rgba(0, 0, 0, 0.5));
+  animation: fadeIn 0.2s ease-out;
+}
+.onboarding-modal {
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--surface-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.25s ease-out;
+}
+.onboarding-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+}
+.onboarding-step-indicator {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.onboarding-skip {
+  background: none;
+  border: none;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.onboarding-skip:hover {
+  color: var(--text-secondary);
+}
+.onboarding-content {
+  padding: var(--space-4);
+  flex: 1;
+  min-height: 0;
+}
+.onboarding-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.onboarding-body {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.onboarding-progress {
+  display: flex;
+  gap: var(--space-1);
+  justify-content: center;
+  padding: var(--space-2) var(--space-4);
+}
+.onboarding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-neutral-300);
+  transition: background var(--transition-fast);
+}
+.onboarding-dot.active {
+  background: var(--color-accent);
+  transform: scale(1.2);
+}
+.onboarding-dot.completed {
+  background: var(--color-accent-muted, var(--color-accent));
+  opacity: 0.6;
+}
+.onboarding-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-top: 1px solid var(--border-default);
+}
+.onboarding-actions-primary {
+  margin-left: auto;
 }
 
 /* Password input wrapper with visibility toggle */

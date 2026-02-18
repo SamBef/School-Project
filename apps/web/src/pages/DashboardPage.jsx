@@ -243,10 +243,10 @@ export default function DashboardPage() {
             {canExpenses && (
               <div className="card dashboard-card-business">
                 <div className="card-header">
-                  <h2>{t('dashboard.strategicInsights')}</h2>
+                  <h2>{t('koboai.strategicInsights')}</h2>
                 </div>
                 <p className="card-header-desc">
-                  Porter&apos;s Five Forces, SWOT, and market context for your location and products.
+                  {t('koboai.tagline')} — Porter&apos;s Five Forces, SWOT, and market context for your location and products.
                 </p>
                 <button
                   type="button"

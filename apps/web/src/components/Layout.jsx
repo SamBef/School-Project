@@ -8,6 +8,7 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { t, getLocale, setLocale, loadLocale, SUPPORTED_LOCALES } from '../i18n';
+import OnboardingModal, { hasCompletedOnboarding } from './OnboardingModal';
 
 function getRoleBadgeClass(role) {
   if (role === 'OWNER') return 'role-badge role-badge-owner';
@@ -42,6 +43,7 @@ export default function Layout({ children }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [localeOpen, setLocaleOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => !hasCompletedOnboarding());
 
   // Close nav panel and dropdowns on route change
   useEffect(() => {
@@ -50,6 +52,15 @@ export default function Layout({ children }) {
     setUserMenuOpen(false);
     setLocaleOpen(false);
   }, [location.pathname]);
+
+  // Re-open onboarding when navigating with ?onboarding=1 (e.g. from Profile "Show tour again")
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('onboarding') === '1' && user) {
+      setShowOnboarding(true);
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.search, location.pathname, user, navigate]);
 
   // Prevent body scroll when panel is open
   useEffect(() => {
@@ -351,6 +362,13 @@ export default function Layout({ children }) {
       <main className="layout-main" role="main">
         {children}
       </main>
+
+      {user && (
+        <OnboardingModal
+          open={showOnboarding}
+          onComplete={() => setShowOnboarding(false)}
+        />
+      )}
     </div>
   );
 }

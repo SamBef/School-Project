@@ -234,15 +234,15 @@ export default function ExpensesPage() {
                   className="btn btn-ghost btn-sm btn-suggest-category"
                   onClick={handleSuggestCategory}
                   disabled={submitting || suggestLoading || !description.trim()}
-                  aria-label={t('expenses.suggestCategory')}
-                  title={t('expenses.suggestCategory')}
+                  aria-label={t('koboai.suggestCategory')}
+                  title={t('koboai.suggestCategory')}
                 >
                   {suggestLoading ? (
                     <span className="spinner-wrapper" aria-hidden="true">
                       <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
                     </span>
                   ) : (
-                    t('expenses.suggestCategory')
+                    t('koboai.suggestCategory')
                   )}
                 </button>
               </div>

@@ -21,9 +21,8 @@ export async function suggestExpenseCategory(description) {
     throw err;
   }
 
-  const prompt = `Given this expense description, reply with exactly one of these words: RENT, STOCK_INVENTORY, UTILITIES, TRANSPORT, MISCELLANEOUS. Reply with only that single word, nothing else.
-
-Expense description: ${description}`;
+  const systemPrompt = `You are KoboAI, the friendly business advisor for KoboTrack. You suggest expense categories. Reply with exactly one of: RENT, STOCK_INVENTORY, UTILITIES, TRANSPORT, MISCELLANEOUS. Reply with only that single word, nothing else.`;
+  const userPrompt = `Expense description: ${description}`;
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -33,7 +32,10 @@ Expense description: ${description}`;
     },
     body: JSON.stringify({
       model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
       max_tokens: 20,
       temperature: 0.2,
     }),
@@ -108,7 +110,9 @@ async function chat(systemPrompt, userContent, maxTokens = 1500) {
  * @returns {Promise<{ insights: string, recommendations: Array<{ type: string, productName?: string, reasoning: string, confidence?: string }> }>}
  */
 export async function getRestockingInsights(context) {
-  const systemPrompt = `You are a strategic business advisor for an SME. You receive inventory and sales data for a selectable period. Your task is to produce concise, actionable insights.
+  const systemPrompt = `You are KoboAI, the business advisor for KoboTrack. You are friendly, concise, and professional. You receive inventory and sales data for a selectable period. Your task is to produce concise, actionable insights.
+
+Personality: Speak in first person where natural (e.g. "I recommend...", "Based on your data..."). Be supportive and clear. No jargon unless necessary.
 
 Rules:
 - Base every recommendation on the data provided. Reference specific numbers (e.g. "Sold 45 units in the period; 12 left").
@@ -161,7 +165,9 @@ Reply with the summary first, then a line "---RECOMMENDATIONS---", then the JSON
  * @returns {Promise<{ insights: string, frameworks: Array<{ name: string, content: string }> }>}
  */
 export async function getStrategicInsights(context) {
-  const systemPrompt = `You are a strategic business advisor for an SME. You receive the business's location and list of products (or product categories). There is no external market database: base your analysis on general knowledge of similar businesses in that geography and sector.
+  const systemPrompt = `You are KoboAI, the business advisor for KoboTrack. You are friendly, concise, and professional. You receive the business's location and list of products (or product categories). There is no external market database: base your analysis on general knowledge of similar businesses in that geography and sector.
+
+Personality: Speak in first person where natural (e.g. "I see...", "For your location..."). Be supportive and actionable. No jargon unless necessary.
 
 Rules:
 - Apply Porter's Five Forces and SWOT. Optionally add 1–2 bullet points from PESTLE (macro factors) or product-prioritization (BCG-style) if relevant.

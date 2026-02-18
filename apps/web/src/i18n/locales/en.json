@@ -27,6 +27,36 @@
     "switchToLight": "Switch to light mode",
     "switchToDark": "Switch to dark mode"
   },
+  "onboarding": {
+    "skip": "Skip tour",
+    "next": "Next",
+    "back": "Back",
+    "getStarted": "Get started",
+    "progressLabel": "Onboarding step",
+    "welcomeTitle": "Welcome to KoboTrack",
+    "welcomeBody": "This short tour will show you where to record sales, track expenses, manage inventory, and how KoboAI can help. You can skip anytime.",
+    "dashboardTitle": "Your dashboard",
+    "dashboardBody": "The dashboard shows today's and all-time revenue, expenses, and net profit. Use Quick actions to jump to Transactions, Expenses, or Inventory.",
+    "transactionsTitle": "Record sales",
+    "transactionsBody": "Go to Transactions to create a sale. Add line items, choose payment method, and confirm. A receipt is generated automatically. You can view or reprint it from the transaction details.",
+    "expensesTitle": "Track expenses",
+    "expensesBody": "Under Reports & team → Expenses you record business costs (rent, utilities, stock, etc.). KoboAI can suggest a category from the description — look for \"Suggest category\" next to the category field.",
+    "inventoryTitle": "Manage inventory",
+    "inventoryBody": "Inventory lets you define products, locations, and units; receive stock from suppliers; and see low-stock alerts. Sales can deduct stock when you link items to products.",
+    "analysisTitle": "Charts and insights",
+    "analysisBody": "Analysis shows revenue and expenses over time, and expenses by category. Use the time range selector to focus on the last 7 days, 30 days, or longer.",
+    "koboaiTitle": "KoboAI — your business advisor",
+    "koboaiBody": "KoboAI is your in-app advisor. On the dashboard, use \"Generate strategic insights\" for Porter's Five Forces and SWOT tailored to your location and products. On Analysis, use \"Generate restocking insights\" for restock and performance recommendations. All insights are optional and based on your data.",
+    "doneTitle": "You're all set",
+    "doneBody": "Use the menus to record sales, track expenses, and try KoboAI when you're ready. You can skip this tour anytime in the future by clicking Skip."
+  },
+  "koboai": {
+    "name": "KoboAI",
+    "tagline": "Your business advisor",
+    "suggestCategory": "KoboAI suggests category",
+    "strategicInsights": "Strategic insights from KoboAI",
+    "restockingInsights": "Restocking insights from KoboAI"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -291,7 +321,10 @@
     "changeAvatar": "Change profile photo",
     "removeAvatar": "Remove photo",
     "avatarUpdated": "Profile photo updated.",
-    "avatarRemoved": "Profile photo removed."
+    "avatarRemoved": "Profile photo removed.",
+    "help": "Help",
+    "helpTourDesc": "Re-run the short tour to see where to record sales, expenses, and how KoboAI can help.",
+    "showTourAgain": "Show tour again"
   },
   "transactions": {
     "newTransaction": "New transaction",

@@ -5,11 +5,13 @@
  */
 
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { t } from '../i18n';
 import PasswordInput from '../components/PasswordInput';
 import CustomSelect from '../components/CustomSelect';
+import { clearOnboarding } from '../components/OnboardingModal';
 
 const CURRENCIES = [
   { code: 'USD', label: 'USD — US Dollar' },
@@ -43,6 +45,7 @@ function getRoleBadgeClass(role) {
 }
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const { user, business, refreshUser } = useAuth();
   const role = user?.role ?? '';
   const isOwner = role === 'OWNER';
@@ -614,6 +617,25 @@ export default function ProfilePage() {
           )}
         </div>
       )}
+
+      <div className="card" style={{ marginTop: 'var(--space-4)' }}>
+        <div className="card-header">
+          <h2>{t('profile.help')}</h2>
+        </div>
+        <p className="card-header-desc" style={{ marginTop: 0 }}>
+          {t('profile.helpTourDesc')}
+        </p>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => {
+            clearOnboarding();
+            navigate('/dashboard?onboarding=1');
+          }}
+        >
+          {t('profile.showTourAgain')}
+        </button>
+      </div>
     </div>
   );
 }

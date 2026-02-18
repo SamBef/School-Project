@@ -330,10 +330,10 @@ export default function AnalysisPage() {
           {/* Restocking & product insights */}
           <div className="card animate-card-in">
             <div className="card-header">
-              <h2>{t('analysis.restockingInsights')}</h2>
+              <h2>{t('koboai.restockingInsights')}</h2>
             </div>
             <p className="card-header-desc">
-              AI recommendations for restock, underperformers, reorder timing, and high-margin opportunities based on the selected period.
+              {t('koboai.tagline')} — Restock, underperformers, reorder timing, and high-margin opportunities based on the selected period.
             </p>
             <button
               type="button"
