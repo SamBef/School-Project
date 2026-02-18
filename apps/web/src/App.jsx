@@ -3,8 +3,8 @@
  * Protected routes are lazy-loaded for smaller initial bundle and faster first paint.
  */
 
-import { lazy, Suspense, useRef, useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { lazy, Suspense, useRef, useEffect, useState, useCallback } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import Layout from './components/Layout';
@@ -47,13 +47,30 @@ function PageFallback() {
   );
 }
 
+const HOME_EXIT_DURATION_MS = 450;
+
 function HomePage() {
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { theme, setTheme } = useTheme();
   const featuresRef = useRef(null);
   const testimonialsRef = useRef(null);
   const [featuresInView, setFeaturesInView] = useState(false);
   const [testimonialsInView, setTestimonialsInView] = useState(false);
+  const [exiting, setExiting] = useState(false);
+  const [exitTarget, setExitTarget] = useState('');
+
+  const handleExitTo = useCallback((path) => (e) => {
+    e.preventDefault();
+    setExiting(true);
+    setExitTarget(path);
+  }, []);
+
+  useEffect(() => {
+    if (!exiting || !exitTarget) return;
+    const t = setTimeout(() => navigate(exitTarget, { replace: true }), HOME_EXIT_DURATION_MS);
+    return () => clearTimeout(t);
+  }, [exiting, exitTarget, navigate]);
 
   useEffect(() => {
     const opts = { rootMargin: '0px 0px -80px 0px', threshold: 0.1 };
@@ -71,7 +88,7 @@ function HomePage() {
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   return (
-    <div className="home-page">
+    <div className={`home-page${exiting ? ' home-page-exit' : ''}`}>
       <header className="home-header" role="banner">
         <Link to="/" className="home-logo">
           <img src="/logo.svg" alt="" width="28" height="28" />
@@ -103,8 +120,8 @@ function HomePage() {
               </svg>
             )}
           </button>
-          <Link to="/login" className="btn btn-ghost">{t('auth.signIn')}</Link>
-          <Link to="/register" className="btn btn-primary" style={{ width: 'auto', padding: 'var(--space-2) var(--space-5)' }}>
+          <Link to="/login" className="btn btn-ghost" onClick={handleExitTo('/login')}>{t('auth.signIn')}</Link>
+          <Link to="/register" className="btn btn-primary" style={{ width: 'auto', padding: 'var(--space-2) var(--space-5)' }} onClick={handleExitTo('/register')}>
             {t('auth.signUp')}
           </Link>
         </div>
@@ -114,8 +131,8 @@ function HomePage() {
         <h1 id="hero-heading">{t('app.heroTitle')}</h1>
         <p>{t('app.heroSubtitle')}</p>
         <div className="home-cta">
-          <Link to="/register" className="btn btn-primary">{t('auth.signUp')}</Link>
-          <Link to="/login" className="btn btn-secondary">{t('auth.signIn')}</Link>
+          <Link to="/register" className="btn btn-primary" onClick={handleExitTo('/register')}>{t('auth.signUp')}</Link>
+          <Link to="/login" className="btn btn-secondary" onClick={handleExitTo('/login')}>{t('auth.signIn')}</Link>
         </div>
       </section>
 

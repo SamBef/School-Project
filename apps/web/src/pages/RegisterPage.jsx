@@ -35,8 +35,10 @@ export default function RegisterPage() {
     try {
       const { primaryLocation: loc } = await getCurrentLocation();
       if (loc) handleChange('primaryLocation', loc);
-    } catch {
-      setError(t('common.error'));
+    } catch (err) {
+      const code = err?.locationErrorCode || 'unavailable';
+      const key = 'common.location' + code.charAt(0).toUpperCase() + code.slice(1);
+      setError(t(key) || t('common.locationUnavailable'));
     }
   }
 

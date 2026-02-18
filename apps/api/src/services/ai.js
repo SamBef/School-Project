@@ -224,3 +224,171 @@ Use clear headings. Be concise and professional.`;
   }
   return { insights: content, frameworks };
 }
+
+const KOBOAI_SYSTEM = `You are KoboAI, the friendly business advisor for KoboTrack. You are concise, calm, and actionable. Reply in plain language.`;
+
+/**
+ * Transaction insights: suggest product name/category and flag possible duplicate or unusual transaction.
+ * @param {{ itemText: string, recentItemNames?: string[], recentTotals?: number[] }}
+ * @returns {Promise<{ suggestedName?: string, suggestedCategory?: string, isPossibleDuplicate?: boolean, note?: string }>}
+ */
+export async function getTransactionInsights({ itemText, recentItemNames = [], recentTotals = [] }) {
+  const systemPrompt = `${KOBOAI_SYSTEM}
+You help with sales transactions. Given what the user is typing (product or line item) and optional recent item names and totals, reply with a JSON object only, no markdown, with optional keys:
+- suggestedName: a cleaned product name if the input looks like a shorthand or typo
+- suggestedCategory: one word (e.g. Beverage, Food, Merchandise) if inferable
+- isPossibleDuplicate: true only if the item text and recent items strongly suggest the same sale was already entered
+- note: one short sentence if something is unusual (e.g. very high total), otherwise omit
+If you cannot infer anything, return {}.`;
+
+  const userContent = `Item text: "${itemText || ''}"
+Recent item names: ${recentItemNames.slice(-10).join(', ') || 'none'}
+Recent totals: ${recentTotals.slice(-5).join(', ') || 'none'}
+Reply with a single JSON object only.`;
+
+  const content = await chat(systemPrompt, userContent, 200);
+  try {
+    const parsed = JSON.parse(content.replace(/^[^{]*|[^}]*$/g, '').trim() || '{}';
+    const out = typeof parsed === 'string' ? {} : parsed;
+    return {
+      suggestedName: out.suggestedName ?? undefined,
+      suggestedCategory: out.suggestedCategory ?? undefined,
+      isPossibleDuplicate: Boolean(out.isPossibleDuplicate),
+      note: out.note ?? undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Cash flow summary: short comparison vs previous period.
+ * @param {{ revenue: number, expenses: number, previousRevenue: number, previousExpenses: number, days: number }}
+ * @returns {Promise<{ summary: string }>}
+ */
+export async function getCashFlowSummary({ revenue, expenses, previousRevenue, previousExpenses, days = 30 }) {
+  const systemPrompt = `${KOBOAI_SYSTEM}
+You receive revenue and expenses for the current period and the previous period. Reply with one or two short sentences: how revenue and expenses compare to the previous period (e.g. "Revenue up, expenses flat" or "Expenses up vs last period."). No bullet lists. Plain language.`;
+
+  const userContent = `Current period (last ${days} days): revenue ${revenue}, expenses ${expenses}.
+Previous period (same length before): revenue ${previousRevenue}, expenses ${previousExpenses}.
+One or two sentence summary only.`;
+
+  const summary = await chat(systemPrompt, userContent, 120);
+  return { summary: summary.trim() };
+}
+
+/**
+ * Expense insights: suggest tags, recurring hint, or similar-past note.
+ * @param {{ description: string, category: string, recentDescriptions?: string[] }}
+ * @returns {Promise<{ suggestedTags?: string[], isRecurring?: boolean, note?: string }>}
+ */
+export async function getExpenseInsights({ description, category, recentDescriptions = [] }) {
+  const systemPrompt = `${KOBOAI_SYSTEM}
+You help with expenses. Reply with a JSON object only, no markdown. Optional keys:
+- suggestedTags: array of 1-4 short tags (e.g. ["office", "monthly"])
+- isRecurring: true if the description suggests a recurring expense (rent, subscription, utility)
+- note: one short sentence about similar past expenses or consistency, or omit
+If nothing to add, return {}.`;
+
+  const userContent = `Description: "${description}". Category: ${category}.
+Recent expense descriptions: ${recentDescriptions.slice(-8).join('; ') || 'none'}
+JSON only.`;
+
+  const content = await chat(systemPrompt, userContent, 150);
+  try {
+    const out = JSON.parse(content.replace(/^[^{]*|[^}]*$/g, '').trim() || {};
+    return {
+      suggestedTags: Array.isArray(out.suggestedTags) ? out.suggestedTags.slice(0, 4) : undefined,
+      isRecurring: Boolean(out.isRecurring),
+      note: out.note ?? undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Extract line items and total from receipt text (no image; text only).
+ * @param {{ text: string }}
+ * @returns {Promise<{ items: Array<{ name: string, quantity: number, unitPrice?: number }>, total?: number, suggestedCategory?: string }>}
+ */
+export async function getReceiptExtract({ text }) {
+  const systemPrompt = `${KOBOAI_SYSTEM}
+You extract structured data from receipt or invoice text. Reply with a single JSON object only, no markdown:
+- items: array of { name: string, quantity: number, unitPrice?: number } (name trimmed, quantity integer, unitPrice number)
+- total: number if a total/grand total is clearly stated
+- suggestedCategory: one word (e.g. Supplies, Food) for the overall receipt, or omit
+If the text is empty or not a receipt, return { items: [] }.`;
+
+  const userContent = `Receipt/invoice text:\n${(text || '').slice(0, 4000)}\n\nJSON only.`;
+
+  const content = await chat(systemPrompt, userContent, 800);
+  try {
+    const out = JSON.parse(content.replace(/^[^{]*|[^}]*$/g, '').trim() || {};
+    const items = Array.isArray(out.items)
+      ? out.items.map((i) => ({
+          name: String(i.name || '').trim() || 'Item',
+          quantity: Math.max(1, Number(i.quantity) || 1),
+          unitPrice: typeof i.unitPrice === 'number' ? i.unitPrice : undefined,
+        }))
+      : [];
+    return {
+      items,
+      total: typeof out.total === 'number' ? out.total : undefined,
+      suggestedCategory: out.suggestedCategory ?? undefined,
+    };
+  } catch {
+    return { items: [] };
+  }
+}
+
+/**
+ * Contextual usage tip for a page.
+ * @param {{ page: string }}
+ * @returns {Promise<{ tip: string }>}
+ */
+export async function getUsageTip({ page }) {
+  const systemPrompt = `${KOBOAI_SYSTEM}
+You give one short, friendly tip for a specific page in KoboTrack. No bullet lists. One sentence only. Pages: dashboard, transactions, expenses, analysis, inventory. Be helpful and specific (e.g. "Record a transaction to see sales in Analysis." or "You haven't added expenses this month—track them to see trends.").`;
+
+  const userContent = `Page: ${page || 'dashboard'}. One sentence tip only.`;
+
+  const tip = await chat(systemPrompt, userContent, 80);
+  return { tip: tip.trim() };
+}
+
+/**
+ * One-sentence period summary for reporting.
+ * @param {{ revenue: number, expenses: number, transactionCount: number, days: number, previousRevenue?: number, previousExpenses?: number }}
+ * @returns {Promise<{ summary: string }>}
+ */
+export async function getPeriodSummary({ revenue, expenses, transactionCount, days, previousRevenue, previousExpenses }) {
+  const systemPrompt = `${KOBOAI_SYSTEM}
+You summarize a period in one sentence for quick review. Include revenue and expense trend if previous period given (e.g. "Last 30 days: revenue up 10%, expenses flat."). Otherwise state totals and transaction count briefly. One sentence only.`;
+
+  const userContent = `Last ${days} days: revenue ${revenue}, expenses ${expenses}, ${transactionCount} transactions.
+${previousRevenue != null && previousExpenses != null ? `Previous period: revenue ${previousRevenue}, expenses ${previousExpenses}.` : ''}
+One sentence summary only.`;
+
+  const summary = await chat(systemPrompt, userContent, 100);
+  return { summary: summary.trim() };
+}
+
+/**
+ * Format a list of alert items into a short KoboAI summary.
+ * @param {{ alerts: Array<{ type: string, message: string }> }}
+ * @returns {Promise<{ summary: string }>}
+ */
+export async function getAlertsSummary({ alerts = [] }) {
+  if (!alerts.length) {
+    return { summary: '' };
+  }
+  const systemPrompt = `${KOBOAI_SYSTEM}
+You receive a list of business alerts (e.g. low stock, draft transactions, currency mismatch). Reply with one short sentence that summarizes what to look at, in a calm tone. No bullet list.`;
+
+  const userContent = `Alerts:\n${alerts.map((a) => `- ${a.type}: ${a.message}`).join('\n')}\n\nOne sentence summary.`;
+
+  const summary = await chat(systemPrompt, userContent, 80);
+  return { summary: summary.trim() };
+}

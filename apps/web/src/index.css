@@ -393,6 +393,33 @@ img {
   box-shadow: var(--shadow-md);
   width: 100%;
   color: var(--text-primary);
+  animation: authCardEnter 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both;
+}
+
+.auth-container .auth-logo {
+  animation: authLogoEnter 0.35s ease-out both;
+}
+
+@keyframes authCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes authLogoEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .auth-card-wide {
@@ -1476,6 +1503,27 @@ img.header-user-avatar-img {
   flex-direction: column;
   min-height: 100vh;
   background-color: var(--surface-base);
+  transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+}
+
+.home-page-exit {
+  animation: homePageOut 0.45s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+.home-page-exit * {
+  pointer-events: none;
+}
+
+@keyframes homePageOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98) translateY(-12px);
+  }
 }
 
 .home-header {
@@ -1988,6 +2036,83 @@ img.header-user-avatar-img {
 }
 
 .dashboard-card-insights .card-header-desc {
+  margin-bottom: var(--space-2);
+}
+
+.dashboard-kobo-glance {
+  margin-bottom: var(--space-4);
+}
+.kobo-glance-line,
+.kobo-glance-summary {
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-2);
+  color: var(--text-primary);
+}
+.kobo-glance-alerts {
+  list-style: disc;
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.dashboard-usage-tip,
+.koboai-usage-tip {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: var(--space-2) 0 0;
+}
+.koboai-usage-tip-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.receipt-paste-card {
+  margin-bottom: var(--space-4);
+}
+.receipt-paste-body {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.receipt-paste-textarea {
+  width: 100%;
+  min-height: 6rem;
+  padding: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  resize: vertical;
+}
+.line-item-wrapper {
+  margin-bottom: var(--space-2);
+}
+.line-item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.line-item-insight {
+  margin-top: var(--space-1);
+  padding-left: var(--space-2);
+  border-left: 3px solid var(--color-accent-muted);
+  font-size: var(--text-sm);
+}
+.expense-insights-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.expense-insight-box {
+  font-size: var(--text-sm);
+}
+.expense-insight-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-accent-muted);
+  color: var(--color-accent);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
   margin-bottom: var(--space-2);
 }
 
@@ -4085,8 +4210,25 @@ img.header-user-avatar-img {
   min-width: 10rem;
 }
 
+.analysis-section {
+  margin-bottom: var(--space-10);
+}
+
+.analysis-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.analysis-section-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin: 0 0 var(--space-4);
+  color: var(--text-primary);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+}
+
 .analysis-kpis {
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .analysis-chart-wrap {

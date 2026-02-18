@@ -96,8 +96,10 @@ export default function ProfilePage() {
       const { primaryLocation: loc, address: addr } = await getCurrentLocation();
       if (loc) setBizLocation(loc);
       if (addr) setBizAddress(addr);
-    } catch {
-      setErrorMsg(t('common.error'));
+    } catch (err) {
+      const code = err?.locationErrorCode || 'unavailable';
+      const key = 'common.location' + code.charAt(0).toUpperCase() + code.slice(1);
+      setErrorMsg(t(key) || t('common.locationUnavailable'));
     }
   }
 

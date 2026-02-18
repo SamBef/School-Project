@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { t } from '../i18n';
 import Spinner from '../components/Spinner';
+import KoboAIUsageTip from '../components/KoboAIUsageTip';
 
 export default function DashboardPage() {
   const { user, business } = useAuth();
@@ -28,6 +29,7 @@ export default function DashboardPage() {
   const [insightsError, setInsightsError] = useState('');
   const [strategicData, setStrategicData] = useState(null);
   const [koboaiConfigured, setKoboaiConfigured] = useState(null);
+  const [koboGlance, setKoboGlance] = useState({ periodSummary: '', cashFlowSummary: '', alerts: [], summary: '' });
 
   useEffect(() => {
     Promise.all([
@@ -55,6 +57,24 @@ export default function DashboardPage() {
       api.get('/health').then((h) => setKoboaiConfigured(h.koboaiConfigured === true)).catch(() => {});
     }
   }, [canUseKoboAI]);
+
+  useEffect(() => {
+    if (!canUseKoboAI || !koboaiConfigured || loading) return;
+    const dateTo = new Date();
+    const dateFrom = new Date();
+    dateFrom.setDate(dateFrom.getDate() - 29);
+    dateFrom.setHours(0, 0, 0, 0);
+    dateTo.setHours(23, 59, 59, 999);
+    const from = dateFrom.toISOString().slice(0, 10);
+    const to = dateTo.toISOString().slice(0, 10);
+    Promise.all([
+      api.get(`/ai/period-summary?dateFrom=${from}&dateTo=${to}`).then((r) => r.summary ?? '').catch(() => ''),
+      api.get(`/ai/cash-flow-summary?dateFrom=${from}&dateTo=${to}`).then((r) => r.summary ?? '').catch(() => ''),
+      api.get('/ai/alerts').then((r) => ({ alerts: r.alerts ?? [], summary: r.summary ?? '' })).catch(() => ({ alerts: [], summary: '' })),
+    ]).then(([periodSummary, cashFlowSummary, { alerts, summary }]) => {
+      setKoboGlance({ periodSummary, cashFlowSummary, alerts, summary });
+    });
+  }, [canUseKoboAI, koboaiConfigured, loading]);
 
   useEffect(() => {
     if (!loading) {
@@ -112,6 +132,7 @@ export default function DashboardPage() {
         <p className="dashboard-currency-note" aria-live="polite">
           {t('dashboard.amountsIn').replace('{currency}', currency)}
         </p>
+        <KoboAIUsageTip page="dashboard" className="dashboard-usage-tip" />
       </header>
 
       {loading ? (
@@ -122,6 +143,30 @@ export default function DashboardPage() {
       ) : (
         <>
           {loadError && <p className="form-error" role="alert">{loadError}</p>}
+
+          {canUseKoboAI && koboaiConfigured && (koboGlance.periodSummary || koboGlance.cashFlowSummary || koboGlance.alerts.length > 0 || koboGlance.summary) && (
+            <section className="card dashboard-kobo-glance" aria-labelledby="kobo-glance-heading">
+              <div className="card-header">
+                <h2 id="kobo-glance-heading">{t('koboai.atAGlance')}</h2>
+              </div>
+              {koboGlance.periodSummary && (
+                <p className="kobo-glance-line" role="status">{koboGlance.periodSummary}</p>
+              )}
+              {koboGlance.cashFlowSummary && (
+                <p className="kobo-glance-line" role="status">{koboGlance.cashFlowSummary}</p>
+              )}
+              {koboGlance.summary && (
+                <p className="kobo-glance-summary" role="status">{koboGlance.summary}</p>
+              )}
+              {koboGlance.alerts.length > 0 && (
+                <ul className="kobo-glance-alerts" aria-label={t('koboai.alerts')}>
+                  {koboGlance.alerts.map((a, i) => (
+                    <li key={i}>{a.message}</li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
 
           <section className="dashboard-section" aria-labelledby="section-today-heading">
             <h2 id="section-today-heading" className="dashboard-section-heading">{t('dashboard.sectionToday')}</h2>

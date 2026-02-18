@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 import Spinner from '../components/Spinner';
 import CustomSelect from '../components/CustomSelect';
+import KoboAIUsageTip from '../components/KoboAIUsageTip';
 
 const CATEGORY_KEYS = [
   { value: 'RENT', i18nKey: 'expenses.categoryRent' },
@@ -61,10 +62,20 @@ export default function ExpensesPage() {
   // AI suggest category
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [suggestError, setSuggestError] = useState('');
+  // KoboAI expense insights (tags, recurring, note)
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [expenseInsight, setExpenseInsight] = useState(null);
+  const [koboaiConfigured, setKoboaiConfigured] = useState(false);
 
   useEffect(() => {
     loadExpenses();
   }, [page, filterCategory]);
+
+  useEffect(() => {
+    if (isOwner) {
+      api.get('/health').then((h) => setKoboaiConfigured(h.koboaiConfigured === true)).catch(() => {});
+    }
+  }, [isOwner]);
 
   async function loadExpenses() {
     setLoading(true);
@@ -196,11 +207,31 @@ export default function ExpensesPage() {
     }
   }
 
+  async function handleExpenseInsights() {
+    if (!description.trim()) return;
+    setExpenseInsight(null);
+    setInsightsLoading(true);
+    try {
+      const recentDescriptions = (expenses ?? []).slice(0, 8).map((e) => e.description);
+      const result = await api.post('/ai/expense-insights', {
+        description: description.trim(),
+        category,
+        recentDescriptions,
+      });
+      setExpenseInsight(result);
+    } catch {
+      setExpenseInsight(null);
+    } finally {
+      setInsightsLoading(false);
+    }
+  }
+
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <div className="page-content">
       <h1 className="page-title">{t('common.expenses')}</h1>
+      <KoboAIUsageTip page="expenses" />
 
       {/* Create / edit form */}
       <div className="card animate-card-in">
@@ -271,6 +302,32 @@ export default function ExpensesPage() {
                 options={CATEGORY_KEYS.map((c) => ({ value: c.value, label: t(c.i18nKey) }))}
               />
             </div>
+
+            {isOwner && koboaiConfigured && description.trim() && (
+              <div className="form-group expense-insights-row">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={handleExpenseInsights}
+                  disabled={insightsLoading || submitting}
+                >
+                  {insightsLoading ? t('common.loading') : t('koboai.expenseInsights')}
+                </button>
+                {expenseInsight && (
+                  <div className="expense-insight-box" role="status">
+                    {expenseInsight.isRecurring && (
+                      <span className="expense-insight-badge">{t('koboai.recurringExpense')}</span>
+                    )}
+                    {expenseInsight.suggestedTags?.length > 0 && (
+                      <p className="form-hint">
+                        {t('koboai.suggestedTags')}: {expenseInsight.suggestedTags.join(', ')}
+                      </p>
+                    )}
+                    {expenseInsight.note && <p className="form-hint">{expenseInsight.note}</p>}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="form-group">
               <label htmlFor="exp-amount">{t('expenses.amount')} ({currency})</label>

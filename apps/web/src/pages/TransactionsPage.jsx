@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 import Spinner from '../components/Spinner';
 import CustomSelect from '../components/CustomSelect';
+import KoboAIUsageTip from '../components/KoboAIUsageTip';
 
 const PAYMENT_METHOD_KEYS = ['CASH', 'CARD', 'MOBILE_MONEY', 'BANK_TRANSFER', 'OTHER'];
 
@@ -22,8 +23,9 @@ const POPULAR_CURRENCIES = [
 const emptyItem = () => ({ name: '', quantity: 1, unitPrice: 0 });
 
 export default function TransactionsPage() {
-  const { business } = useAuth();
+  const { user, business } = useAuth();
   const baseCurrency = business?.baseCurrencyCode ?? 'USD';
+  const canUseKoboAI = user?.role === 'OWNER';
 
   // Form state
   const [items, setItems] = useState([emptyItem()]);
@@ -51,9 +53,25 @@ export default function TransactionsPage() {
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
 
+  // KoboAI (Owner only)
+  const [koboaiConfigured, setKoboaiConfigured] = useState(false);
+  const [receiptPasteOpen, setReceiptPasteOpen] = useState(false);
+  const [receiptText, setReceiptText] = useState('');
+  const [receiptExtractLoading, setReceiptExtractLoading] = useState(false);
+  const [receiptExtractError, setReceiptExtractError] = useState('');
+  const [transactionInsightIndex, setTransactionInsightIndex] = useState(null);
+  const [transactionInsight, setTransactionInsight] = useState(null);
+  const [transactionInsightLoading, setTransactionInsightLoading] = useState(false);
+
   useEffect(() => {
     loadTransactions();
   }, [page, filterMethod, filterDateFrom, filterDateTo]);
+
+  useEffect(() => {
+    if (canUseKoboAI) {
+      api.get('/health').then((h) => setKoboaiConfigured(h.koboaiConfigured === true)).catch(() => {});
+    }
+  }, [canUseKoboAI]);
 
   // Fetch exchange rates when component mounts
   useEffect(() => {
@@ -200,11 +218,101 @@ export default function TransactionsPage() {
     }
   }
 
+  async function handleReceiptExtract() {
+    if (!receiptText.trim()) return;
+    setReceiptExtractError('');
+    setReceiptExtractLoading(true);
+    try {
+      const result = await api.post('/ai/receipt-extract', { text: receiptText.trim() });
+      const extracted = result?.items ?? [];
+      if (extracted.length > 0) {
+        setItems(extracted.map((i) => ({
+          name: i.name ?? '',
+          quantity: i.quantity ?? 1,
+          unitPrice: i.unitPrice ?? 0,
+        })));
+        setReceiptPasteOpen(false);
+        setReceiptText('');
+      } else {
+        setReceiptExtractError(t('common.noDataYet'));
+      }
+    } catch (err) {
+      setReceiptExtractError(err.message || t('common.loadFailed'));
+    } finally {
+      setReceiptExtractLoading(false);
+    }
+  }
+
+  async function fetchTransactionInsight(index) {
+    const item = items[index];
+    const itemText = item?.name?.trim() ?? '';
+    if (!itemText && !koboaiConfigured) return;
+    setTransactionInsightIndex(index);
+    setTransactionInsight(null);
+    setTransactionInsightLoading(true);
+    try {
+      const recentItemNames = items.filter((_, i) => i !== index).map((i) => i.name?.trim()).filter(Boolean);
+      const recentTotals = items.length > 1 ? [getRawTotal()] : [];
+      const result = await api.post('/ai/transaction-insights', {
+        itemText,
+        recentItemNames,
+        recentTotals,
+      });
+      setTransactionInsight(result);
+    } catch {
+      setTransactionInsight(null);
+    } finally {
+      setTransactionInsightLoading(false);
+    }
+  }
+
+  function applySuggestedName(name) {
+    if (transactionInsightIndex == null || !name) return;
+    updateItem(transactionInsightIndex, 'name', name);
+    setTransactionInsight((prev) => prev ? { ...prev, suggestedName: undefined } : null);
+  }
+
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <div className="page-content">
       <h1 className="page-title">{t('common.transactions')}</h1>
+      <KoboAIUsageTip page="transactions" />
+
+      {canUseKoboAI && koboaiConfigured && (
+        <div className="card receipt-paste-card">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => setReceiptPasteOpen((o) => !o)}
+            aria-expanded={receiptPasteOpen}
+          >
+            {receiptPasteOpen ? '−' : '+'} {t('koboai.receiptPaste')}
+          </button>
+          {receiptPasteOpen && (
+            <div className="receipt-paste-body">
+              <p className="form-hint">{t('koboai.receiptPasteHint')}</p>
+              <textarea
+                className="receipt-paste-textarea"
+                value={receiptText}
+                onChange={(e) => setReceiptText(e.target.value)}
+                placeholder="Paste receipt or invoice text…"
+                rows={4}
+                disabled={receiptExtractLoading}
+              />
+              {receiptExtractError && <p className="form-hint form-hint-error" role="alert">{receiptExtractError}</p>}
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleReceiptExtract}
+                disabled={receiptExtractLoading || !receiptText.trim()}
+              >
+                {receiptExtractLoading ? t('common.loading') : t('koboai.extractReceipt')}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* New transaction form */}
       <div className="card animate-card-in">
@@ -224,49 +332,82 @@ export default function TransactionsPage() {
               <span className="line-item-col-action"></span>
             </div>
             {items.map((item, index) => (
-              <div className="line-item-row" key={index}>
-                <input
-                  className="line-item-col-name"
-                  type="text"
-                  placeholder={t('transactions.itemNamePlaceholder')}
-                  value={item.name}
-                  onChange={(e) => updateItem(index, 'name', e.target.value)}
-                  required
-                  disabled={submitting}
-                />
-                <input
-                  className="line-item-col-qty"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={item.quantity}
-                  onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value, 10) || 0)}
-                  required
-                  disabled={submitting}
-                />
-                <input
-                  className="line-item-col-price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.unitPrice}
-                  onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                  required
-                  disabled={submitting}
-                />
-                <span className="line-item-col-total line-item-total-value">
-                  {((item.quantity || 0) * (item.unitPrice || 0)).toFixed(2)}
-                </span>
-                <button
-                  type="button"
-                  className="btn-icon line-item-col-action"
-                  onClick={() => removeItem(index)}
-                  disabled={items.length === 1 || submitting}
-                  aria-label={`Remove item ${index + 1}`}
-                  title="Remove item"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                </button>
+              <div className="line-item-wrapper" key={index}>
+                <div className="line-item-row">
+                  <input
+                    className="line-item-col-name"
+                    type="text"
+                    placeholder={t('transactions.itemNamePlaceholder')}
+                    value={item.name}
+                    onChange={(e) => updateItem(index, 'name', e.target.value)}
+                    required
+                    disabled={submitting}
+                  />
+                  <input
+                    className="line-item-col-qty"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={item.quantity}
+                    onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value, 10) || 0)}
+                    required
+                    disabled={submitting}
+                  />
+                  <input
+                    className="line-item-col-price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.unitPrice}
+                    onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                    required
+                    disabled={submitting}
+                  />
+                  <span className="line-item-col-total line-item-total-value">
+                    {((item.quantity || 0) * (item.unitPrice || 0)).toFixed(2)}
+                  </span>
+                  <span className="line-item-col-action line-item-actions">
+                    {canUseKoboAI && koboaiConfigured && (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => fetchTransactionInsight(index)}
+                        disabled={submitting || transactionInsightLoading}
+                        title={t('koboai.suggestItem')}
+                        aria-label={t('koboai.suggestItem')}
+                      >
+                        {transactionInsightIndex === index && transactionInsightLoading ? t('common.loading') : t('koboai.suggestItem')}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn-icon"
+                      onClick={() => removeItem(index)}
+                      disabled={items.length === 1 || submitting}
+                      aria-label={`Remove item ${index + 1}`}
+                      title="Remove item"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    </button>
+                  </span>
+                </div>
+                {transactionInsightIndex === index && transactionInsight && !transactionInsightLoading && (
+                  <div className="line-item-insight" role="status">
+                    {transactionInsight.isPossibleDuplicate && (
+                      <p className="form-hint form-hint-error">{t('koboai.possibleDuplicate')}</p>
+                    )}
+                    {transactionInsight.suggestedName && (
+                      <p className="form-hint">
+                        <button type="button" className="btn-link" onClick={() => applySuggestedName(transactionInsight.suggestedName)}>
+                          Use: {transactionInsight.suggestedName}
+                        </button>
+                      </p>
+                    )}
+                    {transactionInsight.note && (
+                      <p className="form-hint">{transactionInsight.note}</p>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>

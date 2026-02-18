@@ -232,4 +232,303 @@ router.post(
   }
 );
 
+function handleAiError(err, res, context) {
+  if (err.statusCode === 503) {
+    return res.status(503).json({
+      message: 'KoboAI is not set up on this server. Your administrator can enable it by configuring the API key.',
+    });
+  }
+  if (err.statusCode === 429) {
+    return res.status(429).json({
+      message: 'Too many requests. Please wait a moment and try again.',
+    });
+  }
+  console.error('ai', context, err.message);
+  return res.status(502).json({ message: 'KoboAI request failed. Please try again.' });
+}
+
+/**
+ * POST /ai/transaction-insights
+ * Body: { itemText?: string, recentItemNames?: string[], recentTotals?: number[] }
+ */
+router.post(
+  '/transaction-insights',
+  wrap(requireAuth),
+  requireRole(['OWNER']),
+  async (req, res) => {
+    try {
+      const itemText = req.body?.itemText?.trim() ?? '';
+      const recentItemNames = Array.isArray(req.body?.recentItemNames) ? req.body.recentItemNames : [];
+      const recentTotals = Array.isArray(req.body?.recentTotals) ? req.body.recentTotals : [];
+      const result = await aiService.getTransactionInsights({ itemText, recentItemNames, recentTotals });
+      return res.json(result);
+    } catch (err) {
+      return handleAiError(err, res, 'transaction-insights');
+    }
+  }
+);
+
+/**
+ * GET /ai/cash-flow-summary?dateFrom=&dateTo=
+ * Compares current period to previous period of same length.
+ */
+router.get(
+  '/cash-flow-summary',
+  wrap(requireAuth),
+  requireRole(['OWNER']),
+  async (req, res) => {
+    try {
+      const { businessId } = req.user;
+      const { dateFrom, dateTo } = toDateRange(req);
+      if (dateFrom > dateTo) {
+        return res.status(400).json({ message: 'dateFrom must be before or equal to dateTo.' });
+      }
+      const days = Math.round((dateTo - dateFrom) / (24 * 60 * 60 * 1000)) + 1;
+      const prevEnd = new Date(dateFrom);
+      prevEnd.setDate(prevEnd.getDate() - 1);
+      const prevStart = new Date(prevEnd);
+      prevStart.setDate(prevStart.getDate() - days + 1);
+      prevStart.setHours(0, 0, 0, 0);
+      prevEnd.setHours(23, 59, 59, 999);
+
+      const [currTx, currEx, prevTx, prevEx] = await Promise.all([
+        prisma.transaction.aggregate({
+          where: { businessId, status: 'CONFIRMED', createdAt: { gte: dateFrom, lte: dateTo } },
+          _sum: { total: true },
+        }),
+        prisma.expense.aggregate({
+          where: { businessId, date: { gte: dateFrom, lte: dateTo } },
+          _sum: { amount: true },
+        }),
+        prisma.transaction.aggregate({
+          where: { businessId, status: 'CONFIRMED', createdAt: { gte: prevStart, lte: prevEnd } },
+          _sum: { total: true },
+        }),
+        prisma.expense.aggregate({
+          where: { businessId, date: { gte: prevStart, lte: prevEnd } },
+          _sum: { amount: true },
+        }),
+      ]);
+
+      const revenue = Number(currTx._sum.total ?? 0);
+      const expenses = Number(currEx._sum.amount ?? 0);
+      const previousRevenue = Number(prevTx._sum.total ?? 0);
+      const previousExpenses = Number(prevEx._sum.amount ?? 0);
+
+      const result = await aiService.getCashFlowSummary({
+        revenue,
+        expenses,
+        previousRevenue,
+        previousExpenses,
+        days,
+      });
+      return res.json(result);
+    } catch (err) {
+      return handleAiError(err, res, 'cash-flow-summary');
+    }
+  }
+);
+
+/**
+ * POST /ai/expense-insights
+ * Body: { description: string, category: string, recentDescriptions?: string[] }
+ */
+router.post(
+  '/expense-insights',
+  wrap(requireAuth),
+  requireRole(['OWNER']),
+  async (req, res) => {
+    try {
+      const description = req.body?.description?.trim() ?? '';
+      const category = req.body?.category?.trim() ?? 'MISCELLANEOUS';
+      const recentDescriptions = Array.isArray(req.body?.recentDescriptions) ? req.body.recentDescriptions : [];
+      const result = await aiService.getExpenseInsights({ description, category, recentDescriptions });
+      return res.json(result);
+    } catch (err) {
+      return handleAiError(err, res, 'expense-insights');
+    }
+  }
+);
+
+/**
+ * POST /ai/receipt-extract
+ * Body: { text: string }
+ */
+router.post(
+  '/receipt-extract',
+  wrap(requireAuth),
+  requireRole(['OWNER']),
+  async (req, res) => {
+    try {
+      const text = req.body?.text?.trim() ?? '';
+      const result = await aiService.getReceiptExtract({ text });
+      return res.json(result);
+    } catch (err) {
+      return handleAiError(err, res, 'receipt-extract');
+    }
+  }
+);
+
+/**
+ * GET /ai/usage-tip?page=analysis
+ */
+router.get(
+  '/usage-tip',
+  wrap(requireAuth),
+  requireRole(['OWNER']),
+  async (req, res) => {
+    try {
+      const page = req.query?.page ?? 'dashboard';
+      const result = await aiService.getUsageTip({ page });
+      return res.json(result);
+    } catch (err) {
+      return handleAiError(err, res, 'usage-tip');
+    }
+  }
+);
+
+/**
+ * GET /ai/period-summary?dateFrom=&dateTo=
+ */
+router.get(
+  '/period-summary',
+  wrap(requireAuth),
+  requireRole(['OWNER']),
+  async (req, res) => {
+    try {
+      const { businessId } = req.user;
+      const { dateFrom, dateTo } = toDateRange(req);
+      if (dateFrom > dateTo) {
+        return res.status(400).json({ message: 'dateFrom must be before or equal to dateTo.' });
+      }
+      const days = Math.round((dateTo - dateFrom) / (24 * 60 * 60 * 1000)) + 1;
+      const prevEnd = new Date(dateFrom);
+      prevEnd.setDate(prevEnd.getDate() - 1);
+      const prevStart = new Date(prevEnd);
+      prevStart.setDate(prevStart.getDate() - days + 1);
+      prevStart.setHours(0, 0, 0, 0);
+      prevEnd.setHours(23, 59, 59, 999);
+
+      const [currTx, currEx, prevTx, prevEx] = await Promise.all([
+        prisma.transaction.aggregate({
+          where: { businessId, status: 'CONFIRMED', createdAt: { gte: dateFrom, lte: dateTo } },
+          _sum: { total: true },
+          _count: true,
+        }),
+        prisma.expense.aggregate({
+          where: { businessId, date: { gte: dateFrom, lte: dateTo } },
+          _sum: { amount: true },
+        }),
+        prisma.transaction.aggregate({
+          where: { businessId, status: 'CONFIRMED', createdAt: { gte: prevStart, lte: prevEnd } },
+          _sum: { total: true },
+        }),
+        prisma.expense.aggregate({
+          where: { businessId, date: { gte: prevStart, lte: prevEnd } },
+          _sum: { amount: true },
+        }),
+      ]);
+
+      const revenue = Number(currTx._sum.total ?? 0);
+      const expenses = Number(currEx._sum.amount ?? 0);
+      const transactionCount = currTx._count ?? 0;
+      const previousRevenue = Number(prevTx._sum.total ?? 0);
+      const previousExpenses = Number(prevEx._sum.amount ?? 0);
+
+      const result = await aiService.getPeriodSummary({
+        revenue,
+        expenses,
+        transactionCount,
+        days,
+        previousRevenue,
+        previousExpenses,
+      });
+      return res.json(result);
+    } catch (err) {
+      return handleAiError(err, res, 'period-summary');
+    }
+  }
+);
+
+/**
+ * GET /ai/alerts
+ * Gathers low stock, draft transactions, currency mismatch; returns list and optional KoboAI summary.
+ */
+router.get(
+  '/alerts',
+  wrap(requireAuth),
+  requireRole(['OWNER']),
+  async (req, res) => {
+    try {
+      const { businessId } = req.user;
+      const alerts = [];
+
+      const business = await prisma.business.findUnique({
+        where: { id: businessId },
+        select: { baseCurrencyCode: true, globalMinStock: true },
+      });
+      const baseCurrency = business?.baseCurrencyCode ?? 'USD';
+      const globalMin = business?.globalMinStock != null ? Number(business.globalMinStock) : null;
+
+      const [draftCount, stockLevels, transactionsWithDifferentCurrency] = await Promise.all([
+        prisma.transaction.count({
+          where: { businessId, status: 'DRAFT' },
+        }),
+        prisma.stockLevel.findMany({
+          where: { product: { businessId } },
+          select: {
+            quantity: true,
+            product: { select: { name: true, minStock: true, businessId: true } },
+          },
+        }),
+        prisma.transaction.findMany({
+          where: {
+            businessId,
+            status: 'CONFIRMED',
+            AND: [
+              { currencyCode: { not: null } },
+              { currencyCode: { not: baseCurrency } },
+            ],
+          },
+          select: { id: true },
+          take: 1,
+        }),
+      ]);
+      if (draftCount > 5) {
+        alerts.push({ type: 'drafts', message: `${draftCount} draft transactions need attention.` });
+      }
+      for (const sl of stockLevels ?? []) {
+        if (sl.product?.businessId !== businessId) continue;
+        const min = sl.product?.minStock != null ? Number(sl.product.minStock) : globalMin;
+        if (min != null && min > 0 && Number(sl.quantity) < min) {
+          alerts.push({
+            type: 'low_stock',
+            message: `${sl.product?.name ?? 'Product'} is below minimum (${sl.quantity} / ${min}).`,
+          });
+        }
+      }
+      if ((transactionsWithDifferentCurrency?.length ?? 0) > 0) {
+        alerts.push({
+          type: 'currency',
+          message: `Some transactions use a payment currency different from base (${baseCurrency}). Check conversion.`,
+        });
+      }
+
+      let summary = '';
+      if (alerts.length > 0) {
+        try {
+          const { summary: s } = await aiService.getAlertsSummary({ alerts });
+          summary = s;
+        } catch {
+          summary = `${alerts.length} item(s) need your attention.`;
+        }
+      }
+
+      return res.json({ alerts, summary });
+    } catch (err) {
+      return handleAiError(err, res, 'alerts');
+    }
+  }
+);
+
 export default router;

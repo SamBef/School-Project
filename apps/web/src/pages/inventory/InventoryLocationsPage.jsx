@@ -29,8 +29,10 @@ export default function InventoryLocationsPage() {
     try {
       const { address } = await getCurrentLocation();
       if (address) setFormAddress(address);
-    } catch {
-      setSubmitError(t('common.error'));
+    } catch (err) {
+      const code = err?.locationErrorCode || 'unavailable';
+      const key = 'common.location' + code.charAt(0).toUpperCase() + code.slice(1);
+      setSubmitError(t(key) || t('common.locationUnavailable'));
     }
   }
 

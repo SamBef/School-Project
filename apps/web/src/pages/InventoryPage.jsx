@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { t } from '../i18n';
 import { api } from '../lib/api';
 import Spinner from '../components/Spinner';
+import KoboAIUsageTip from '../components/KoboAIUsageTip';
 
 const productStockSections = [
   { to: '/inventory/products', labelKey: 'inventory.products' },
@@ -82,6 +83,7 @@ export default function InventoryPage() {
     <div className="page-content">
       <h1 className="page-title">{t('inventory.overview')}</h1>
       <p className="page-subtitle">{t('inventory.overviewIntro')}</p>
+      <KoboAIUsageTip page="inventory" />
 
       <section className="dashboard-section" aria-labelledby="inventory-stats-heading">
         <h2 id="inventory-stats-heading" className="dashboard-section-heading">{t('inventory.statsOverview')}</h2>
