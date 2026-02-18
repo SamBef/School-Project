@@ -333,7 +333,7 @@ export default function AnalysisPage() {
               <h2>{t('koboai.restockingInsights')}</h2>
             </div>
             <p className="card-header-desc">
-              {t('koboai.tagline')} — Restock, underperformers, reorder timing, and high-margin opportunities based on the selected period.
+              {t('analysis.restockingInsightsDesc')}
             </p>
             <button
               type="button"

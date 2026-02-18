@@ -240,8 +240,38 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {canExpenses && (
+            {business && (
               <div className="card dashboard-card-business">
+                <div className="card-header">
+                  <h2>{t('dashboard.sectionBusiness')}</h2>
+                </div>
+                <ul className="business-info-list">
+                  <li>
+                    <span className="info-label">{t('common.name')}</span>
+                    <span className="info-value">{business.name}</span>
+                  </li>
+                  <li>
+                    <span className="info-label">{t('common.email')}</span>
+                    <span className="info-value">{business.email || '—'}</span>
+                  </li>
+                  <li>
+                    <span className="info-label">{t('common.phone')}</span>
+                    <span className="info-value">{business.phone || '—'}</span>
+                  </li>
+                  <li>
+                    <span className="info-label">{t('common.primaryLocation')}</span>
+                    <span className="info-value">{business.primaryLocation || '—'}</span>
+                  </li>
+                  <li>
+                    <span className="info-label">{t('common.currency')}</span>
+                    <span className="info-value">{currency}</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            {canExpenses && (
+              <div className="card dashboard-card-insights">
                 <div className="card-header">
                   <h2>{t('koboai.strategicInsights')}</h2>
                 </div>
@@ -283,36 +313,6 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 )}
-              </div>
-            )}
-
-            {business && (
-              <div className="card dashboard-card-business">
-                <div className="card-header">
-                  <h2>{t('dashboard.sectionBusiness')}</h2>
-                </div>
-                <ul className="business-info-list">
-                  <li>
-                    <span className="info-label">{t('common.name')}</span>
-                    <span className="info-value">{business.name}</span>
-                  </li>
-                  <li>
-                    <span className="info-label">{t('common.email')}</span>
-                    <span className="info-value">{business.email || '—'}</span>
-                  </li>
-                  <li>
-                    <span className="info-label">{t('common.phone')}</span>
-                    <span className="info-value">{business.phone || '—'}</span>
-                  </li>
-                  <li>
-                    <span className="info-label">{t('common.primaryLocation')}</span>
-                    <span className="info-value">{business.primaryLocation || '—'}</span>
-                  </li>
-                  <li>
-                    <span className="info-label">{t('common.currency')}</span>
-                    <span className="info-value">{currency}</span>
-                  </li>
-                </ul>
               </div>
             )}
 

@@ -618,11 +618,11 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="card" style={{ marginTop: 'var(--space-4)' }}>
+      <div className="card card-mt">
         <div className="card-header">
           <h2>{t('profile.help')}</h2>
         </div>
-        <p className="card-header-desc" style={{ marginTop: 0 }}>
+        <p className="card-header-desc card-header-desc-tight">
           {t('profile.helpTourDesc')}
         </p>
         <button

@@ -32,12 +32,9 @@ export function clearOnboarding() {
 
 const STEPS = [
   { id: 'welcome', titleKey: 'onboarding.welcomeTitle', bodyKey: 'onboarding.welcomeBody' },
-  { id: 'dashboard', titleKey: 'onboarding.dashboardTitle', bodyKey: 'onboarding.dashboardBody' },
-  { id: 'transactions', titleKey: 'onboarding.transactionsTitle', bodyKey: 'onboarding.transactionsBody' },
-  { id: 'expenses', titleKey: 'onboarding.expensesTitle', bodyKey: 'onboarding.expensesBody' },
-  { id: 'inventory', titleKey: 'onboarding.inventoryTitle', bodyKey: 'onboarding.inventoryBody' },
-  { id: 'analysis', titleKey: 'onboarding.analysisTitle', bodyKey: 'onboarding.analysisBody' },
-  { id: 'koboai', titleKey: 'onboarding.koboaiTitle', bodyKey: 'onboarding.koboaiBody' },
+  { id: 'main', titleKey: 'onboarding.mainTitle', bodyKey: 'onboarding.mainBody' },
+  { id: 'expensesInventory', titleKey: 'onboarding.expensesInventoryTitle', bodyKey: 'onboarding.expensesInventoryBody' },
+  { id: 'analysisKoboai', titleKey: 'onboarding.analysisKoboaiTitle', bodyKey: 'onboarding.analysisKoboaiBody' },
   { id: 'done', titleKey: 'onboarding.doneTitle', bodyKey: 'onboarding.doneBody' },
 ];
 
@@ -143,7 +140,7 @@ export default function OnboardingModal({ onComplete, open }) {
               </button>
             ) : (
               <button type="button" className="btn btn-primary" onClick={handleNext}>
-                {t('onboarding.next')}
+                {t('common.next')}
               </button>
             )}
           </div>
