@@ -1,5 +1,5 @@
 /**
- * Theme context — light/dark mode with localStorage and prefers-color-scheme.
+ * Theme context — light/dark mode per tab (sessionStorage) and prefers-color-scheme.
  * Sets data-theme on document.documentElement for CSS variable switching.
  */
 
@@ -14,7 +14,7 @@ const ThemeContext = createContext({
 
 function getInitialTheme() {
   if (typeof window === 'undefined') return 'light';
-  const stored = localStorage.getItem(STORAGE_KEY);
+  const stored = sessionStorage.getItem(STORAGE_KEY);
   if (stored === 'light' || stored === 'dark') return stored;
   if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark';
   return 'light';
@@ -30,7 +30,7 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     try {
-      localStorage.setItem(STORAGE_KEY, theme);
+      sessionStorage.setItem(STORAGE_KEY, theme);
     } catch {
       /* ignore */
     }

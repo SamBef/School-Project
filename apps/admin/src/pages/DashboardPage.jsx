@@ -81,7 +81,6 @@ export default function DashboardPage() {
       <header className="admin-header" role="banner">
         <h1>KoboTrack Admin</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <Link to="/archived" className="btn btn-ghost" style={{ textDecoration: 'none' }}>Archived</Link>
           <Link to="/profile" className="btn btn-ghost" style={{ textDecoration: 'none' }}>Profile</Link>
           <span className="admin-header-email">{name || email}</span>
           <button type="button" className="btn btn-ghost" onClick={logout}>
@@ -91,9 +90,8 @@ export default function DashboardPage() {
       </header>
 
       <main className="admin-main" role="main">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
+        <div style={{ marginBottom: 'var(--space-4)' }}>
           <Link to="/companies/new" className="btn btn-primary">Create company</Link>
-          <Link to="/archived" className="btn btn-ghost" style={{ textDecoration: 'none' }}>Archived companies</Link>
         </div>
         {stats && (
           <div className="admin-stats">

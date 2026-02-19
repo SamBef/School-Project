@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
 
@@ -17,7 +17,6 @@ const ROLES = ['OWNER', 'MANAGER', 'CASHIER'];
 
 export default function CompanyDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { name, email, logout } = useAdminAuth();
   const [business, setBusiness] = useState(null);
   const [users, setUsers] = useState([]);
@@ -27,13 +26,10 @@ export default function CompanyDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [addUserOpen, setAddUserOpen] = useState(false);
   const [editUserOpen, setEditUserOpen] = useState(null);
-  const [resetPasswordUser, setResetPasswordUser] = useState(null);
-  const [resetPasswordForm, setResetPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
   const [editForm, setEditForm] = useState({});
   const [addUserForm, setAddUserForm] = useState({ email: '', firstName: '', lastName: '', role: 'CASHIER', sendInvite: true, password: '' });
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const loadBusiness = useCallback(() => {
     return api.get(`/admin/businesses/${id}`).then((data) => {
@@ -83,20 +79,6 @@ export default function CompanyDetailPage() {
       await loadBusiness();
     } catch (err) {
       setActionError(err.message || 'Action failed.');
-    } finally {
-      setActionLoading(false);
-    }
-  }
-
-  async function handleDeleteCompany() {
-    setActionError('');
-    setActionLoading(true);
-    try {
-      await api.delete(`/admin/businesses/${id}`);
-      setDeleteConfirmOpen(false);
-      navigate('/');
-    } catch (err) {
-      setActionError(err.message || 'Delete failed.');
     } finally {
       setActionLoading(false);
     }
@@ -155,29 +137,6 @@ export default function CompanyDetailPage() {
     }
   }
 
-  async function handleResetPassword(e) {
-    e.preventDefault();
-    if (resetPasswordForm.newPassword !== resetPasswordForm.confirmPassword) {
-      setActionError('Passwords do not match.');
-      return;
-    }
-    if (resetPasswordForm.newPassword.length < 8) {
-      setActionError('Password must be at least 8 characters.');
-      return;
-    }
-    setActionError('');
-    setActionLoading(true);
-    try {
-      await api.patch(`/admin/businesses/${id}/users/${resetPasswordUser.id}/password`, { newPassword: resetPasswordForm.newPassword });
-      setResetPasswordUser(null);
-      setResetPasswordForm({ newPassword: '', confirmPassword: '' });
-    } catch (err) {
-      setActionError(err.message || 'Failed to update password.');
-    } finally {
-      setActionLoading(false);
-    }
-  }
-
   if (loading) return <p className="loading">Loading…</p>;
   if (error) return <p className="form-error" role="alert">{error}</p>;
   if (!business) return null;
@@ -214,7 +173,6 @@ export default function CompanyDetailPage() {
                   ) : (
                     <button type="button" className="btn btn-danger-ghost" onClick={() => handleDeactivateCompany(true)} disabled={actionLoading}>Deactivate company</button>
                   )}
-                  <button type="button" className="btn btn-danger-ghost" onClick={() => setDeleteConfirmOpen(true)} disabled={actionLoading} title="Permanently remove company; data is archived for potential restoration">Delete company</button>
                 </>
               )}
             </div>
@@ -348,10 +306,7 @@ export default function CompanyDetailPage() {
                             loading={actionLoading}
                           />
                         ) : (
-                          <span style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
-                            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditUserOpen(u.id)}>Edit</button>
-                            <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setResetPasswordUser(u); setResetPasswordForm({ newPassword: '', confirmPassword: '' }); setActionError(''); }} disabled={actionLoading}>Reset password</button>
-                          </span>
+                          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditUserOpen(u.id)}>Edit</button>
                         )}
                       </td>
                     </tr>
@@ -361,57 +316,6 @@ export default function CompanyDetailPage() {
             </div>
           )}
         </div>
-
-        {deleteConfirmOpen && (
-          <div className="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-company-title" aria-describedby="delete-company-desc">
-            <div className="admin-modal" style={{ maxWidth: '420px' }}>
-              <div style={{ marginBottom: 'var(--space-4)' }}>
-                <h2 id="delete-company-title" style={{ margin: '0 0 var(--space-2)', fontSize: 'var(--text-xl)', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  Delete company?
-                </h2>
-                <p id="delete-company-desc" style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 'var(--line-normal)' }}>
-                  All data will be archived for potential restoration but removed from the system. This cannot be undone.
-                </p>
-              </div>
-              <div style={{ padding: 'var(--space-4)', background: 'var(--color-error-muted)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(248, 81, 73, 0.25)', marginBottom: 'var(--space-5)' }}>
-                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-                  You can restore this company later from <strong>Archived companies</strong>.
-                </p>
-              </div>
-              <div className="form-actions" style={{ justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-                <button type="button" className="btn btn-ghost" onClick={() => setDeleteConfirmOpen(false)} disabled={actionLoading}>
-                  Cancel
-                </button>
-                <button type="button" className="btn btn-danger-ghost" onClick={handleDeleteCompany} disabled={actionLoading}>
-                  {actionLoading ? 'Deleting…' : 'Delete company'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {resetPasswordUser && (
-          <div className="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="reset-password-title">
-            <div className="admin-modal">
-              <h2 id="reset-password-title">Set new password for {resetPasswordUser.email}</h2>
-              <p style={{ margin: '0 0 var(--space-4)', fontSize: 'var(--text-sm)', color: 'var(--color-neutral-500)' }}>Current passwords cannot be viewed (stored securely). Enter a new password for this member.</p>
-              <form onSubmit={handleResetPassword}>
-                <div className="form-group">
-                  <label htmlFor="rp-new">New password *</label>
-                  <input id="rp-new" type="password" minLength={8} required value={resetPasswordForm.newPassword} onChange={(e) => setResetPasswordForm((f) => ({ ...f, newPassword: e.target.value }))} disabled={actionLoading} />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="rp-confirm">Confirm new password *</label>
-                  <input id="rp-confirm" type="password" minLength={8} required value={resetPasswordForm.confirmPassword} onChange={(e) => setResetPasswordForm((f) => ({ ...f, confirmPassword: e.target.value }))} disabled={actionLoading} />
-                </div>
-                <div className="form-actions">
-                  <button type="submit" className="btn btn-primary" disabled={actionLoading}>{actionLoading ? 'Updating…' : 'Update password'}</button>
-                  <button type="button" className="btn btn-ghost" onClick={() => { setResetPasswordUser(null); setResetPasswordForm({ newPassword: '', confirmPassword: '' }); setActionError(''); }}>Cancel</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
         {addUserOpen && (
           <div className="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="add-user-title">

@@ -413,49 +413,6 @@ router.patch(
 );
 
 /**
- * PATCH /admin/businesses/:id/users/:userId/password
- * Admin sets a new password for a company member. Current password cannot be retrieved (stored as hash).
- */
-router.patch(
-  '/:id/users/:userId/password',
-  wrap(requireAdmin),
-  async (req, res) => {
-    try {
-      const { id: businessId, userId } = req.params;
-      const { newPassword } = req.body;
-      if (!newPassword || String(newPassword).length < 8) {
-        res.status(400).json({ message: 'New password must be at least 8 characters.' });
-        return;
-      }
-      const user = await prisma.user.findFirst({
-        where: { id: userId, businessId },
-        select: { id: true, email: true },
-      });
-      if (!user) {
-        res.status(404).json({ message: 'User not found.' });
-        return;
-      }
-      const passwordHash = await bcrypt.hash(String(newPassword), SALT_ROUNDS);
-      await prisma.user.update({
-        where: { id: userId },
-        data: { passwordHash, resetToken: null, resetTokenExpiry: null },
-      });
-      await logActivity({
-        businessId,
-        userId: user.id,
-        action: 'user.password_reset_by_admin',
-        entityType: 'User',
-        entityId: user.id,
-      });
-      res.json({ message: 'Password updated. The member can sign in with the new password.' });
-    } catch (err) {
-      console.error('admin businesses users password error', err);
-      res.status(500).json({ message: 'Failed to update password.' });
-    }
-  }
-);
-
-/**
  * DELETE /admin/businesses/:id/users/:userId
  * Hard delete user only if they have no transactions, expenses, etc. Otherwise ask to deactivate.
  */
@@ -711,68 +668,6 @@ router.patch(
     } catch (err) {
       console.error('admin business patch error', err);
       res.status(500).json({ message: 'Failed to update business.' });
-    }
-  }
-);
-
-/**
- * Serialize for JSON: Date -> ISO string, Decimal -> string (for snapshot storage).
- */
-function serializeForArchive(obj) {
-  if (obj === null || obj === undefined) return obj;
-  if (obj instanceof Date) return obj.toISOString();
-  if (typeof obj === 'object' && obj.constructor?.name === 'Decimal') return obj.toString();
-  if (Array.isArray(obj)) return obj.map(serializeForArchive);
-  if (typeof obj === 'object') {
-    const out = {};
-    for (const k of Object.keys(obj)) out[k] = serializeForArchive(obj[k]);
-    return out;
-  }
-  return obj;
-}
-
-/**
- * DELETE /admin/businesses/:id
- * Hard delete a company: archive full snapshot first, then delete (cascade removes related data).
- */
-router.delete(
-  '/:id',
-  wrap(requireAdmin),
-  async (req, res) => {
-    try {
-      const { id } = req.params;
-      const adminId = req.admin?.id ?? 'unknown';
-      const business = await prisma.business.findUnique({
-        where: { id },
-        include: {
-          users: true,
-          transactions: { include: { receipt: true } },
-          expenses: true,
-          activityLogs: true,
-          units: true,
-          locations: true,
-          products: true,
-          suppliers: true,
-          returnReasons: true,
-        },
-      });
-      if (!business) {
-        res.status(404).json({ message: 'Business not found.' });
-        return;
-      }
-      const snapshot = serializeForArchive(business);
-      await prisma.deletedBusinessArchive.create({
-        data: {
-          originalBusinessId: id,
-          deletedByAdminId: adminId,
-          snapshot,
-        },
-      });
-      await prisma.business.delete({ where: { id } });
-      res.json({ message: 'Company deleted. Data archived for potential restoration.' });
-    } catch (err) {
-      console.error('admin business delete error', err);
-      res.status(500).json({ message: 'Failed to delete company.' });
     }
   }
 );

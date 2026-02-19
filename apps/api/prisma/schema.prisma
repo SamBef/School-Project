@@ -409,12 +409,3 @@ model ActivityLog {
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
-
-// Archive of a hard-deleted business for potential restoration (snapshot = full business + users + transactions + expenses + activityLogs)
-model DeletedBusinessArchive {
-  id                 String   @id @default(uuid())
-  originalBusinessId String   // id of the deleted business
-  deletedAt          DateTime @default(now())
-  deletedByAdminId   String   // admin who performed the delete
-  snapshot           Json     // serialized business + users + transactions + expenses + activityLogs
-}

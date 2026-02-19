@@ -112,7 +112,7 @@ export default function Layout({ children }) {
     setLocaleOpen(false);
     await loadLocale(locale);
     setLocale(locale);
-    localStorage.setItem('kobotrack_locale', locale);
+    sessionStorage.setItem('kobotrack_locale', locale);
     window.location.reload();
   }
 

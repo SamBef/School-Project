@@ -4,7 +4,7 @@ import { loadLocale } from './i18n';
 import App from './App';
 import './index.css';
 
-const locale = localStorage.getItem('kobotrack_locale') || 'en';
+const locale = sessionStorage.getItem('kobotrack_locale') || 'en';
 loadLocale(locale).then(() => {
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>

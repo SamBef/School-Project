@@ -9,7 +9,6 @@ import CreateCompanyPage from './pages/CreateCompanyPage';
 import ProfilePage from './pages/ProfilePage';
 
 const CompanyDetailPage = lazy(() => import('./pages/CompanyDetailPage'));
-const ArchivedCompaniesPage = lazy(() => import('./pages/ArchivedCompaniesPage'));
 
 function PageFallback() {
   return <p className="loading">Loading…</p>;
@@ -57,16 +56,6 @@ export default function App() {
           <ProtectedRoute>
             <Suspense fallback={<PageFallback />}>
               <CompanyDetailPage />
-            </Suspense>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/archived"
-        element={
-          <ProtectedRoute>
-            <Suspense fallback={<PageFallback />}>
-              <ArchivedCompaniesPage />
             </Suspense>
           </ProtectedRoute>
         }
