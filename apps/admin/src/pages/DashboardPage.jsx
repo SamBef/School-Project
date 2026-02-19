@@ -155,7 +155,7 @@ export default function DashboardPage() {
             </p>
           )}
           {!loading && !error && filteredAndSorted.length > 0 && (
-            <div style={{ overflowX: 'auto', minWidth: 0 }}>
+            <div className="admin-table-wrap">
               <table className="data-table" role="grid">
                 <thead>
                   <tr>

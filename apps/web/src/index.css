@@ -156,6 +156,9 @@ html {
 
 body {
   overflow-x: hidden;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 body {
@@ -170,6 +173,7 @@ body {
 
 #root {
   min-height: 100vh;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -944,12 +948,14 @@ fieldset legend {
    Buttons
    ============================ */
 
+/* Minimum touch target 44px for primary actions (accessibility) */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
+  min-height: 2.75rem;
   font-size: var(--text-sm);
   font-weight: 500;
   font-family: inherit;
@@ -1056,7 +1062,7 @@ fieldset legend {
 .layout-header {
   display: flex;
   align-items: center;
-  padding: var(--space-3) var(--space-5);
+  padding: var(--space-3) clamp(var(--space-4), 4vw, var(--space-5));
   gap: var(--space-3);
   background-color: var(--surface-raised);
   border-bottom: 1px solid var(--border-default);
@@ -1065,6 +1071,7 @@ fieldset legend {
   z-index: 10;
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--transition-normal);
+  padding-top: max(var(--space-3), env(safe-area-inset-top));
 }
 
 .layout-header .logo-link {
@@ -1505,10 +1512,10 @@ img.header-user-avatar-img {
 }
 
 
-/* Main content area */
+/* Main content area — fluid padding for optimal layout at all viewport sizes */
 .layout-main {
   flex: 1;
-  padding: var(--space-8) var(--space-6);
+  padding: clamp(var(--space-5), 5vw, var(--space-8)) clamp(var(--space-4), 4vw, var(--space-6));
   max-width: 72rem;
   margin: 0 auto;
   width: 100%;
@@ -1564,7 +1571,8 @@ img.header-user-avatar-img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-4) var(--space-8);
+  padding: var(--space-4) clamp(var(--space-4), 6vw, var(--space-8));
+  padding-top: max(var(--space-4), env(safe-area-inset-top));
   border-bottom: 1px solid var(--border-default);
   background-color: var(--surface-raised);
   transition: box-shadow var(--transition-normal);
@@ -3439,7 +3447,6 @@ img.header-user-avatar-img {
   width: 100%;
   min-width: 0;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-md);
 }
 

@@ -17,7 +17,7 @@ const ROLES = ['OWNER', 'MANAGER', 'CASHIER'];
 
 export default function CompanyDetailPage() {
   const { id } = useParams();
-  const { email, logout } = useAdminAuth();
+  const { name, email, logout } = useAdminAuth();
   const [business, setBusiness] = useState(null);
   const [users, setUsers] = useState([]);
   const [activity, setActivity] = useState([]);
@@ -152,7 +152,8 @@ export default function CompanyDetailPage() {
           {isDeactivated && <span className="badge badge-inactive">Deactivated</span>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <span className="admin-header-email">{email}</span>
+          <Link to="/profile" className="btn btn-ghost" style={{ textDecoration: 'none' }}>Profile</Link>
+          <span className="admin-header-email">{name || email}</span>
           <button type="button" className="btn btn-ghost" onClick={logout}>Sign out</button>
         </div>
       </header>
@@ -244,7 +245,7 @@ export default function CompanyDetailPage() {
           <h2>Activity (last 7 days)</h2>
           <p style={{ margin: '0 0 var(--space-4)', fontSize: 'var(--text-sm)', color: 'var(--color-neutral-500)' }}>Daily counts. No transaction or expense details.</p>
           {(business.activityLast7Days && business.activityLast7Days.length > 0) ? (
-            <div style={{ overflowX: 'auto' }}>
+            <div className="admin-table-wrap">
               <table className="data-table">
                 <thead>
                   <tr><th>Date</th><th>Transactions</th><th>Expenses</th></tr>
@@ -273,7 +274,7 @@ export default function CompanyDetailPage() {
           {users.length === 0 ? (
             <p className="empty-state">No users yet. Add an owner when creating the company, or add users here.</p>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <div className="admin-table-wrap">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -368,7 +369,7 @@ export default function CompanyDetailPage() {
           {activity.length === 0 ? (
             <p className="empty-state">No activity recorded yet.</p>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <div className="admin-table-wrap">
               <table className="data-table">
                 <thead>
                   <tr>
