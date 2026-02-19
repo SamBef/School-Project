@@ -12,7 +12,7 @@ const SORT_OPTIONS = [
 ];
 
 export default function DashboardPage() {
-  const { email, logout } = useAdminAuth();
+  const { name, email, logout } = useAdminAuth();
   const [businesses, setBusinesses] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -80,7 +80,8 @@ export default function DashboardPage() {
       <header className="admin-header" role="banner">
         <h1>KoboTrack Admin</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-neutral-500)' }}>{email}</span>
+          <Link to="/profile" className="btn btn-ghost" style={{ textDecoration: 'none' }}>Profile</Link>
+          <span className="admin-header-email">{name || email}</span>
           <button type="button" className="btn btn-ghost" onClick={logout}>
             Sign out
           </button>
@@ -127,18 +128,20 @@ export default function DashboardPage() {
               onChange={(e) => setSearch(e.target.value)}
               aria-label="Search companies"
             />
-            <label htmlFor="admin-sort" className="visually-hidden">Sort by</label>
-            <select
-              id="admin-sort"
-              className="admin-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              aria-label="Sort companies"
-            >
-              {SORT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
+            <div className="admin-toolbar-sort">
+              <span className="admin-toolbar-sort-label" id="admin-sort-label">Sort by</span>
+              <select
+                id="admin-sort"
+                className="admin-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                aria-labelledby="admin-sort-label"
+              >
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
             <button type="button" className="btn btn-ghost" onClick={exportCSV} disabled={filteredAndSorted.length === 0}>
               Export CSV
             </button>
