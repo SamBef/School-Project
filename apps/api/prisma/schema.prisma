@@ -71,6 +71,7 @@ model Business {
   address             String?
   logoUrl             String?
   baseCurrencyCode    String    @default("USD") // e.g. USD, EUR, GHS
+  baseLocale          String    @default("en")  // default language for company (en, es, fr)
   defaultLocationId   String?   // inventory: default sell-from location
   globalMinStock      Decimal?  @db.Decimal(12, 4) // optional global low-stock threshold
   deactivatedAt      DateTime? // when set, business is deactivated (users cannot log in)
@@ -101,6 +102,7 @@ model User {
   avatarUrl          String?   // base64 data URL or external URL
   passwordHash       String?   // null until set (invited users) or after reset
   role               Role
+  locale             String?   // user's preferred language (en, es, fr); null = use business baseLocale
   businessId         String
   invitedAt          DateTime?
   acceptedAt         DateTime?

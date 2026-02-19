@@ -41,6 +41,7 @@ export default function CompanyDetailPage() {
         primaryLocation: data.primaryLocation,
         address: data.address || '',
         baseCurrencyCode: data.baseCurrencyCode,
+        baseLocale: data.baseLocale || 'en',
       });
     });
   }, [id]);
@@ -209,10 +210,18 @@ export default function CompanyDetailPage() {
                   <label htmlFor="edit-currency">Base currency</label>
                   <input id="edit-currency" value={editForm.baseCurrencyCode || ''} onChange={(e) => setEditForm((f) => ({ ...f, baseCurrencyCode: e.target.value }))} disabled={actionLoading} />
                 </div>
+                <div className="form-group">
+                  <label htmlFor="edit-baseLocale">Base locale</label>
+                  <select id="edit-baseLocale" value={editForm.baseLocale || 'en'} onChange={(e) => setEditForm((f) => ({ ...f, baseLocale: e.target.value }))} disabled={actionLoading}>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                  </select>
+                </div>
               </div>
               <div className="form-actions">
                 <button type="submit" className="btn btn-primary" disabled={actionLoading}>{actionLoading ? 'Saving…' : 'Save'}</button>
-                <button type="button" className="btn btn-ghost" onClick={() => { setEditOpen(false); setEditForm({ name: business.name, email: business.email, phone: business.phone, primaryLocation: business.primaryLocation, address: business.address || '', baseCurrencyCode: business.baseCurrencyCode }); }}>Cancel</button>
+                <button type="button" className="btn btn-ghost" onClick={() => { setEditOpen(false); setEditForm({ name: business.name, email: business.email, phone: business.phone, primaryLocation: business.primaryLocation, address: business.address || '', baseCurrencyCode: business.baseCurrencyCode, baseLocale: business.baseLocale || 'en' }); }}>Cancel</button>
               </div>
             </form>
           ) : (
@@ -227,6 +236,8 @@ export default function CompanyDetailPage() {
               <dd>{business.address || '—'}</dd>
               <dt>Currency</dt>
               <dd>{business.baseCurrencyCode}</dd>
+              <dt>Base locale</dt>
+              <dd>{business.baseLocale === 'es' ? 'Español' : business.baseLocale === 'fr' ? 'Français' : 'English'}</dd>
               <dt>Created</dt>
               <dd>{formatDate(business.createdAt)}</dd>
               <dt>Team size</dt>
@@ -281,6 +292,7 @@ export default function CompanyDetailPage() {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Locale</th>
                     <th>Status</th>
                     <th>Created</th>
                     <th>Actions</th>
@@ -292,6 +304,7 @@ export default function CompanyDetailPage() {
                       <td>{[u.firstName, u.lastName].filter(Boolean).join(' ') || '—'}</td>
                       <td>{u.email}</td>
                       <td>{u.role}</td>
+                      <td>{(u.locale || business.baseLocale || 'en') === 'es' ? 'Español' : (u.locale || business.baseLocale || 'en') === 'fr' ? 'Français' : 'English'}</td>
                       <td>
                         {u.deactivatedAt ? <span className="badge badge-inactive">Deactivated</span> : u.hasPassword ? <span className="badge badge-active">Active</span> : <span className="badge badge-pending">Pending invite</span>}
                       </td>
@@ -300,7 +313,7 @@ export default function CompanyDetailPage() {
                         {editUserOpen === u.id ? (
                           <UserEditInline
                             user={u}
-                            onSave={(role, deactivated) => handleUpdateUser(u.id, { role, deactivated })}
+                            onSave={(role, deactivated, locale) => handleUpdateUser(u.id, { role, deactivated, locale })}
                             onDelete={() => handleDeleteUser(u.id)}
                             onCancel={() => setEditUserOpen(null)}
                             loading={actionLoading}
@@ -396,19 +409,30 @@ export default function CompanyDetailPage() {
   );
 }
 
+const LOCALES = [
+  { value: '', label: 'Company default' },
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+  { value: 'fr', label: 'Français' },
+];
+
 function UserEditInline({ user, onSave, onDelete, onCancel, loading }) {
   const [role, setRole] = useState(user.role);
   const [deactivated, setDeactivated] = useState(!!user.deactivatedAt);
+  const [locale, setLocale] = useState(user.locale ?? '');
   return (
     <div className="user-edit-inline">
       <select value={role} onChange={(e) => setRole(e.target.value)} disabled={loading} className="admin-select-sm">
         {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
       </select>
+      <select value={locale} onChange={(e) => setLocale(e.target.value)} disabled={loading} className="admin-select-sm" title="Member locale">
+        {LOCALES.map((l) => <option key={l.value || 'default'} value={l.value}>{l.label}</option>)}
+      </select>
       <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', fontSize: 'var(--text-xs)' }}>
         <input type="checkbox" checked={deactivated} onChange={(e) => setDeactivated(e.target.checked)} disabled={loading} />
         Deactivated
       </label>
-      <button type="button" className="btn btn-primary btn-sm" onClick={() => onSave(role, deactivated)} disabled={loading}>Save</button>
+      <button type="button" className="btn btn-primary btn-sm" onClick={() => onSave(role, deactivated, locale || null)} disabled={loading}>Save</button>
       <button type="button" className="btn btn-ghost btn-sm" onClick={() => onDelete()} disabled={loading}>Delete</button>
       <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel}>Cancel</button>
     </div>

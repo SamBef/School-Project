@@ -38,6 +38,7 @@ router.get(
           primaryLocation: true,
           createdAt: true,
           baseCurrencyCode: true,
+          baseLocale: true,
           deactivatedAt: true,
           _count: {
             select: { users: true, transactions: true, expenses: true },
@@ -68,6 +69,7 @@ router.get(
           primaryLocation: b.primaryLocation,
           createdAt: b.createdAt.toISOString(),
           baseCurrencyCode: b.baseCurrencyCode,
+          baseLocale: b.baseLocale ?? 'en',
           deactivatedAt: b.deactivatedAt?.toISOString() ?? null,
           userCount: b._count.users,
           transactionCount: b._count.transactions,
@@ -122,6 +124,7 @@ router.post(
         return;
       }
       const passwordHash = await bcrypt.hash(ownerPassword, SALT_ROUNDS);
+      const { baseLocale } = req.body;
       const business = await prisma.business.create({
         data: {
           name: businessName.trim(),
@@ -130,6 +133,7 @@ router.post(
           primaryLocation: primaryLocation.trim(),
           address: address?.trim() || null,
           baseCurrencyCode: (baseCurrencyCode?.trim() || 'USD').toUpperCase().slice(0, 3),
+          baseLocale: (baseLocale?.trim() || 'en').toLowerCase().slice(0, 5),
         },
       });
       await prisma.user.create({
@@ -191,6 +195,7 @@ router.get(
           firstName: true,
           lastName: true,
           role: true,
+          locale: true,
           invitedAt: true,
           acceptedAt: true,
           deactivatedAt: true,
@@ -206,6 +211,7 @@ router.get(
           firstName: u.firstName,
           lastName: u.lastName,
           role: u.role,
+          locale: u.locale ?? null,
           invitedAt: u.invitedAt?.toISOString() ?? null,
           acceptedAt: u.acceptedAt?.toISOString() ?? null,
           deactivatedAt: u.deactivatedAt?.toISOString() ?? null,
@@ -363,10 +369,10 @@ router.patch(
   async (req, res) => {
     try {
       const { id: businessId, userId } = req.params;
-      const { role, deactivated } = req.body;
+      const { role, deactivated, locale } = req.body;
       const user = await prisma.user.findFirst({
         where: { id: userId, businessId },
-        select: { id: true, email: true, role: true, deactivatedAt: true },
+        select: { id: true, email: true, role: true, locale: true, deactivatedAt: true },
       });
       if (!user) {
         res.status(404).json({ message: 'User not found.' });
@@ -374,6 +380,7 @@ router.patch(
       }
       const data = {};
       if (role && ['OWNER', 'MANAGER', 'CASHIER'].includes(role)) data.role = role;
+      if (locale !== undefined) data.locale = locale === null || locale === '' ? null : String(locale).trim().toLowerCase().slice(0, 5);
       if (typeof deactivated === 'boolean') {
         data.deactivatedAt = deactivated ? new Date() : null;
         await logActivity({
@@ -387,14 +394,14 @@ router.patch(
       if (Object.keys(data).length === 0) {
         res.json({
           message: 'No changes.',
-          user: { id: user.id, email: user.email, role: user.role, deactivatedAt: user.deactivatedAt?.toISOString() ?? null },
+          user: { id: user.id, email: user.email, role: user.role, locale: user.locale ?? null, deactivatedAt: user.deactivatedAt?.toISOString() ?? null },
         });
         return;
       }
       const updated = await prisma.user.update({
         where: { id: userId },
         data,
-        select: { id: true, email: true, role: true, deactivatedAt: true },
+        select: { id: true, email: true, role: true, locale: true, deactivatedAt: true },
       });
       res.json({
         message: 'User updated.',
@@ -402,6 +409,7 @@ router.patch(
           id: updated.id,
           email: updated.email,
           role: updated.role,
+          locale: updated.locale ?? null,
           deactivatedAt: updated.deactivatedAt?.toISOString() ?? null,
         },
       });
@@ -529,6 +537,7 @@ router.get(
           primaryLocation: true,
           address: true,
           baseCurrencyCode: true,
+          baseLocale: true,
           deactivatedAt: true,
           createdAt: true,
           _count: { select: { users: true, transactions: true, expenses: true } },
@@ -593,6 +602,7 @@ router.get(
         primaryLocation: business.primaryLocation,
         address: business.address,
         baseCurrencyCode: business.baseCurrencyCode,
+        baseLocale: business.baseLocale ?? 'en',
         deactivatedAt: business.deactivatedAt?.toISOString() ?? null,
         createdAt: business.createdAt.toISOString(),
         userCount: business._count.users,
@@ -618,7 +628,7 @@ router.patch(
   async (req, res) => {
     try {
       const { id } = req.params;
-      const { name, email, phone, primaryLocation, address, baseCurrencyCode, deactivated } = req.body;
+      const { name, email, phone, primaryLocation, address, baseCurrencyCode, baseLocale, deactivated } = req.body;
       const business = await prisma.business.findUnique({
         where: { id },
         select: { id: true, name: true, deactivatedAt: true },
@@ -634,6 +644,7 @@ router.patch(
       if (primaryLocation !== undefined) data.primaryLocation = String(primaryLocation).trim();
       if (address !== undefined) data.address = address?.trim() || null;
       if (baseCurrencyCode !== undefined) data.baseCurrencyCode = (baseCurrencyCode?.trim() || 'USD').toUpperCase().slice(0, 3);
+      if (baseLocale !== undefined) data.baseLocale = (baseLocale?.trim() || 'en').toLowerCase().slice(0, 5);
       if (typeof deactivated === 'boolean') {
         data.deactivatedAt = deactivated ? new Date() : null;
         await logActivity({
@@ -650,7 +661,7 @@ router.patch(
       const updated = await prisma.business.update({
         where: { id },
         data,
-        select: { id: true, name: true, email: true, phone: true, primaryLocation: true, address: true, baseCurrencyCode: true, deactivatedAt: true },
+        select: { id: true, name: true, email: true, phone: true, primaryLocation: true, address: true, baseCurrencyCode: true, baseLocale: true, deactivatedAt: true },
       });
       res.json({
         message: 'Business updated.',
@@ -662,6 +673,7 @@ router.patch(
           primaryLocation: updated.primaryLocation,
           address: updated.address,
           baseCurrencyCode: updated.baseCurrencyCode,
+          baseLocale: updated.baseLocale ?? 'en',
           deactivatedAt: updated.deactivatedAt?.toISOString() ?? null,
         },
       });
