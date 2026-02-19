@@ -1545,6 +1545,7 @@ img.header-user-avatar-img {
   min-height: 100vh;
   background-color: var(--surface-base);
   transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+  overflow-x: hidden;
 }
 
 .home-page-exit {
@@ -1614,6 +1615,7 @@ img.header-user-avatar-img {
   padding: var(--space-16) var(--space-6);
   max-width: 40rem;
   margin: 0 auto;
+  min-height: 0;
   animation: heroEnter 0.6s ease-out both;
 }
 
@@ -1659,11 +1661,13 @@ img.header-user-avatar-img {
   padding: var(--space-12) var(--space-6);
   background-color: var(--surface-raised);
   border-top: 1px solid var(--border-default);
+  overflow: visible;
 }
 
 .home-features-inner {
   max-width: 56rem;
   margin: 0 auto;
+  min-height: 0;
 }
 
 .home-features-inner .features-heading-animate {
@@ -1773,11 +1777,13 @@ img.header-user-avatar-img {
   padding: var(--space-16) var(--space-6);
   background-color: var(--surface-base);
   border-top: 1px solid var(--border-default);
+  overflow: visible;
 }
 
 .home-testimonials-inner {
   max-width: 56rem;
   margin: 0 auto;
+  min-height: 0;
 }
 
 .home-testimonials h2 {
@@ -3678,8 +3684,10 @@ img.header-user-avatar-img {
     flex-direction: column;
   }
 
-  /* Home page */
+  /* Home page — natural flow on small screens; no inner scroll */
   .home-hero {
+    flex: none;
+    justify-content: flex-start;
     padding: var(--space-10) var(--space-4);
   }
 
@@ -3693,10 +3701,35 @@ img.header-user-avatar-img {
 
   .home-header {
     padding: var(--space-3) var(--space-4);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .home-header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
   }
 
   .home-features {
     padding: var(--space-8) var(--space-4);
+  }
+
+  .home-testimonials {
+    padding: var(--space-10) var(--space-4);
+  }
+
+  .home-testimonials h2 {
+    margin-bottom: var(--space-6);
+  }
+
+  .testimonials-grid {
+    gap: var(--space-4);
+  }
+
+  .testimonial-card {
+    padding: var(--space-4);
+    padding-top: var(--space-6);
   }
 
   /* Auth pages */
@@ -3814,6 +3847,19 @@ img.header-user-avatar-img {
     padding: var(--space-4);
   }
 
+  /* Home hero tighter on very small screens */
+  .home-hero {
+    padding: var(--space-8) var(--space-4);
+  }
+
+  .home-hero h1 {
+    font-size: var(--text-xl);
+  }
+
+  .home-hero p {
+    margin-bottom: var(--space-6);
+  }
+
   /* Home CTA stacks vertically */
   .home-cta {
     flex-direction: column;
@@ -3827,6 +3873,15 @@ img.header-user-avatar-img {
   /* Features grid single column */
   .features-grid {
     grid-template-columns: 1fr;
+  }
+
+  .home-testimonials {
+    padding: var(--space-8) var(--space-4);
+  }
+
+  .testimonial-card {
+    padding: var(--space-3);
+    padding-top: var(--space-5);
   }
 
   /* Invite row fully stacked */
