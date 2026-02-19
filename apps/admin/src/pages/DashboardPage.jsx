@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
+import AdminSortDropdown from '../components/AdminSortDropdown';
 
 const SORT_OPTIONS = [
   { value: 'name', label: 'Company name' },
@@ -130,17 +131,13 @@ export default function DashboardPage() {
             />
             <div className="admin-toolbar-sort">
               <span className="admin-toolbar-sort-label" id="admin-sort-label">Sort by</span>
-              <select
+              <AdminSortDropdown
                 id="admin-sort"
-                className="admin-select"
+                options={SORT_OPTIONS}
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                aria-labelledby="admin-sort-label"
-              >
-                {SORT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
+                onChange={setSortBy}
+                ariaLabelledBy="admin-sort-label"
+              />
             </div>
             <button type="button" className="btn btn-ghost" onClick={exportCSV} disabled={filteredAndSorted.length === 0}>
               Export CSV
