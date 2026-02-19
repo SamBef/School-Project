@@ -91,6 +91,7 @@ kobotrack/
 ## Documentation
 
 - **Full documentation:** [docs/](docs/) — setup, architecture, API, deployment, step-by-step screenshots and signup instructions.
+- **Deployment checklist:** [docs/deployment-checklist.md](docs/deployment-checklist.md) — env vars, builds, CORS, and pre-deploy checks for main app, admin app, and API.
 - **Report:** [REPORT.md](REPORT.md) — university-style report (source for PDF); same content also in `docs/` and generated as PDF.
 
 ---

@@ -6,20 +6,33 @@ For a full list of admin features (create company, manage users, deactivate, act
 
 ## 1. Make sure the API is running
 
-The admin app talks to the same API as the main web app. That API uses the database in `apps/api/.env` (e.g. **Supabase**). From `apps/api`:
+**Option A — Different port for admin (recommended: same DB, admin on 3005)**
 
-```powershell
-cd c:\Users\User\Desktop\DTTRASM\apps\api
-npm run dev
-```
+- **Terminal 1** — API for main app (port from `apps/api/.env`, e.g. 3004):
+  ```powershell
+  cd c:\Users\User\Desktop\DTTRASM\apps\api
+  npm run dev
+  ```
+- **Terminal 2** — API for admin app (port 3005, same DB):
+  ```powershell
+  cd c:\Users\User\Desktop\DTTRASM\apps\api
+  npm run dev:admin
+  ```
+- Create **`apps/admin/.env`** with:
+  ```env
+  VITE_ADMIN_API_URL=http://localhost:3005
+  ```
+  Then the admin app will call the API on 3005. Same database as the main API.
 
-Leave this running (you should see it listening on port 3003).
+**Option B — Same API for both (admin uses same port as main)**
+
+- Run the API once (e.g. `npm run dev` in `apps/api`, port 3004). Do **not** set `VITE_ADMIN_API_URL` in `apps/admin/.env` (or leave it unset); the admin app will use the Vite proxy and talk to the same port.
 
 ---
 
 ## 2. Create an admin user (one-time)
 
-You need at least one platform admin account. From `apps/api` in a **new** terminal:
+You need at least one platform admin account (same DB no matter which port the API uses). From `apps/api` in a **new** terminal:
 
 ```powershell
 cd c:\Users\User\Desktop\DTTRASM\apps\api

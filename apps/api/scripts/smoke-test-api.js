@@ -1,10 +1,10 @@
 /**
  * Smoke test for API endpoints. Run with the API running (npm run dev in apps/api).
  * Usage: node scripts/smoke-test-api.js
- * Uses API_URL env or default http://localhost:3003
+ * Uses API_URL env or default http://localhost:3004 (match PORT in apps/api/.env).
  */
 
-const BASE = process.env.API_URL || 'http://localhost:3003';
+const BASE = process.env.API_URL || 'http://localhost:3004';
 
 async function fetchJson(path, options = {}) {
   const url = `${BASE}${path}`;

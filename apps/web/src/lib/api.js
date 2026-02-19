@@ -30,7 +30,7 @@ function getAuthHeaders() {
 function getConnectionHint(url) {
   const isLocal = url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1');
   if (isLocal) {
-    return 'Make sure the API is running (e.g. run "npm run dev" in apps/api). Check apps/web/.env has VITE_API_URL=http://localhost:3003 (or the port your API uses).';
+    return 'Make sure the API is running (e.g. run "npm run dev" in apps/api). Check apps/web/.env has VITE_API_URL=http://localhost:3004 (or the port your API uses).';
   }
   return 'Check that VITE_API_URL is set to your API URL (no trailing slash). In Vercel: Settings → Environment Variables. If the API sleeps on Render, wait 30–60 seconds and try again.';
 }
@@ -38,7 +38,7 @@ function getConnectionHint(url) {
 async function request(path, options = {}) {
   if (!BASE_URL || !BASE_URL.startsWith('http')) {
     throw new Error(
-      'API URL is not configured. Set VITE_API_URL in apps/web/.env for local dev (e.g. http://localhost:3003). For production, set it in Vercel (or your host) to your API URL, then redeploy.'
+      'API URL is not configured. Set VITE_API_URL in apps/web/.env for local dev (e.g. http://localhost:3004). For production, set it in your host (e.g. Vercel) to your API URL, then redeploy.'
     );
   }
   const url = `${BASE_URL}${path}`;

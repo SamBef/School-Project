@@ -4,7 +4,7 @@ import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
 
 export default function CreateCompanyPage() {
-  const { email, logout } = useAdminAuth();
+  const { name, email, logout } = useAdminAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -59,7 +59,8 @@ export default function CreateCompanyPage() {
           <h1 style={{ margin: 0 }}>Create company</h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <span className="admin-header-email">{email}</span>
+          <Link to="/profile" className="btn btn-ghost" style={{ textDecoration: 'none' }}>Profile</Link>
+          <span className="admin-header-email">{name || email}</span>
           <button type="button" className="btn btn-ghost" onClick={logout}>Sign out</button>
         </div>
       </header>

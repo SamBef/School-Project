@@ -8,12 +8,12 @@ export default defineConfig({
     port: 5174,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:3004',
+        target: process.env.VITE_ADMIN_API_URL || process.env.VITE_API_URL || 'http://localhost:3004',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '/admin': {
-        target: process.env.VITE_API_URL || 'http://localhost:3004',
+        target: process.env.VITE_ADMIN_API_URL || process.env.VITE_API_URL || 'http://localhost:3004',
         changeOrigin: true,
       },
     },

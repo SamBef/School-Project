@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
 
 export default function LoginPage() {
   const { isAuthenticated, login } = useAdminAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const { token } = await api.post('/admin/auth/login', { email: email.trim(), password });
+      const { token } = await api.post('/admin/auth/login', { name: name.trim(), password });
       login(token);
       navigate('/', { replace: true });
     } catch (err) {
@@ -32,19 +32,20 @@ export default function LoginPage() {
     <div className="admin-auth-page">
       <div className="admin-auth-card">
         <h2>KoboTrack Admin</h2>
-        <p>Sign in to manage companies on the platform.</p>
+        <p>Sign in with your admin name and password.</p>
         <form onSubmit={handleSubmit}>
           {error && <p className="form-error" role="alert">{error}</p>}
           <div className="form-group">
-            <label htmlFor="admin-email">Email</label>
+            <label htmlFor="admin-name">Name</label>
             <input
-              id="admin-email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="admin-name"
+              type="text"
+              autoComplete="username"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
               disabled={loading}
+              placeholder="e.g. koboadmin"
             />
           </div>
           <div className="form-group">
@@ -62,6 +63,9 @@ export default function LoginPage() {
           <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
+          <p style={{ marginTop: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
+            <Link to="/forgot-password">Forgot password?</Link>
+          </p>
         </form>
       </div>
     </div>

@@ -383,13 +383,16 @@ model StockAdjustment {
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Platform admin — separate from business users; for managing companies on the platform
+// Platform admin — separate from business users; login by name + password; email for forgot-password
 model Admin {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                String    @id @default(uuid())
+  name              String    @unique @default("admin")  // login name (e.g. koboadmin)
+  email             String    @unique  // for forgot-password emails
+  passwordHash      String
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 // Audit/activity log for admin visibility (e.g. login, transaction created, user invited)

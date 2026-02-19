@@ -4,6 +4,12 @@ The admin app (e.g. http://localhost:5174) lets platform admins manage companies
 
 ---
 
+## Admin login: name + password (not email)
+
+Admins sign in with **name** and **password**, not email. The admin name is set when creating the admin (e.g. `ADMIN_NAME=koboadmin`). Email is kept for forgot-password (reset link is sent to email). Profile page lets you update name, email, and password.
+
+---
+
 ## After schema update (deactivated + activity log)
 
 If you added the new fields (`User.deactivatedAt`, `Business.deactivatedAt`, `ActivityLog`), run once from **PowerShell outside Cursor** (to avoid EPERM):
@@ -54,3 +60,21 @@ Or with Supabase you can use `npx prisma db push` instead of migrate. Then resta
 
 - **Main app** (e.g. localhost:5173): Company users sign in with the account they got by **registering** or by **accepting an invite**. They manage their business (transactions, expenses, team invites).
 - **Admin app** (e.g. localhost:5174): Platform admins sign in with the account created by `create-admin.js`. They manage **companies** and **users** across the platform. No “Create account” on the login page — admin accounts are created via the script; **companies** are created via **Create company** inside the admin app.
+
+---
+
+## Using a different API (and database) for the admin app
+
+The admin app does not connect to the database directly; it only talks to an **API** (HTTP). By default it uses the same API (and thus the same database) as the main app.
+
+To use a **different backend** (e.g. a separate API with a different database):
+
+1. Create **`apps/admin/.env`** and set:
+   ```env
+   VITE_ADMIN_API_URL=http://localhost:3005
+   ```
+   Use your admin API base URL (no trailing slash).
+
+2. Run a **second API** instance with its own `DATABASE_URL` in its `.env` (e.g. different port or host). Create an admin user on that instance with `create-admin.js`. The admin app will then use that API and that database.
+
+To only point the admin app at a **different port** (same API, same DB), set `VITE_ADMIN_API_URL` to that URL and run the API on that port.

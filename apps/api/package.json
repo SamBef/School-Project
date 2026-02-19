@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/index.js",
+    "dev:admin": "cross-env PORT=3005 node --watch src/index.js",
     "start": "node src/index.js",
     "build": "node src/index.js",
     "db:generate": "prisma generate",
@@ -31,6 +32,7 @@
     "pdfkit": "^0.17.2"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "eslint": "^8.56.0",
     "prisma": "^5.10.0"
   }

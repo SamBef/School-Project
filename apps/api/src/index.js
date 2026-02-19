@@ -76,8 +76,19 @@ app.use('/ai', asyncHandler(aiRoutes));
 app.use('/admin', asyncHandler(adminRoutes));
 
 app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ message: 'Something went wrong. Please try again.' });
+  const errMsg = err?.message || String(err);
+  console.error('API error:', errMsg);
+  let safeMessage =
+    err.code === 'P2021' || errMsg.includes('relation') || errMsg.includes('does not exist') || errMsg.includes('Unknown arg') || errMsg.includes('column')
+      ? 'Database schema is out of date. Run: npx prisma db push (from apps/api, in PowerShell outside Cursor) then restart the API.'
+      : errMsg.includes('JWT') || errMsg.includes('jwtSecret')
+        ? 'Server configuration error. Set JWT_SECRET in apps/api/.env.'
+        : process.env.NODE_ENV === 'production'
+          ? 'Something went wrong. Please try again.'
+          : (errMsg || 'Something went wrong. Please try again.');
+  if (!res.headersSent) {
+    res.status(500).json({ message: safeMessage });
+  }
 });
 
 function startServer(portToUse) {

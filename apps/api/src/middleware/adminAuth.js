@@ -37,7 +37,7 @@ export async function requireAdmin(req, res, next) {
   }
   const admin = await prisma.admin.findUnique({
     where: { id: payload.adminId },
-    select: { id: true, email: true },
+    select: { id: true, name: true, email: true },
   });
   if (!admin) {
     res.status(401).json({ message: 'Admin not found. Please sign in again.' });

@@ -1,8 +1,18 @@
 /**
- * API client for admin app — uses admin JWT. Base URL from VITE_API_URL (or /api proxy).
+ * API client for admin app — uses admin JWT.
+ * Base URL: VITE_ADMIN_API_URL (admin-only) or VITE_API_URL, or in dev the /admin proxy when both are unset.
  */
 
-const BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}` : '';
+const BASE = (import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_API_URL || '')
+  .replace(/\/$/, '');
+
+function ensureBaseUrl() {
+  if (!BASE && !import.meta.env.DEV) {
+    throw new Error(
+      'Admin API URL is not set. Set VITE_ADMIN_API_URL (or VITE_API_URL) when building the admin app for production (e.g. in your host environment variables).'
+    );
+  }
+}
 
 function getToken() {
   return localStorage.getItem('kobotrack_admin_token');
@@ -10,6 +20,7 @@ function getToken() {
 
 export const api = {
   async get(path) {
+    ensureBaseUrl();
     const token = getToken();
     const res = await fetch(`${BASE}${path}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -23,6 +34,7 @@ export const api = {
   },
 
   async post(path, body) {
+    ensureBaseUrl();
     const token = getToken();
     const res = await fetch(`${BASE}${path}`, {
       method: 'POST',
@@ -39,6 +51,7 @@ export const api = {
   },
 
   async patch(path, body) {
+    ensureBaseUrl();
     const token = getToken();
     const res = await fetch(`${BASE}${path}`, {
       method: 'PATCH',
@@ -55,6 +68,7 @@ export const api = {
   },
 
   async delete(path) {
+    ensureBaseUrl();
     const token = getToken();
     const res = await fetch(`${BASE}${path}`, {
       method: 'DELETE',
