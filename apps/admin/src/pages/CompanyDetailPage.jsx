@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
 
@@ -17,6 +17,7 @@ const ROLES = ['OWNER', 'MANAGER', 'CASHIER'];
 
 export default function CompanyDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { name, email, logout } = useAdminAuth();
   const [business, setBusiness] = useState(null);
   const [users, setUsers] = useState([]);
@@ -79,6 +80,20 @@ export default function CompanyDetailPage() {
       await loadBusiness();
     } catch (err) {
       setActionError(err.message || 'Action failed.');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleDeleteCompany() {
+    if (!window.confirm(`Permanently delete "${business?.name}"? This removes the company and all its users, transactions, and expenses. This cannot be undone.`)) return;
+    setActionError('');
+    setActionLoading(true);
+    try {
+      await api.delete(`/admin/businesses/${id}`);
+      navigate('/', { replace: true });
+    } catch (err) {
+      setActionError(err.message || 'Delete failed.');
     } finally {
       setActionLoading(false);
     }
@@ -173,6 +188,7 @@ export default function CompanyDetailPage() {
                   ) : (
                     <button type="button" className="btn btn-danger-ghost" onClick={() => handleDeactivateCompany(true)} disabled={actionLoading}>Deactivate company</button>
                   )}
+                  <button type="button" className="btn btn-danger-ghost" onClick={handleDeleteCompany} disabled={actionLoading} title="Permanently delete this company and all its data">Delete company</button>
                 </>
               )}
             </div>

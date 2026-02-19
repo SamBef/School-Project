@@ -60,6 +60,21 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, [setToken]);
 
+  // Sync auth when another tab logs in/out (same origin shares localStorage)
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key !== TOKEN_KEY) return;
+      const newValue = e.newValue || null;
+      setTokenState(newValue);
+      if (!newValue) {
+        setUser(null);
+        setBusiness(null);
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const login = useCallback(
     async (email, password) => {
       const data = await api.post('/auth/login', { email, password });

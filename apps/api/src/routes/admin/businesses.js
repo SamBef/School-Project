@@ -672,4 +672,31 @@ router.patch(
   }
 );
 
+/**
+ * DELETE /admin/businesses/:id
+ * Permanently delete a company and all its data (users, transactions, expenses, etc.). Admin-only.
+ */
+router.delete(
+  '/:id',
+  wrap(requireAdmin),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const business = await prisma.business.findUnique({
+        where: { id },
+        select: { id: true, name: true },
+      });
+      if (!business) {
+        res.status(404).json({ message: 'Business not found.' });
+        return;
+      }
+      await prisma.business.delete({ where: { id } });
+      res.json({ message: 'Company deleted.' });
+    } catch (err) {
+      console.error('admin business delete error', err);
+      res.status(500).json({ message: 'Failed to delete company.' });
+    }
+  }
+);
+
 export default router;
