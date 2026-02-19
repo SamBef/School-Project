@@ -49,8 +49,8 @@ export default function SetPasswordPage() {
     setLoading(true);
     try {
       const data = await api.post('/auth/set-password', { token, newPassword: password });
-      // Store token and reload to let AuthContext pick it up via /auth/me
-      localStorage.setItem('kobotrack_token', data.token);
+      // Store token in sessionStorage so this tab has its own session
+      sessionStorage.setItem('kobotrack_token', data.token);
       setSuccess(true);
       // Short delay so the user sees the success message before redirect
       setTimeout(() => {

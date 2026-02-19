@@ -20,7 +20,7 @@ function notifySessionExpiry() {
 }
 
 function getAuthHeaders() {
-  const token = localStorage.getItem(TOKEN_KEY);
+  const token = sessionStorage.getItem(TOKEN_KEY);
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -55,7 +55,7 @@ async function request(path, options = {}) {
     const body = await res.json().catch(() => ({}));
 
     // If 401 and we had a token, the session has expired
-    if (res.status === 401 && localStorage.getItem(TOKEN_KEY)) {
+    if (res.status === 401 && sessionStorage.getItem(TOKEN_KEY)) {
       // Don't trigger on login/register attempts (no prior token expected)
       if (!path.includes('/auth/login') && !path.includes('/auth/register')) {
         notifySessionExpiry();
@@ -75,7 +75,7 @@ async function request(path, options = {}) {
  */
 async function downloadFile(path, filename) {
   const url = `${BASE_URL}${path}`;
-  const token = localStorage.getItem(TOKEN_KEY);
+  const token = sessionStorage.getItem(TOKEN_KEY);
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   const res = await fetch(url, { headers });
 

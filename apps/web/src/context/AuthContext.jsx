@@ -1,6 +1,6 @@
 /**
  * Auth context — holds token, user, business; provides login, register, logout, refreshUser.
- * Token is stored in localStorage so it survives refresh. On load, if token exists we call /auth/me.
+ * Token is stored in sessionStorage so each tab has its own session (parallel roles).
  * Listens for 401 session expiry from the API client and shows a clear message.
  */
 
@@ -14,17 +14,17 @@ const TOKEN_KEY = 'kobotrack_token';
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [business, setBusiness] = useState(null);
-  const [token, setTokenState] = useState(() => localStorage.getItem(TOKEN_KEY));
+  const [token, setTokenState] = useState(() => sessionStorage.getItem(TOKEN_KEY));
   const [loading, setLoading] = useState(true);
   const [sessionExpired, setSessionExpired] = useState(false);
 
   const setToken = useCallback((newToken) => {
     if (newToken) {
-      localStorage.setItem(TOKEN_KEY, newToken);
+      sessionStorage.setItem(TOKEN_KEY, newToken);
       setTokenState(newToken);
       setSessionExpired(false);
     } else {
-      localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
       setTokenState(null);
       setUser(null);
       setBusiness(null);
@@ -59,21 +59,6 @@ export function AuthProvider({ children }) {
     });
     return unsubscribe;
   }, [setToken]);
-
-  // Sync auth when another tab logs in/out (same origin shares localStorage)
-  useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key !== TOKEN_KEY) return;
-      const newValue = e.newValue || null;
-      setTokenState(newValue);
-      if (!newValue) {
-        setUser(null);
-        setBusiness(null);
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
 
   const login = useCallback(
     async (email, password) => {
