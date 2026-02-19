@@ -65,9 +65,9 @@ kobotrack/
    npm install
    ```
 
-2. **Configure environment** — See [Quick start: Step 2 and 3](docs/quick-start-2-and-3.md) for detailed, chronological steps.
+2. **Configure environment** — See [Configuration environments — clear guide](docs/configuration-guide.md) for step-by-step env setup.
 
-   - Copy `apps/api/.env.example` to `apps/api/.env` and set `DATABASE_URL`, `JWT_SECRET`, `SENDGRID_API_KEY`, etc.
+   - Copy `apps/api/.env.example` to `apps/api/.env` and set database, `JWT_SECRET`, email (Gmail or SendGrid), `FRONTEND_URL`.
    - Copy `apps/web/.env.example` to `apps/web/.env` and set `VITE_API_URL` to your API base URL.
 
 3. **Database** — From repo root (see [docs/quick-start-2-and-3.md](docs/quick-start-2-and-3.md)):

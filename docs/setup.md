@@ -57,6 +57,8 @@ This installs dependencies for the root workspace and for `apps/web` and `apps/a
 
 ## 4. Environment variables
 
+**For a clearer, step-by-step guide:** see [Configuration environments — clear guide](configuration-guide.md).
+
 ### API (`apps/api/.env`)
 
 Copy from `apps/api/.env.example` and fill in:

@@ -6,43 +6,20 @@ Follow these in order after you have cloned the repo and run `npm install` (step
 
 ---
 
-## Step 2 — Configure environment (in order)
+## Step 2 — Configure environment
 
-### 2.1 Create the API environment file
+**Use the full guide:** [**Configuration environments — clear guide**](configuration-guide.md). It explains:
 
-1. Open the folder `apps/api`.
-2. Copy the file **`.env.example`** and paste it in the same folder.
-3. Rename the copy to **`.env`** (no `.example`).
-4. Open `apps/api/.env` and set these (replace placeholders with your real values):
+- Which env files you need (API, web, admin)
+- Exactly what each variable means and where to get values
+- Required vs optional, and local vs production examples
+- A checklist at the end
 
-| Variable | What to put |
-|----------|-------------|
-| `DATABASE_URL` | Your PostgreSQL connection URL (e.g. Supabase: Project Settings → Database → Connection string; replace `[YOUR-PASSWORD]` with your DB password). |
-| `DIRECT_URL` | Same value as `DATABASE_URL` for most setups (Supabase/local). |
-| `JWT_SECRET` | A long random string (e.g. generate one; never commit the real value). |
-| `SENDGRID_API_KEY` | Your SendGrid API key, or leave empty if you use SMTP. |
-| `SENDGRID_FROM_EMAIL` | Sender email for invites/password reset (e.g. `noreply@yourdomain.com`). |
-| **Or use SMTP (Gmail)** | Set `SMTP_USER` and `SMTP_PASS` (Gmail App Password) instead of SendGrid. |
-| `FRONTEND_URL` | Web app URL (local: `http://localhost:5173`). |
-| `PORT` | API port (optional; default is 3003; often 3004 in this project). |
+**Short version:**
 
-**Windows TLS note:** If you see a credentials/TLS error when connecting to the database, add (dev only):  
-`DATABASE_INSECURE_SSL=1`
-
-### 2.2 Create the web app environment file
-
-1. Open the folder `apps/web`.
-2. Copy **`.env.example`** and paste it in the same folder.
-3. Rename the copy to **`.env`**.
-4. Open `apps/web/.env` and set:
-
-| Variable | What to put |
-|----------|-------------|
-| `VITE_API_URL` | Base URL of your API with no trailing slash. Local: `http://localhost:3004` (or whatever port your API uses). |
-
-### 2.3 (Optional) Admin app
-
-- If you run the admin app and it uses a different API URL, copy `apps/admin/.env.example` to `apps/admin/.env` and set `VITE_ADMIN_API_URL` (or leave unset to use the default proxy in dev).
+1. **API** — In `apps/api`, copy `.env.example` → `.env`. Fill in: `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, email (Gmail **or** SendGrid), `FRONTEND_URL`. See [configuration-guide.md](configuration-guide.md#1-api-environment-appsapienv).
+2. **Web** — In `apps/web`, copy `.env.example` → `.env`. Set `VITE_API_URL` (e.g. `http://localhost:3004`). See [configuration-guide.md](configuration-guide.md#2-web-app-environment-appswebenv).
+3. **Admin** — Optional. Only if the admin app uses a different API: copy `apps/admin/.env.example` → `.env` and set `VITE_ADMIN_API_URL` if needed. See [configuration-guide.md](configuration-guide.md#3-admin-app-environment-appsadminenv--optional).
 
 ---
 
@@ -70,9 +47,7 @@ This creates or updates tables in the database pointed to by `DATABASE_URL` in `
 
 ## Summary checklist
 
-- [ ] `apps/api/.env` created from `.env.example` and required variables set (`DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, email).
-- [ ] `apps/web/.env` created from `.env.example` and `VITE_API_URL` set.
-- [ ] `npm run db:generate` run from repo root.
-- [ ] `npm run db:push` run from repo root.
+- [ ] **Env:** [Configuration guide](configuration-guide.md) followed — `apps/api/.env` and `apps/web/.env` created and filled.
+- [ ] **DB:** `npm run db:generate` then `npm run db:push` run from repo root.
 
 Then you can run the API and web app (step 4 in the README).
