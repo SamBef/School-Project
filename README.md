@@ -65,12 +65,12 @@ kobotrack/
    npm install
    ```
 
-2. **Configure environment**
+2. **Configure environment** — See [Quick start: Step 2 and 3](docs/quick-start-2-and-3.md) for detailed, chronological steps.
 
    - Copy `apps/api/.env.example` to `apps/api/.env` and set `DATABASE_URL`, `JWT_SECRET`, `SENDGRID_API_KEY`, etc.
    - Copy `apps/web/.env.example` to `apps/web/.env` and set `VITE_API_URL` to your API base URL.
 
-3. **Database**
+3. **Database** — From repo root (see [docs/quick-start-2-and-3.md](docs/quick-start-2-and-3.md)):
 
    ```bash
    npm run db:generate
