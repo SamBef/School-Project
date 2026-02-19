@@ -14,6 +14,13 @@ function ensureBaseUrl() {
   }
 }
 
+function connectionHint(url) {
+  if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
+    return 'Make sure the API is running (e.g. npm run dev in apps/api). Check apps/admin/.env has VITE_API_URL.';
+  }
+  return 'Check VITE_API_URL on Vercel (admin project). If the API sleeps on Render, wait 30–60 seconds and try again.';
+}
+
 function getToken() {
   return localStorage.getItem('kobotrack_admin_token');
 }
@@ -22,10 +29,16 @@ export const api = {
   async get(path) {
     ensureBaseUrl();
     const token = getToken();
-    const res = await fetch(`${BASE}${path}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      credentials: 'include',
-    });
+    const url = `${BASE}${path}`;
+    let res;
+    try {
+      res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
+      });
+    } catch (err) {
+      throw new Error(`Cannot reach the API at ${url}. ${connectionHint(url)}`);
+    }
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || `Request failed: ${res.status}`);
@@ -36,15 +49,21 @@ export const api = {
   async post(path, body) {
     ensureBaseUrl();
     const token = getToken();
-    const res = await fetch(`${BASE}${path}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      credentials: 'include',
-      body: JSON.stringify(body),
-    });
+    const url = `${BASE}${path}`;
+    let res;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      throw new Error(`Cannot reach the API at ${url}. ${connectionHint(url)}`);
+    }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || `Request failed: ${res.status}`);
     return data;
@@ -53,15 +72,21 @@ export const api = {
   async patch(path, body) {
     ensureBaseUrl();
     const token = getToken();
-    const res = await fetch(`${BASE}${path}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      credentials: 'include',
-      body: JSON.stringify(body),
-    });
+    const url = `${BASE}${path}`;
+    let res;
+    try {
+      res = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      throw new Error(`Cannot reach the API at ${url}. ${connectionHint(url)}`);
+    }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || `Request failed: ${res.status}`);
     return data;
@@ -70,11 +95,17 @@ export const api = {
   async delete(path) {
     ensureBaseUrl();
     const token = getToken();
-    const res = await fetch(`${BASE}${path}`, {
-      method: 'DELETE',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      credentials: 'include',
-    });
+    const url = `${BASE}${path}`;
+    let res;
+    try {
+      res = await fetch(url, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
+      });
+    } catch (err) {
+      throw new Error(`Cannot reach the API at ${url}. ${connectionHint(url)}`);
+    }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || `Request failed: ${res.status}`);
     return data;
