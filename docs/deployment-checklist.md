@@ -2,6 +2,8 @@
 
 Use this before deploying so both apps and the API are ready for production.
 
+**Step-by-step deploy guide (Render + Vercel):** [deploy-render-vercel-step-by-step.md](deploy-render-vercel-step-by-step.md) — do Step 2 (API on Render) then Step 3 (Web and Admin on Vercel).
+
 ---
 
 ## 1. Environment variables
