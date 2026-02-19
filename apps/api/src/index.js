@@ -59,7 +59,8 @@ app.use(compression());
 app.use(express.json({ limit: '5mb' }));
 
 app.get('/health', (req, res) => {
-  const koboaiConfigured = Boolean(config.openaiApiKey && config.openaiApiKey.trim().length > 0);
+  const key = (config.openaiApiKey || (process.env.OPENAI_API_KEY ?? '').trim()).trim();
+  const koboaiConfigured = Boolean(key && key.length > 0);
   res.json({ status: 'ok', service: 'kobotrack-api', koboaiConfigured });
 });
 
