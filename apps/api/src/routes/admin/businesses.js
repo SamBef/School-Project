@@ -715,4 +715,66 @@ router.patch(
   }
 );
 
+/**
+ * Serialize for JSON: Date -> ISO string, Decimal -> string (for snapshot storage).
+ */
+function serializeForArchive(obj) {
+  if (obj === null || obj === undefined) return obj;
+  if (obj instanceof Date) return obj.toISOString();
+  if (typeof obj === 'object' && obj.constructor?.name === 'Decimal') return obj.toString();
+  if (Array.isArray(obj)) return obj.map(serializeForArchive);
+  if (typeof obj === 'object') {
+    const out = {};
+    for (const k of Object.keys(obj)) out[k] = serializeForArchive(obj[k]);
+    return out;
+  }
+  return obj;
+}
+
+/**
+ * DELETE /admin/businesses/:id
+ * Hard delete a company: archive full snapshot first, then delete (cascade removes related data).
+ */
+router.delete(
+  '/:id',
+  wrap(requireAdmin),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const adminId = req.admin?.id ?? 'unknown';
+      const business = await prisma.business.findUnique({
+        where: { id },
+        include: {
+          users: true,
+          transactions: { include: { receipt: true } },
+          expenses: true,
+          activityLogs: true,
+          units: true,
+          locations: true,
+          products: true,
+          suppliers: true,
+          returnReasons: true,
+        },
+      });
+      if (!business) {
+        res.status(404).json({ message: 'Business not found.' });
+        return;
+      }
+      const snapshot = serializeForArchive(business);
+      await prisma.deletedBusinessArchive.create({
+        data: {
+          originalBusinessId: id,
+          deletedByAdminId: adminId,
+          snapshot,
+        },
+      });
+      await prisma.business.delete({ where: { id } });
+      res.json({ message: 'Company deleted. Data archived for potential restoration.' });
+    } catch (err) {
+      console.error('admin business delete error', err);
+      res.status(500).json({ message: 'Failed to delete company.' });
+    }
+  }
+);
+
 export default router;
