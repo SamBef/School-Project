@@ -413,6 +413,49 @@ router.patch(
 );
 
 /**
+ * PATCH /admin/businesses/:id/users/:userId/password
+ * Admin sets a new password for a company member. Current password cannot be retrieved (stored as hash).
+ */
+router.patch(
+  '/:id/users/:userId/password',
+  wrap(requireAdmin),
+  async (req, res) => {
+    try {
+      const { id: businessId, userId } = req.params;
+      const { newPassword } = req.body;
+      if (!newPassword || String(newPassword).length < 8) {
+        res.status(400).json({ message: 'New password must be at least 8 characters.' });
+        return;
+      }
+      const user = await prisma.user.findFirst({
+        where: { id: userId, businessId },
+        select: { id: true, email: true },
+      });
+      if (!user) {
+        res.status(404).json({ message: 'User not found.' });
+        return;
+      }
+      const passwordHash = await bcrypt.hash(String(newPassword), SALT_ROUNDS);
+      await prisma.user.update({
+        where: { id: userId },
+        data: { passwordHash, resetToken: null, resetTokenExpiry: null },
+      });
+      await logActivity({
+        businessId,
+        userId: user.id,
+        action: 'user.password_reset_by_admin',
+        entityType: 'User',
+        entityId: user.id,
+      });
+      res.json({ message: 'Password updated. The member can sign in with the new password.' });
+    } catch (err) {
+      console.error('admin businesses users password error', err);
+      res.status(500).json({ message: 'Failed to update password.' });
+    }
+  }
+);
+
+/**
  * DELETE /admin/businesses/:id/users/:userId
  * Hard delete user only if they have no transactions, expenses, etc. Otherwise ask to deactivate.
  */

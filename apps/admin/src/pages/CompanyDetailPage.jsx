@@ -26,6 +26,8 @@ export default function CompanyDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [addUserOpen, setAddUserOpen] = useState(false);
   const [editUserOpen, setEditUserOpen] = useState(null);
+  const [resetPasswordUser, setResetPasswordUser] = useState(null);
+  const [resetPasswordForm, setResetPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
   const [editForm, setEditForm] = useState({});
   const [addUserForm, setAddUserForm] = useState({ email: '', firstName: '', lastName: '', role: 'CASHIER', sendInvite: true, password: '' });
   const [actionLoading, setActionLoading] = useState(false);
@@ -132,6 +134,29 @@ export default function CompanyDetailPage() {
       setEditUserOpen(null);
     } catch (err) {
       setActionError(err.message || 'Delete failed.');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleResetPassword(e) {
+    e.preventDefault();
+    if (resetPasswordForm.newPassword !== resetPasswordForm.confirmPassword) {
+      setActionError('Passwords do not match.');
+      return;
+    }
+    if (resetPasswordForm.newPassword.length < 8) {
+      setActionError('Password must be at least 8 characters.');
+      return;
+    }
+    setActionError('');
+    setActionLoading(true);
+    try {
+      await api.patch(`/admin/businesses/${id}/users/${resetPasswordUser.id}/password`, { newPassword: resetPasswordForm.newPassword });
+      setResetPasswordUser(null);
+      setResetPasswordForm({ newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      setActionError(err.message || 'Failed to update password.');
     } finally {
       setActionLoading(false);
     }
@@ -306,7 +331,10 @@ export default function CompanyDetailPage() {
                             loading={actionLoading}
                           />
                         ) : (
-                          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditUserOpen(u.id)}>Edit</button>
+                          <span style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
+                            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditUserOpen(u.id)}>Edit</button>
+                            <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setResetPasswordUser(u); setResetPasswordForm({ newPassword: '', confirmPassword: '' }); setActionError(''); }} disabled={actionLoading}>Reset password</button>
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -316,6 +344,29 @@ export default function CompanyDetailPage() {
             </div>
           )}
         </div>
+
+        {resetPasswordUser && (
+          <div className="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="reset-password-title">
+            <div className="admin-modal">
+              <h2 id="reset-password-title">Set new password for {resetPasswordUser.email}</h2>
+              <p style={{ margin: '0 0 var(--space-4)', fontSize: 'var(--text-sm)', color: 'var(--color-neutral-500)' }}>Current passwords cannot be viewed (stored securely). Enter a new password for this member.</p>
+              <form onSubmit={handleResetPassword}>
+                <div className="form-group">
+                  <label htmlFor="rp-new">New password *</label>
+                  <input id="rp-new" type="password" minLength={8} required value={resetPasswordForm.newPassword} onChange={(e) => setResetPasswordForm((f) => ({ ...f, newPassword: e.target.value }))} disabled={actionLoading} />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="rp-confirm">Confirm new password *</label>
+                  <input id="rp-confirm" type="password" minLength={8} required value={resetPasswordForm.confirmPassword} onChange={(e) => setResetPasswordForm((f) => ({ ...f, confirmPassword: e.target.value }))} disabled={actionLoading} />
+                </div>
+                <div className="form-actions">
+                  <button type="submit" className="btn btn-primary" disabled={actionLoading}>{actionLoading ? 'Updating…' : 'Update password'}</button>
+                  <button type="button" className="btn btn-ghost" onClick={() => { setResetPasswordUser(null); setResetPasswordForm({ newPassword: '', confirmPassword: '' }); setActionError(''); }}>Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {addUserOpen && (
           <div className="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="add-user-title">
