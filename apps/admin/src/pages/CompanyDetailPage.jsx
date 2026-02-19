@@ -33,6 +33,7 @@ export default function CompanyDetailPage() {
   const [addUserForm, setAddUserForm] = useState({ email: '', firstName: '', lastName: '', role: 'CASHIER', sendInvite: true, password: '' });
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const loadBusiness = useCallback(() => {
     return api.get(`/admin/businesses/${id}`).then((data) => {
@@ -88,11 +89,11 @@ export default function CompanyDetailPage() {
   }
 
   async function handleDeleteCompany() {
-    if (!window.confirm('Permanently delete this company? All data will be archived for potential restoration but removed from the system. This cannot be undone.')) return;
     setActionError('');
     setActionLoading(true);
     try {
       await api.delete(`/admin/businesses/${id}`);
+      setDeleteConfirmOpen(false);
       navigate('/');
     } catch (err) {
       setActionError(err.message || 'Delete failed.');
@@ -213,7 +214,7 @@ export default function CompanyDetailPage() {
                   ) : (
                     <button type="button" className="btn btn-danger-ghost" onClick={() => handleDeactivateCompany(true)} disabled={actionLoading}>Deactivate company</button>
                   )}
-                  <button type="button" className="btn btn-danger-ghost" onClick={handleDeleteCompany} disabled={actionLoading} title="Permanently remove company; data is archived for potential restoration">Delete company</button>
+                  <button type="button" className="btn btn-danger-ghost" onClick={() => setDeleteConfirmOpen(true)} disabled={actionLoading} title="Permanently remove company; data is archived for potential restoration">Delete company</button>
                 </>
               )}
             </div>
@@ -360,6 +361,34 @@ export default function CompanyDetailPage() {
             </div>
           )}
         </div>
+
+        {deleteConfirmOpen && (
+          <div className="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-company-title" aria-describedby="delete-company-desc">
+            <div className="admin-modal" style={{ maxWidth: '420px' }}>
+              <div style={{ marginBottom: 'var(--space-4)' }}>
+                <h2 id="delete-company-title" style={{ margin: '0 0 var(--space-2)', fontSize: 'var(--text-xl)', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Delete company?
+                </h2>
+                <p id="delete-company-desc" style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 'var(--line-normal)' }}>
+                  All data will be archived for potential restoration but removed from the system. This cannot be undone.
+                </p>
+              </div>
+              <div style={{ padding: 'var(--space-4)', background: 'var(--color-error-muted)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(248, 81, 73, 0.25)', marginBottom: 'var(--space-5)' }}>
+                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
+                  You can restore this company later from <strong>Archived companies</strong>.
+                </p>
+              </div>
+              <div className="form-actions" style={{ justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => setDeleteConfirmOpen(false)} disabled={actionLoading}>
+                  Cancel
+                </button>
+                <button type="button" className="btn btn-danger-ghost" onClick={handleDeleteCompany} disabled={actionLoading}>
+                  {actionLoading ? 'Deleting…' : 'Delete company'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {resetPasswordUser && (
           <div className="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="reset-password-title">
