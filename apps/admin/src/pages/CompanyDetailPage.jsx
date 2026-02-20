@@ -36,6 +36,7 @@ export default function CompanyDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [addUserOpen, setAddUserOpen] = useState(false);
   const [editUserOpen, setEditUserOpen] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -104,8 +105,6 @@ export default function CompanyDetailPage() {
   }
 
   async function handleDeleteCompany() {
-    const confirmMessage = `Permanently delete "${business?.name}"? This removes the company and all its users, transactions, and expenses. This cannot be undone.`;
-    if (!window.confirm(confirmMessage)) return;
     setActionError('');
     setActionLoading(true);
     try {
@@ -225,12 +224,12 @@ export default function CompanyDetailPage() {
                       <span>Reactivate</span>
                     </button>
                   ) : (
-                    <button type="button" className="btn btn-ghost" onClick={() => handleDeactivateCompany(true)} disabled={actionLoading} aria-label="Archive company" title="Archive company (deactivate)">
+                    <button type="button" className="btn btn-ghost" onClick={() => handleDeactivateCompany(true)} disabled={actionLoading} aria-label="Deactivate company" title="Deactivate company">
                       <IconArchive />
-                      <span>Archive</span>
+                      <span>Deactivate</span>
                     </button>
                   )}
-                  <button type="button" className="btn btn-danger-ghost" onClick={handleDeleteCompany} disabled={actionLoading} aria-label="Delete company permanently" title="Delete company (irreversible)">
+                  <button type="button" className="btn btn-danger-ghost" onClick={() => setDeleteConfirmOpen(true)} disabled={actionLoading} aria-label="Delete company permanently" title="Delete company (irreversible)">
                     <IconTrash />
                     <span>Delete company</span>
                   </button>
@@ -393,6 +392,29 @@ export default function CompanyDetailPage() {
             </div>
           )}
         </div>
+
+        {deleteConfirmOpen && (
+          <div className="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-company-title" onClick={(e) => e.target === e.currentTarget && setDeleteConfirmOpen(false)}>
+            <div className="admin-modal admin-modal-confirm" onClick={(e) => e.stopPropagation()}>
+              <h2 id="delete-company-title">Delete company?</h2>
+              <p className="admin-modal-confirm-message">
+                Permanently delete <strong>{business.name}</strong>? This removes the company and all its users, transactions, and expenses. This cannot be undone.
+              </p>
+              <div className="form-actions admin-modal-actions">
+                <button type="button" className="btn btn-ghost" onClick={() => setDeleteConfirmOpen(false)} aria-label="Cancel">Cancel</button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  disabled={actionLoading}
+                  onClick={() => { setDeleteConfirmOpen(false); handleDeleteCompany(); }}
+                  aria-label="Permanently delete company"
+                >
+                  {actionLoading ? 'Deleting…' : 'Delete company'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {addUserOpen && (
           <div className="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="add-user-title">
