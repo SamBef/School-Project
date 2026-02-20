@@ -34,8 +34,8 @@ router.get(
         expenseCount,
       });
     } catch (err) {
-      console.error('admin stats error', err);
-      res.status(500).json({ message: 'Failed to load stats.' });
+      console.error('admin stats error', err?.message ?? err);
+      res.status(500).json({ message: 'Failed to load stats.', detail: process.env.NODE_ENV === 'development' ? (err?.message ?? String(err)) : undefined });
     }
   }
 );
