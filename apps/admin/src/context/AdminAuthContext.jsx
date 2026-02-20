@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { api } from '../lib/api';
 
 const STORAGE_KEY = 'kobotrack_admin_token';
 
@@ -34,6 +35,19 @@ export function AdminAuthProvider({ children }) {
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
+  const refreshAdmin = useCallback(async () => {
+    if (!token) return;
+    try {
+      const data = await api.get('/admin/auth/me');
+      if (data?.admin) {
+        setName(data.admin.name ?? null);
+        setEmail(data.admin.email ?? null);
+      }
+    } catch {
+      // Ignore: token may be expired or network error
+    }
+  }, [token]);
+
   useEffect(() => {
     if (token) {
       const { name: n, email: e } = parsePayload(token);
@@ -45,7 +59,7 @@ export function AdminAuthProvider({ children }) {
     }
   }, [token]);
 
-  const value = { token, name, email, isAuthenticated: !!token, login, logout };
+  const value = { token, name, email, isAuthenticated: !!token, login, logout, refreshAdmin };
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
 }
 

@@ -18,7 +18,7 @@ export default function ArchivePage() {
   const [error, setError] = useState('');
   const [restoringId, setRestoringId] = useState(null);
 
-  useEffect(() => {
+  function loadArchive() {
     setLoading(true);
     setError('');
     api.get('/admin/businesses')
@@ -28,6 +28,24 @@ export default function ArchivePage() {
       })
       .catch((err) => setError(err.message || 'Failed to load archived companies.'))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    loadArchive();
+  }, []);
+
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState !== 'visible') return;
+      api.get('/admin/businesses')
+        .then((data) => {
+          const list = data.businesses ?? [];
+          setBusinesses(list.filter((b) => b.deactivatedAt));
+        })
+        .catch(() => {});
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
   const filtered = useMemo(() => {

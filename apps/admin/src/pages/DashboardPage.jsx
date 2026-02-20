@@ -24,7 +24,7 @@ export default function DashboardPage() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('lastActivity');
 
-  useEffect(() => {
+  function loadData() {
     setLoading(true);
     setError('');
     setStatsError('');
@@ -35,6 +35,20 @@ export default function DashboardPage() {
     api.get('/admin/stats')
       .then(setStats)
       .catch((err) => setStatsError(err.message || 'Failed to load stats.'));
+  }
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState !== 'visible') return;
+      api.get('/admin/businesses').then((data) => setBusinesses(data.businesses ?? [])).catch(() => {});
+      api.get('/admin/stats').then(setStats).catch(() => {});
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
   const filteredAndSorted = useMemo(() => {

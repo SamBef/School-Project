@@ -6,7 +6,7 @@ import AdminBreadcrumbs from '../components/AdminBreadcrumbs';
 import { IconBack, IconSignOut } from '../components/AdminIcons';
 
 export default function ProfilePage() {
-  const { name: contextName, email: contextEmail, logout } = useAdminAuth();
+  const { name: contextName, email: contextEmail, logout, refreshAdmin } = useAdminAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -45,6 +45,7 @@ export default function ProfilePage() {
         body.newPassword = form.newPassword;
       }
       await api.patch('/admin/auth/me', body);
+      await refreshAdmin();
       setMessage('Profile updated.');
       setForm((f) => ({ ...f, currentPassword: '', newPassword: '', confirmNewPassword: '' }));
     } catch (err) {

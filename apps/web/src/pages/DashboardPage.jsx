@@ -44,6 +44,23 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState !== 'visible') return;
+      Promise.all([
+        api.get('/users/count').catch(() => ({ total: 0, active: 0, pending: 0 })),
+        api.get('/dashboard').catch(() => null),
+      ]).then(([team, dash]) => {
+        setTeamCount(team);
+        setStats(dash);
+        if (!dash) setLoadError(t('common.loadFailed'));
+      });
+      api.get('/transactions?limit=5').then((res) => setRecentTransactions(res.transactions || [])).catch(() => {});
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+
+  useEffect(() => {
     Promise.all([
       api.inventory.getLowStockAlerts().then((alerts) => (Array.isArray(alerts) ? alerts.length : 0)).catch(() => 0),
       api.inventory.getProducts({ limit: 1 }).then((res) => res.total ?? 0).catch(() => 0),
