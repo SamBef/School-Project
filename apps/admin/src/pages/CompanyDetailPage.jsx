@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
 import { IconBack, IconProfile, IconSignOut, IconEdit, IconArchive, IconRefresh, IconSave, IconCancel, IconAdd, IconTrash } from '../components/AdminIcons';
+import AdminSelectDropdown from '../components/AdminSelectDropdown';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -16,8 +17,17 @@ function formatDateTime(iso) {
 
 const ROLES = ['OWNER', 'MANAGER', 'CASHIER'];
 
+const LOCALE_OPTIONS = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+  { value: 'fr', label: 'Français' },
+];
+
+const ROLE_OPTIONS = ROLES.map((r) => ({ value: r, label: r }));
+
 export default function CompanyDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { name, email, logout } = useAdminAuth();
   const [business, setBusiness] = useState(null);
   const [users, setUsers] = useState([]);
@@ -87,6 +97,21 @@ export default function CompanyDetailPage() {
       else await loadBusiness();
     } catch (err) {
       setActionError(err.message || 'Action failed.');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleDeleteCompany() {
+    const confirmMessage = `Permanently delete "${business?.name}"? This removes the company and all its users, transactions, and expenses. This cannot be undone.`;
+    if (!window.confirm(confirmMessage)) return;
+    setActionError('');
+    setActionLoading(true);
+    try {
+      await api.delete(`/admin/businesses/${id}`);
+      navigate('/');
+    } catch (err) {
+      setActionError(err.message || 'Delete failed.');
     } finally {
       setActionLoading(false);
     }
@@ -170,7 +195,7 @@ export default function CompanyDetailPage() {
             <IconProfile />
           </Link>
           <span className="admin-header-email">{name || email}</span>
-          <button type="button" className="btn btn-ghost btn-icon" onClick={logout} aria-label="Sign out" title="Sign out">
+          <button type="button" className="btn btn-ghost btn-icon admin-header-signout" onClick={logout} aria-label="Sign out" title="Sign out">
             <IconSignOut />
           </button>
         </div>
@@ -179,24 +204,31 @@ export default function CompanyDetailPage() {
       <main className="admin-main" role="main">
         {actionError && <p className="form-error" role="alert">{actionError}</p>}
 
-        <div className="card">
+        <div className="card card-summary">
           <div className="card-head-actions">
             <h2>Summary</h2>
-            <div className="card-actions">
+            <div className="card-actions card-actions-labeled">
               {!editOpen && (
                 <>
-                  <button type="button" className="btn btn-ghost btn-icon" onClick={() => setEditOpen(true)} disabled={actionLoading} aria-label="Edit company" title="Edit company">
+                  <button type="button" className="btn btn-ghost" onClick={() => setEditOpen(true)} disabled={actionLoading} aria-label="Edit company" title="Edit company">
                     <IconEdit />
+                    <span>Edit</span>
                   </button>
                   {isDeactivated ? (
-                    <button type="button" className="btn btn-ghost btn-icon" onClick={() => handleDeactivateCompany(false)} disabled={actionLoading} aria-label="Reactivate company" title="Reactivate company">
+                    <button type="button" className="btn btn-ghost" onClick={() => handleDeactivateCompany(false)} disabled={actionLoading} aria-label="Reactivate company" title="Reactivate company">
                       <IconRefresh />
+                      <span>Reactivate</span>
                     </button>
                   ) : (
-                    <button type="button" className="btn btn-danger-ghost btn-icon" onClick={() => handleDeactivateCompany(true)} disabled={actionLoading} aria-label="Deactivate company" title="Deactivate company">
+                    <button type="button" className="btn btn-ghost" onClick={() => handleDeactivateCompany(true)} disabled={actionLoading} aria-label="Archive company" title="Archive company (deactivate)">
                       <IconArchive />
+                      <span>Archive</span>
                     </button>
                   )}
+                  <button type="button" className="btn btn-danger-ghost" onClick={handleDeleteCompany} disabled={actionLoading} aria-label="Delete company permanently" title="Delete company (irreversible)">
+                    <IconTrash />
+                    <span>Delete company</span>
+                  </button>
                 </>
               )}
             </div>
@@ -234,49 +266,42 @@ export default function CompanyDetailPage() {
                   <input id="edit-currency" value={editForm.baseCurrencyCode || ''} onChange={(e) => setEditForm((f) => ({ ...f, baseCurrencyCode: e.target.value }))} disabled={actionLoading} />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="edit-baseLocale">Base locale</label>
-                  <select id="edit-baseLocale" value={editForm.baseLocale || 'en'} onChange={(e) => setEditForm((f) => ({ ...f, baseLocale: e.target.value }))} disabled={actionLoading}>
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                    <option value="fr">Français</option>
-                  </select>
+                  <span className="form-label" id="edit-baseLocale-label">Base locale</span>
+                  <AdminSelectDropdown
+                    id="edit-baseLocale"
+                    ariaLabelledBy="edit-baseLocale-label"
+                    ariaLabel="Base locale"
+                    options={LOCALE_OPTIONS}
+                    value={editForm.baseLocale || 'en'}
+                    onChange={(v) => setEditForm((f) => ({ ...f, baseLocale: v }))}
+                    disabled={actionLoading}
+                  />
                 </div>
               </div>
               <div className="form-actions">
-                <button type="submit" className="btn btn-primary btn-icon" disabled={actionLoading} aria-label="Save" title="Save">
+                <button type="submit" className="btn btn-primary" disabled={actionLoading} aria-label="Save" title="Save">
                   <IconSave />
-                  {actionLoading ? <span className="btn-icon-text">Saving…</span> : <span className="btn-icon-text">Save</span>}
+                  <span>{actionLoading ? 'Saving…' : 'Save'}</span>
                 </button>
-                <button type="button" className="btn btn-ghost btn-icon" onClick={() => { setEditOpen(false); setEditForm({ name: business.name, email: business.email, phone: business.phone, primaryLocation: business.primaryLocation, address: business.address || '', baseCurrencyCode: business.baseCurrencyCode, baseLocale: business.baseLocale || 'en' }); }} aria-label="Cancel" title="Cancel">
+                <button type="button" className="btn btn-ghost" onClick={() => { setEditOpen(false); setEditForm({ name: business.name, email: business.email, phone: business.phone, primaryLocation: business.primaryLocation, address: business.address || '', baseCurrencyCode: business.baseCurrencyCode, baseLocale: business.baseLocale || 'en' }); }} aria-label="Cancel" title="Cancel">
                   <IconCancel />
-                  <span className="btn-icon-text">Cancel</span>
+                  <span>Cancel</span>
                 </button>
               </div>
             </form>
           ) : (
-            <dl className="admin-dl">
-              <dt>Email</dt>
-              <dd>{business.email}</dd>
-              <dt>Phone</dt>
-              <dd>{business.phone}</dd>
-              <dt>Location</dt>
-              <dd>{business.primaryLocation}</dd>
-              <dt>Address</dt>
-              <dd>{business.address || '—'}</dd>
-              <dt>Currency</dt>
-              <dd>{business.baseCurrencyCode}</dd>
-              <dt>Base locale</dt>
-              <dd>{business.baseLocale === 'es' ? 'Español' : business.baseLocale === 'fr' ? 'Français' : 'English'}</dd>
-              <dt>Created</dt>
-              <dd>{formatDate(business.createdAt)}</dd>
-              <dt>Team size</dt>
-              <dd>{business.userCount}</dd>
-              <dt>Total transactions</dt>
-              <dd>{business.transactionCount}</dd>
-              <dt>Total expenses</dt>
-              <dd>{business.expenseCount}</dd>
-              <dt>Last activity</dt>
-              <dd>{formatDate(business.lastActivityAt)}</dd>
+            <dl className="admin-dl admin-dl-summary">
+              <div className="admin-dl-row"><dt>Email</dt><dd>{business.email}</dd></div>
+              <div className="admin-dl-row"><dt>Phone</dt><dd>{business.phone}</dd></div>
+              <div className="admin-dl-row"><dt>Location</dt><dd>{business.primaryLocation}</dd></div>
+              <div className="admin-dl-row"><dt>Address</dt><dd>{business.address || '—'}</dd></div>
+              <div className="admin-dl-row"><dt>Currency</dt><dd>{business.baseCurrencyCode}</dd></div>
+              <div className="admin-dl-row"><dt>Base locale</dt><dd>{business.baseLocale === 'es' ? 'Español' : business.baseLocale === 'fr' ? 'Français' : 'English'}</dd></div>
+              <div className="admin-dl-row"><dt>Created</dt><dd>{formatDate(business.createdAt)}</dd></div>
+              <div className="admin-dl-row"><dt>Team size</dt><dd>{business.userCount}</dd></div>
+              <div className="admin-dl-row"><dt>Total transactions</dt><dd>{business.transactionCount}</dd></div>
+              <div className="admin-dl-row"><dt>Total expenses</dt><dd>{business.expenseCount}</dd></div>
+              <div className="admin-dl-row"><dt>Last activity</dt><dd>{formatDate(business.lastActivityAt)}</dd></div>
             </dl>
           )}
         </div>
@@ -309,9 +334,9 @@ export default function CompanyDetailPage() {
         <div className="card">
           <div className="card-head-actions">
             <h2>Users</h2>
-            <button type="button" className="btn btn-primary btn-icon" onClick={() => { setAddUserOpen(true); setActionError(''); }} disabled={actionLoading || isDeactivated} aria-label="Add user" title="Add user">
+            <button type="button" className="btn btn-primary" onClick={() => { setAddUserOpen(true); setActionError(''); }} disabled={actionLoading || isDeactivated} aria-label="Add user" title="Add user">
               <IconAdd />
-              <span className="btn-icon-text">Add user</span>
+              <span>Add user</span>
             </button>
           </div>
           {users.length === 0 ? (
@@ -384,10 +409,16 @@ export default function CompanyDetailPage() {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="au-role">Role</label>
-                  <select id="au-role" value={addUserForm.role} onChange={(e) => setAddUserForm((f) => ({ ...f, role: e.target.value }))} disabled={actionLoading}>
-                    {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-                  </select>
+                  <span className="form-label" id="au-role-label">Role</span>
+                  <AdminSelectDropdown
+                    id="au-role"
+                    ariaLabelledBy="au-role-label"
+                    ariaLabel="Role"
+                    options={ROLE_OPTIONS}
+                    value={addUserForm.role}
+                    onChange={(v) => setAddUserForm((f) => ({ ...f, role: v }))}
+                    disabled={actionLoading}
+                  />
                 </div>
                 <div className="form-group">
                   <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
@@ -445,7 +476,7 @@ export default function CompanyDetailPage() {
   );
 }
 
-const LOCALES = [
+const LOCALES_INLINE = [
   { value: '', label: 'Company default' },
   { value: 'en', label: 'English' },
   { value: 'es', label: 'Español' },
@@ -458,25 +489,40 @@ function UserEditInline({ user, onSave, onDelete, onCancel, loading }) {
   const [locale, setLocale] = useState(user.locale ?? '');
   return (
     <div className="user-edit-inline">
-      <select value={role} onChange={(e) => setRole(e.target.value)} disabled={loading} className="admin-select-sm">
-        {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-      </select>
-      <select value={locale} onChange={(e) => setLocale(e.target.value)} disabled={loading} className="admin-select-sm" title="Member locale">
-        {LOCALES.map((l) => <option key={l.value || 'default'} value={l.value}>{l.label}</option>)}
-      </select>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', fontSize: 'var(--text-xs)' }}>
+      <AdminSelectDropdown
+        id={`user-role-${user.id}`}
+        ariaLabel="Role"
+        options={ROLE_OPTIONS}
+        value={role}
+        onChange={setRole}
+        disabled={loading}
+        className="admin-select-dropdown-sm"
+      />
+      <AdminSelectDropdown
+        id={`user-locale-${user.id}`}
+        ariaLabel="Locale"
+        options={LOCALES_INLINE}
+        value={locale}
+        onChange={(v) => setLocale(v)}
+        disabled={loading}
+        className="admin-select-dropdown-sm"
+      />
+      <label className="user-edit-inline-checkbox">
         <input type="checkbox" checked={deactivated} onChange={(e) => setDeactivated(e.target.checked)} disabled={loading} />
-        Deactivated
+        <span>Deactivated</span>
       </label>
-      <button type="button" className="btn btn-primary btn-sm btn-icon" onClick={() => onSave(role, deactivated, locale || null)} disabled={loading} aria-label="Save" title="Save">
-        <IconSave />
-      </button>
-      <button type="button" className="btn btn-ghost btn-sm btn-icon" onClick={() => onDelete()} disabled={loading} aria-label="Delete user" title="Delete">
-        <IconTrash />
-      </button>
-      <button type="button" className="btn btn-ghost btn-sm btn-icon" onClick={onCancel} aria-label="Cancel" title="Cancel">
-        <IconCancel />
-      </button>
+      <div className="user-edit-inline-buttons">
+        <button type="button" className="btn btn-primary btn-sm" onClick={() => onSave(role, deactivated, locale || null)} disabled={loading} aria-label="Save" title="Save">
+          <IconSave />
+          <span>Save</span>
+        </button>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => onDelete()} disabled={loading} aria-label="Delete user" title="Delete">
+          <IconTrash />
+        </button>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel} aria-label="Cancel" title="Cancel">
+          <IconCancel />
+        </button>
+      </div>
     </div>
   );
 }

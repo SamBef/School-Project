@@ -66,7 +66,7 @@ export default function CreateCompanyPage() {
             <IconProfile />
           </Link>
           <span className="admin-header-email">{name || email}</span>
-          <button type="button" className="btn btn-ghost btn-icon" onClick={logout} aria-label="Sign out" title="Sign out">
+          <button type="button" className="btn btn-ghost btn-icon admin-header-signout" onClick={logout} aria-label="Sign out" title="Sign out">
             <IconSignOut />
           </button>
         </div>
