@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
 import AdminSortDropdown from '../components/AdminSortDropdown';
-import { IconProfile, IconSignOut, IconAdd, IconDownload } from '../components/AdminIcons';
+import AdminBreadcrumbs from '../components/AdminBreadcrumbs';
+import { IconProfile, IconSignOut, IconAdd, IconDownload, IconArchive } from '../components/AdminIcons';
 
 const SORT_OPTIONS = [
   { value: 'name', label: 'Company name' },
@@ -37,7 +38,7 @@ export default function DashboardPage() {
   }, []);
 
   const filteredAndSorted = useMemo(() => {
-    let list = businesses;
+    let list = businesses.filter((b) => !b.deactivatedAt);
     const q = search.trim().toLowerCase();
     if (q) {
       list = list.filter(
@@ -100,9 +101,15 @@ export default function DashboardPage() {
       </header>
 
       <main className="admin-main" role="main">
+        <AdminBreadcrumbs segments={[{ label: 'Dashboard' }]} />
         <div className="admin-actions-top">
-          <Link to="/companies/new" className="btn btn-primary btn-icon" aria-label="Create company" title="Create company">
+          <Link to="/companies/new" className="btn btn-primary" aria-label="Create company" title="Create company">
             <IconAdd />
+            <span>Create company</span>
+          </Link>
+          <Link to="/archive" className="btn btn-ghost" aria-label="View archive" title="View archived companies">
+            <IconArchive />
+            <span>Archive</span>
           </Link>
         </div>
         {statsError && (
@@ -160,10 +167,12 @@ export default function DashboardPage() {
           </div>
 
           {error && <p className="form-error" role="alert">{error}</p>}
-          {loading && <p className="loading">Loading…</p>}
+          {loading && <p className="loading"><span className="loading-spinner" aria-hidden />Loading…</p>}
           {!loading && !error && filteredAndSorted.length === 0 && (
             <p className="empty-state">
-              {businesses.length === 0 ? 'No companies on the platform yet.' : 'No companies match your search.'}
+              {businesses.filter((b) => !b.deactivatedAt).length === 0
+                ? 'No active companies. Create one or restore from Archive.'
+                : 'No active companies match your search.'}
             </p>
           )}
           {!loading && !error && filteredAndSorted.length > 0 && (

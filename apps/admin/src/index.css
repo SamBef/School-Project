@@ -167,9 +167,37 @@ body {
 .card-actions-labeled .btn { display: inline-flex; align-items: center; gap: var(--space-2); }
 .card-summary .admin-dl-summary { margin-top: var(--space-2); }
 .admin-actions-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
+.admin-actions-top .btn { display: inline-flex; align-items: center; gap: var(--space-2); }
+.admin-card-description {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
 .admin-main { flex: 1; padding: clamp(var(--space-4), 4vw, var(--space-6)); max-width: 64rem; margin: 0 auto; width: 100%; min-width: 0; overflow-x: hidden; }
+
+.admin-breadcrumbs {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+}
+.admin-breadcrumbs-item { display: inline; }
+.admin-breadcrumbs-sep {
+  margin: 0 var(--space-2);
+  color: var(--text-muted);
+  user-select: none;
+}
+.admin-breadcrumbs-link {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+.admin-breadcrumbs-link:hover { text-decoration: underline; }
+.admin-breadcrumbs-current { color: var(--text-primary); font-weight: 500; }
 
 /* Companies: table on desktop, cards on small viewports */
 .admin-companies-table { display: block; }
@@ -501,7 +529,29 @@ body {
 .data-table tbody tr { transition: background-color var(--transition-fast); }
 .data-table tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
 .empty-state { text-align: center; padding: var(--space-8); color: var(--text-muted); }
-.loading { text-align: center; padding: var(--space-8); color: var(--text-muted); }
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--text-muted);
+}
+.loading-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--border-default);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: admin-spin 0.7s linear infinite;
+}
+@keyframes admin-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner { animation: none; border-top-color: var(--text-muted); }
+}
 
 
 /* Badges */
@@ -579,6 +629,16 @@ body {
   font-size: var(--text-xs);
 }
 .admin-col-actions { min-width: 14rem; white-space: nowrap; }
+.admin-col-name {
+  white-space: nowrap;
+  min-width: 8rem;
+  padding-right: var(--space-4);
+}
+.admin-col-created {
+  white-space: nowrap;
+  min-width: 6.5rem;
+  padding-right: var(--space-4);
+}
 .admin-select-sm {
   padding: var(--space-1) var(--space-2);
   font-size: var(--text-xs);

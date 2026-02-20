@@ -4,6 +4,7 @@ import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
 import { IconBack, IconProfile, IconSignOut, IconEdit, IconArchive, IconRefresh, IconSave, IconCancel, IconAdd, IconTrash } from '../components/AdminIcons';
 import AdminSelectDropdown from '../components/AdminSelectDropdown';
+import AdminBreadcrumbs from '../components/AdminBreadcrumbs';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -160,7 +161,10 @@ export default function CompanyDetailPage() {
   }
 
   async function handleDeleteUser(userId) {
-    if (!window.confirm('Delete this user? This is only allowed if they have no transactions or expenses.')) return;
+    const user = users.find((u) => u.id === userId);
+    const userName = user ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email : 'this user';
+    const confirmMessage = `Permanently remove ${userName} (${user?.email ?? 'this user'}) from the company? This is only allowed if they have no transactions or expenses. This action cannot be undone.`;
+    if (!window.confirm(confirmMessage)) return;
     setActionError('');
     setActionLoading(true);
     try {
@@ -174,7 +178,7 @@ export default function CompanyDetailPage() {
     }
   }
 
-  if (loading) return <p className="loading">Loading…</p>;
+  if (loading) return <p className="loading"><span className="loading-spinner" aria-hidden />Loading…</p>;
   if (error) return <p className="form-error" role="alert">{error}</p>;
   if (!business) return null;
 
@@ -202,6 +206,7 @@ export default function CompanyDetailPage() {
       </header>
 
       <main className="admin-main" role="main">
+        <AdminBreadcrumbs segments={[{ label: 'Dashboard', to: '/' }, { label: business.name }]} />
         {actionError && <p className="form-error" role="alert">{actionError}</p>}
 
         <div className="card card-summary">
@@ -346,26 +351,26 @@ export default function CompanyDetailPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Name</th>
+                    <th className="admin-col-name">Name</th>
                     <th>Email</th>
                     <th>Role</th>
                     <th>Locale</th>
                     <th>Status</th>
-                    <th>Created</th>
+                    <th className="admin-col-created">Created</th>
                     <th className="admin-col-actions">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((u) => (
                     <tr key={u.id}>
-                      <td>{[u.firstName, u.lastName].filter(Boolean).join(' ') || '—'}</td>
+                      <td className="admin-col-name">{[u.firstName, u.lastName].filter(Boolean).join(' ') || '—'}</td>
                       <td>{u.email}</td>
                       <td>{u.role}</td>
                       <td>{(u.locale || business.baseLocale || 'en') === 'es' ? 'Español' : (u.locale || business.baseLocale || 'en') === 'fr' ? 'Français' : 'English'}</td>
                       <td>
                         {u.deactivatedAt ? <span className="badge badge-inactive">Deactivated</span> : u.hasPassword ? <span className="badge badge-active">Active</span> : <span className="badge badge-pending">Pending invite</span>}
                       </td>
-                      <td>{formatDate(u.createdAt)}</td>
+                      <td className="admin-col-created">{formatDate(u.createdAt)}</td>
                       <td className="admin-col-actions">
                         {editUserOpen === u.id ? (
                           <UserEditInline

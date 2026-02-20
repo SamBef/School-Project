@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
+import AdminBreadcrumbs from '../components/AdminBreadcrumbs';
 import { IconBack, IconSignOut } from '../components/AdminIcons';
 
 export default function ProfilePage() {
@@ -53,7 +54,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) return <p className="loading">Loading…</p>;
+  if (loading) return <p className="loading"><span className="loading-spinner" aria-hidden />Loading…</p>;
   if (error && !profile) {
     return (
       <div className="admin-layout">
@@ -91,6 +92,7 @@ export default function ProfilePage() {
       </header>
 
       <main className="admin-main" role="main">
+        <AdminBreadcrumbs segments={[{ label: 'Dashboard', to: '/' }, { label: 'Profile' }]} />
         <div className="card card-form">
           <h2>Update your login credentials</h2>
           <p style={{ margin: '0 0 var(--space-4)', color: 'var(--color-neutral-600)' }}>

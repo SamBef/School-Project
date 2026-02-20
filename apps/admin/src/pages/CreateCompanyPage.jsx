@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
+import AdminBreadcrumbs from '../components/AdminBreadcrumbs';
 import { IconBack, IconProfile, IconSignOut } from '../components/AdminIcons';
 
 export default function CreateCompanyPage() {
@@ -73,6 +74,7 @@ export default function CreateCompanyPage() {
       </header>
 
       <main className="admin-main" role="main">
+        <AdminBreadcrumbs segments={[{ label: 'Dashboard', to: '/' }, { label: 'Create company' }]} />
         <div className="card card-form">
           <p style={{ margin: '0 0 var(--space-4)', color: 'var(--color-neutral-600)' }}>
             Create a new company and its first user (owner). The owner can sign in to the main app and invite more users.
