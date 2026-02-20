@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
+import { IconBack, IconProfile, IconSignOut } from '../components/AdminIcons';
 
 export default function CreateCompanyPage() {
   const { name, email, logout } = useAdminAuth();
@@ -54,14 +55,20 @@ export default function CreateCompanyPage() {
   return (
     <div className="admin-layout">
       <header className="admin-header" role="banner">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <Link to="/" className="btn btn-ghost" style={{ textDecoration: 'none' }}>← Companies</Link>
-          <h1 style={{ margin: 0 }}>Create company</h1>
+        <div className="admin-header-left">
+          <Link to="/" className="btn btn-ghost btn-icon" aria-label="Back to companies" title="Companies">
+            <IconBack />
+          </Link>
+          <h1 className="admin-header-title">Create company</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <Link to="/profile" className="btn btn-ghost" style={{ textDecoration: 'none' }}>Profile</Link>
+        <div className="admin-header-actions">
+          <Link to="/profile" className="btn btn-ghost btn-icon" aria-label="Profile" title="Profile">
+            <IconProfile />
+          </Link>
           <span className="admin-header-email">{name || email}</span>
-          <button type="button" className="btn btn-ghost" onClick={logout}>Sign out</button>
+          <button type="button" className="btn btn-ghost btn-icon" onClick={logout} aria-label="Sign out" title="Sign out">
+            <IconSignOut />
+          </button>
         </div>
       </header>
 

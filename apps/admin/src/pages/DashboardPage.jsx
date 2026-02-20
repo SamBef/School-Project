@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
 import AdminSortDropdown from '../components/AdminSortDropdown';
+import { IconProfile, IconSignOut, IconAdd, IconDownload } from '../components/AdminIcons';
 
 const SORT_OPTIONS = [
   { value: 'name', label: 'Company name' },
@@ -16,18 +17,23 @@ export default function DashboardPage() {
   const { name, email, logout } = useAdminAuth();
   const [businesses, setBusinesses] = useState([]);
   const [stats, setStats] = useState(null);
+  const [statsError, setStatsError] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('lastActivity');
 
   useEffect(() => {
-    Promise.all([
-      api.get('/admin/businesses').then((data) => setBusinesses(data.businesses ?? [])),
-      api.get('/admin/stats').then(setStats),
-    ])
-      .catch((err) => setError(err.message || 'Failed to load data.'))
+    setLoading(true);
+    setError('');
+    setStatsError('');
+    api.get('/admin/businesses')
+      .then((data) => setBusinesses(data.businesses ?? []))
+      .catch((err) => setError(err.message || 'Failed to load companies.'))
       .finally(() => setLoading(false));
+    api.get('/admin/stats')
+      .then(setStats)
+      .catch((err) => setStatsError(err.message || 'Failed to load stats.'));
   }, []);
 
   const filteredAndSorted = useMemo(() => {
@@ -79,20 +85,29 @@ export default function DashboardPage() {
   return (
     <div className="admin-layout">
       <header className="admin-header" role="banner">
-        <h1>KoboTrack Admin</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <Link to="/profile" className="btn btn-ghost" style={{ textDecoration: 'none' }}>Profile</Link>
+        <div className="admin-header-left">
+          <h1 className="admin-header-title">KoboTrack Admin</h1>
+        </div>
+        <div className="admin-header-actions">
+          <Link to="/profile" className="btn btn-ghost btn-icon" aria-label="Profile" title="Profile">
+            <IconProfile />
+          </Link>
           <span className="admin-header-email">{name || email}</span>
-          <button type="button" className="btn btn-ghost" onClick={logout}>
-            Sign out
+          <button type="button" className="btn btn-ghost btn-icon" onClick={logout} aria-label="Sign out" title="Sign out">
+            <IconSignOut />
           </button>
         </div>
       </header>
 
       <main className="admin-main" role="main">
-        <div style={{ marginBottom: 'var(--space-4)' }}>
-          <Link to="/companies/new" className="btn btn-primary">Create company</Link>
+        <div className="admin-actions-top">
+          <Link to="/companies/new" className="btn btn-primary btn-icon" aria-label="Create company" title="Create company">
+            <IconAdd />
+          </Link>
         </div>
+        {statsError && (
+          <p className="form-error" role="alert" style={{ marginBottom: 'var(--space-2)' }}>{statsError}</p>
+        )}
         {stats && (
           <div className="admin-stats">
             <div className="admin-stat">
@@ -139,8 +154,8 @@ export default function DashboardPage() {
                 ariaLabelledBy="admin-sort-label"
               />
             </div>
-            <button type="button" className="btn btn-ghost" onClick={exportCSV} disabled={filteredAndSorted.length === 0}>
-              Export CSV
+            <button type="button" className="btn btn-ghost btn-icon" onClick={exportCSV} disabled={filteredAndSorted.length === 0} aria-label="Export CSV" title="Export CSV">
+              <IconDownload />
             </button>
           </div>
 
@@ -152,8 +167,9 @@ export default function DashboardPage() {
             </p>
           )}
           {!loading && !error && filteredAndSorted.length > 0 && (
-            <div className="admin-table-wrap">
-              <table className="data-table" role="grid">
+            <>
+              <div className="admin-table-wrap admin-companies-table">
+                <table className="data-table" role="grid">
                 <thead>
                   <tr>
                     <th>Company</th>
@@ -186,6 +202,16 @@ export default function DashboardPage() {
                 </tbody>
               </table>
             </div>
+              <div className="admin-companies-cards" aria-label="Companies list">
+                {filteredAndSorted.map((b) => (
+                  <Link to={`/companies/${b.id}`} key={b.id} className="admin-company-card">
+                    <span className="admin-company-card-name">{b.name}</span>
+                    <span className="admin-company-card-meta">{b.primaryLocation || '—'} · {b.baseCurrencyCode} · {b.userCount} users</span>
+                    <span className="admin-company-card-status">{b.deactivatedAt ? 'Deactivated' : 'Active'}</span>
+                  </Link>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </main>

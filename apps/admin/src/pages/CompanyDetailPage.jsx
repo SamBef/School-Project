@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
+import { IconBack, IconProfile, IconSignOut, IconEdit, IconArchive, IconRefresh, IconSave, IconCancel, IconAdd, IconTrash } from '../components/AdminIcons';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -62,8 +63,13 @@ export default function CompanyDetailPage() {
     setActionError('');
     setActionLoading(true);
     try {
-      await api.patch(`/admin/businesses/${id}`, editForm);
-      await loadBusiness();
+      const res = await api.patch(`/admin/businesses/${id}`, editForm);
+      if (res.business) {
+        setBusiness((prev) => ({ ...prev, ...res.business }));
+        setEditForm((prev) => ({ ...prev, ...res.business, baseLocale: res.business.baseLocale ?? 'en' }));
+      } else {
+        await loadBusiness();
+      }
       setEditOpen(false);
     } catch (err) {
       setActionError(err.message || 'Update failed.');
@@ -76,8 +82,9 @@ export default function CompanyDetailPage() {
     setActionError('');
     setActionLoading(true);
     try {
-      await api.patch(`/admin/businesses/${id}`, { deactivated: !!deactivate });
-      await loadBusiness();
+      const res = await api.patch(`/admin/businesses/${id}`, { deactivated: !!deactivate });
+      if (res.business) setBusiness((prev) => ({ ...prev, ...res.business }));
+      else await loadBusiness();
     } catch (err) {
       setActionError(err.message || 'Action failed.');
     } finally {
@@ -113,8 +120,12 @@ export default function CompanyDetailPage() {
     setActionError('');
     setActionLoading(true);
     try {
-      await api.patch(`/admin/businesses/${id}/users/${userId}`, payload);
-      await loadUsers();
+      const res = await api.patch(`/admin/businesses/${id}/users/${userId}`, payload);
+      if (res.user) {
+        setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, ...res.user, locale: res.user.locale ?? u.locale } : u)));
+      } else {
+        await loadUsers();
+      }
       setEditUserOpen(null);
     } catch (err) {
       setActionError(err.message || 'Update failed.');
@@ -147,15 +158,21 @@ export default function CompanyDetailPage() {
   return (
     <div className="admin-layout">
       <header className="admin-header" role="banner">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <Link to="/" className="btn btn-ghost" style={{ textDecoration: 'none' }}>← Companies</Link>
-          <h1 style={{ margin: 0 }}>{business.name}</h1>
+        <div className="admin-header-left">
+          <Link to="/" className="btn btn-ghost btn-icon" aria-label="Back to companies" title="Companies">
+            <IconBack />
+          </Link>
+          <h1 className="admin-header-title">{business.name}</h1>
           {isDeactivated && <span className="badge badge-inactive">Deactivated</span>}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <Link to="/profile" className="btn btn-ghost" style={{ textDecoration: 'none' }}>Profile</Link>
+        <div className="admin-header-actions">
+          <Link to="/profile" className="btn btn-ghost btn-icon" aria-label="Profile" title="Profile">
+            <IconProfile />
+          </Link>
           <span className="admin-header-email">{name || email}</span>
-          <button type="button" className="btn btn-ghost" onClick={logout}>Sign out</button>
+          <button type="button" className="btn btn-ghost btn-icon" onClick={logout} aria-label="Sign out" title="Sign out">
+            <IconSignOut />
+          </button>
         </div>
       </header>
 
@@ -163,16 +180,22 @@ export default function CompanyDetailPage() {
         {actionError && <p className="form-error" role="alert">{actionError}</p>}
 
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+          <div className="card-head-actions">
             <h2>Summary</h2>
-            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            <div className="card-actions">
               {!editOpen && (
                 <>
-                  <button type="button" className="btn btn-ghost" onClick={() => setEditOpen(true)} disabled={actionLoading}>Edit company</button>
+                  <button type="button" className="btn btn-ghost btn-icon" onClick={() => setEditOpen(true)} disabled={actionLoading} aria-label="Edit company" title="Edit company">
+                    <IconEdit />
+                  </button>
                   {isDeactivated ? (
-                    <button type="button" className="btn btn-ghost" onClick={() => handleDeactivateCompany(false)} disabled={actionLoading}>Reactivate company</button>
+                    <button type="button" className="btn btn-ghost btn-icon" onClick={() => handleDeactivateCompany(false)} disabled={actionLoading} aria-label="Reactivate company" title="Reactivate company">
+                      <IconRefresh />
+                    </button>
                   ) : (
-                    <button type="button" className="btn btn-danger-ghost" onClick={() => handleDeactivateCompany(true)} disabled={actionLoading}>Deactivate company</button>
+                    <button type="button" className="btn btn-danger-ghost btn-icon" onClick={() => handleDeactivateCompany(true)} disabled={actionLoading} aria-label="Deactivate company" title="Deactivate company">
+                      <IconArchive />
+                    </button>
                   )}
                 </>
               )}
@@ -220,8 +243,14 @@ export default function CompanyDetailPage() {
                 </div>
               </div>
               <div className="form-actions">
-                <button type="submit" className="btn btn-primary" disabled={actionLoading}>{actionLoading ? 'Saving…' : 'Save'}</button>
-                <button type="button" className="btn btn-ghost" onClick={() => { setEditOpen(false); setEditForm({ name: business.name, email: business.email, phone: business.phone, primaryLocation: business.primaryLocation, address: business.address || '', baseCurrencyCode: business.baseCurrencyCode, baseLocale: business.baseLocale || 'en' }); }}>Cancel</button>
+                <button type="submit" className="btn btn-primary btn-icon" disabled={actionLoading} aria-label="Save" title="Save">
+                  <IconSave />
+                  {actionLoading ? <span className="btn-icon-text">Saving…</span> : <span className="btn-icon-text">Save</span>}
+                </button>
+                <button type="button" className="btn btn-ghost btn-icon" onClick={() => { setEditOpen(false); setEditForm({ name: business.name, email: business.email, phone: business.phone, primaryLocation: business.primaryLocation, address: business.address || '', baseCurrencyCode: business.baseCurrencyCode, baseLocale: business.baseLocale || 'en' }); }} aria-label="Cancel" title="Cancel">
+                  <IconCancel />
+                  <span className="btn-icon-text">Cancel</span>
+                </button>
               </div>
             </form>
           ) : (
@@ -278,9 +307,12 @@ export default function CompanyDetailPage() {
         </div>
 
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+          <div className="card-head-actions">
             <h2>Users</h2>
-            <button type="button" className="btn btn-primary" onClick={() => { setAddUserOpen(true); setActionError(''); }} disabled={actionLoading || isDeactivated}>Add user</button>
+            <button type="button" className="btn btn-primary btn-icon" onClick={() => { setAddUserOpen(true); setActionError(''); }} disabled={actionLoading || isDeactivated} aria-label="Add user" title="Add user">
+              <IconAdd />
+              <span className="btn-icon-text">Add user</span>
+            </button>
           </div>
           {users.length === 0 ? (
             <p className="empty-state">No users yet. Add an owner when creating the company, or add users here.</p>
@@ -295,7 +327,7 @@ export default function CompanyDetailPage() {
                     <th>Locale</th>
                     <th>Status</th>
                     <th>Created</th>
-                    <th>Actions</th>
+                    <th className="admin-col-actions">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -309,7 +341,7 @@ export default function CompanyDetailPage() {
                         {u.deactivatedAt ? <span className="badge badge-inactive">Deactivated</span> : u.hasPassword ? <span className="badge badge-active">Active</span> : <span className="badge badge-pending">Pending invite</span>}
                       </td>
                       <td>{formatDate(u.createdAt)}</td>
-                      <td>
+                      <td className="admin-col-actions">
                         {editUserOpen === u.id ? (
                           <UserEditInline
                             user={u}
@@ -319,7 +351,9 @@ export default function CompanyDetailPage() {
                             loading={actionLoading}
                           />
                         ) : (
-                          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditUserOpen(u.id)}>Edit</button>
+                          <button type="button" className="btn btn-ghost btn-sm btn-icon" onClick={() => setEditUserOpen(u.id)} aria-label="Edit user" title="Edit">
+                            <IconEdit />
+                          </button>
                         )}
                       </td>
                     </tr>
@@ -369,7 +403,9 @@ export default function CompanyDetailPage() {
                 )}
                 <div className="form-actions">
                   <button type="submit" className="btn btn-primary" disabled={actionLoading}>{actionLoading ? 'Adding…' : 'Add user'}</button>
-                  <button type="button" className="btn btn-ghost" onClick={() => { setAddUserOpen(false); setActionError(''); }}>Cancel</button>
+                  <button type="button" className="btn btn-ghost btn-icon" onClick={() => { setAddUserOpen(false); setActionError(''); }} aria-label="Cancel" title="Cancel">
+                    <IconCancel />
+                  </button>
                 </div>
               </form>
             </div>
@@ -432,9 +468,15 @@ function UserEditInline({ user, onSave, onDelete, onCancel, loading }) {
         <input type="checkbox" checked={deactivated} onChange={(e) => setDeactivated(e.target.checked)} disabled={loading} />
         Deactivated
       </label>
-      <button type="button" className="btn btn-primary btn-sm" onClick={() => onSave(role, deactivated, locale || null)} disabled={loading}>Save</button>
-      <button type="button" className="btn btn-ghost btn-sm" onClick={() => onDelete()} disabled={loading}>Delete</button>
-      <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel}>Cancel</button>
+      <button type="button" className="btn btn-primary btn-sm btn-icon" onClick={() => onSave(role, deactivated, locale || null)} disabled={loading} aria-label="Save" title="Save">
+        <IconSave />
+      </button>
+      <button type="button" className="btn btn-ghost btn-sm btn-icon" onClick={() => onDelete()} disabled={loading} aria-label="Delete user" title="Delete">
+        <IconTrash />
+      </button>
+      <button type="button" className="btn btn-ghost btn-sm btn-icon" onClick={onCancel} aria-label="Cancel" title="Cancel">
+        <IconCancel />
+      </button>
     </div>
   );
 }

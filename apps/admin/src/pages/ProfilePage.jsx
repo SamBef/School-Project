@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { api } from '../lib/api';
+import { IconBack, IconSignOut } from '../components/AdminIcons';
 
 export default function ProfilePage() {
   const { name: contextName, email: contextEmail, logout } = useAdminAuth();
@@ -57,9 +58,11 @@ export default function ProfilePage() {
     return (
       <div className="admin-layout">
         <header className="admin-header" role="banner">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <Link to="/" className="btn btn-ghost" style={{ textDecoration: 'none' }}>← Dashboard</Link>
-            <h1 style={{ margin: 0 }}>Profile</h1>
+          <div className="admin-header-left">
+            <Link to="/" className="btn btn-ghost btn-icon" aria-label="Back to dashboard" title="Dashboard">
+              <IconBack />
+            </Link>
+            <h1 className="admin-header-title">Profile</h1>
           </div>
         </header>
         <main className="admin-main" role="main">
@@ -73,13 +76,17 @@ export default function ProfilePage() {
   return (
     <div className="admin-layout">
       <header className="admin-header" role="banner">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <Link to="/" className="btn btn-ghost" style={{ textDecoration: 'none' }}>← Dashboard</Link>
-          <h1 style={{ margin: 0 }}>Profile</h1>
+        <div className="admin-header-left">
+          <Link to="/" className="btn btn-ghost btn-icon" aria-label="Back to dashboard" title="Dashboard">
+            <IconBack />
+          </Link>
+          <h1 className="admin-header-title">Profile</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+        <div className="admin-header-actions">
           <span className="admin-header-email">{contextName || contextEmail}</span>
-          <button type="button" className="btn btn-ghost" onClick={logout}>Sign out</button>
+          <button type="button" className="btn btn-ghost btn-icon" onClick={logout} aria-label="Sign out" title="Sign out">
+            <IconSignOut />
+          </button>
         </div>
       </header>
 
