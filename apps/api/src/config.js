@@ -43,8 +43,11 @@ if (!(process.env.OPENAI_API_KEY ?? '').trim()) {
   }
 }
 
+const rawPort = parseInt(process.env.PORT ?? '3005', 10);
+const port = rawPort === 3004 ? 3005 : rawPort;
+
 export const config = {
-  port: parseInt(process.env.PORT ?? '3003', 10),
+  port,
   frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:5173',
   adminFrontendUrl: process.env.ADMIN_FRONTEND_URL ?? 'http://localhost:5174', // admin app origin for CORS
   jwtSecret: process.env.JWT_SECRET ?? '',

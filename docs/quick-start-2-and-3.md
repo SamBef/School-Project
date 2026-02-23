@@ -18,7 +18,7 @@ Follow these in order after you have cloned the repo and run `npm install` (step
 **Short version:**
 
 1. **API** — In `apps/api`, copy `.env.example` → `.env`. Fill in: `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, email (Gmail **or** SendGrid), `FRONTEND_URL`. See [configuration-guide.md](configuration-guide.md#1-api-environment-appsapienv).
-2. **Web** — In `apps/web`, copy `.env.example` → `.env`. Set `VITE_API_URL` (e.g. `http://localhost:3004`). See [configuration-guide.md](configuration-guide.md#2-web-app-environment-appswebenv).
+2. **Web** — In `apps/web`, copy `.env.example` → `.env`. Set `VITE_API_URL` (e.g. `http://localhost:3005`). See [configuration-guide.md](configuration-guide.md#2-web-app-environment-appswebenv).
 3. **Admin** — Optional. Only if the admin app uses a different API: copy `apps/admin/.env.example` → `.env` and set `VITE_ADMIN_API_URL` if needed. See [configuration-guide.md](configuration-guide.md#3-admin-app-environment-appsadminenv--optional).
 
 ---

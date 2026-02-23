@@ -181,7 +181,7 @@ This document records known gaps in the project: missing tests, incomplete docum
 
 The following are **not** current gaps; they were completed before AI work:
 
-- API and web ports fixed to 3003 / 5173; API exits if port is in use.
+- API default port 3005, web 5174 (or 5173); API exits if port is in use.
 - GET /expenses invalid `category` returns 400 with valid categories listed.
 - Smoke test and testing docs updated (when to run, what to expect).
 - Config test includes `jwtSecret` assertion.

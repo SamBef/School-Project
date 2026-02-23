@@ -30,7 +30,7 @@ npm run test
 From the repo root, in two terminals:
 
 ```bash
-# Terminal 1 — API (port 3003)
+# Terminal 1 — API (port 3005)
 npm run dev:api
 
 # Terminal 2 — Web (port 5173)

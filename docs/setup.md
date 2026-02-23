@@ -79,7 +79,7 @@ Copy from `apps/web/.env.example` and set:
 
 | Variable | Description |
 |----------|-------------|
-| `VITE_API_URL` | Base URL of the API (e.g. `http://localhost:3003`) |
+| `VITE_API_URL` | Base URL of the API (e.g. `http://localhost:3005`) |
 
 ---
 
@@ -116,7 +116,7 @@ npm run dev:web
 ```
 
 - Web: usually `http://localhost:5173`
-- API: usually `http://localhost:3003`
+- API: usually `http://localhost:3005`
 
 ---
 

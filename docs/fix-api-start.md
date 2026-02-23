@@ -1,14 +1,14 @@
-# Fix: "EPERM" and "Port 3003 is in use" when starting the API
+# Fix: "EPERM" and "Port 3005 is in use" when starting the API
 
 You see both:
 - **EPERM: operation not permitted, rename ... query_engine-windows.dll.node**
-- **Port 3003 is in use**
+- **Port 3005 is in use**
 
-So **another API (or Node) process is already running**: it’s using port 3003 and has the Prisma files locked. You need to stop that process and then start the API **once**.
+So **another API (or Node) process is already running**: it’s using port 3005 and has the Prisma files locked. You need to stop that process and then start the API **once**.
 
 ---
 
-## Step 1: Stop whatever is using port 3003
+## Step 1: Stop whatever is using port 3005
 
 **Option A — From the terminal**
 
@@ -29,12 +29,12 @@ So **another API (or Node) process is already running**: it’s using port 3003 
 Run in PowerShell:
 
 ```powershell
-$conn = Get-NetTCPConnection -LocalPort 3003 -ErrorAction SilentlyContinue
+$conn = Get-NetTCPConnection -LocalPort 3005 -ErrorAction SilentlyContinue
 if ($conn) {
   Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue
-  Write-Host "Stopped process using port 3003."
+  Write-Host "Stopped process using port 3005."
 } else {
-  Write-Host "Nothing is using port 3003."
+  Write-Host "Nothing is using port 3005."
 }
 ```
 
@@ -58,7 +58,7 @@ node src/index.js
 You should see something like:
 
 - `CORS allowed origins: http://localhost:5173, http://localhost:5174`
-- `KoboTrack API listening on port 3003`
+- `KoboTrack API listening on port 3005`
 
 Leave this terminal open and use the app. Do **not** start the API again in another terminal.
 
@@ -69,6 +69,6 @@ Leave this terminal open and use the app. Do **not** start the API again in anot
 | Problem | Cause | Fix |
 |--------|--------|-----|
 | EPERM on Prisma file | Another process has the file open | Stop that process (API or Node in another terminal / Task Manager) |
-| Port 3003 is in use | API (or another app) already listening on 3003 | Stop that process; then start the API only once |
+| Port 3005 is in use | API (or another app) already listening on 3005 | Stop that process; then start the API only once |
 
 After stopping the old process, start the API **once** from `apps/api` with `node src/index.js`.

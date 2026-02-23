@@ -8,7 +8,7 @@ For a full list of admin features (create company, manage users, deactivate, act
 
 **Option A — Different port for admin (recommended: same DB, admin on 3005)**
 
-- **Terminal 1** — API for main app (port from `apps/api/.env`, e.g. 3004):
+- **Terminal 1** — API for main app (port from `apps/api/.env`, default 3005):
   ```powershell
   cd c:\Users\User\Desktop\DTTRASM\apps\api
   npm run dev
@@ -26,7 +26,7 @@ For a full list of admin features (create company, manage users, deactivate, act
 
 **Option B — Same API for both (admin uses same port as main)**
 
-- Run the API once (e.g. `npm run dev` in `apps/api`, port 3004). Do **not** set `VITE_ADMIN_API_URL` in `apps/admin/.env` (or leave it unset); the admin app will use the Vite proxy and talk to the same port.
+- Run the API once (e.g. `npm run dev` in `apps/api`, port 3005). Do **not** set `VITE_ADMIN_API_URL` in `apps/admin/.env` (or leave it unset); the admin app will use the Vite proxy and talk to the same port.
 
 ---
 
@@ -77,7 +77,7 @@ The admin app will run at **http://localhost:5174**.
 
 ## If the API is on a different port
 
-If your API runs on a port other than 3003, create **`apps/admin/.env`** with:
+If your API runs on a port other than 3005, create **`apps/admin/.env`** with:
 
 ```env
 VITE_API_URL=http://localhost:YOUR_PORT

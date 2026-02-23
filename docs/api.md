@@ -1,6 +1,6 @@
 # API reference
 
-KoboTrack REST API — base URL: `VITE_API_URL` (e.g. `http://localhost:3003`).
+KoboTrack REST API — base URL: `VITE_API_URL` (e.g. `http://localhost:3005`).
 
 All protected routes require header: `Authorization: Bearer <token>`.
 

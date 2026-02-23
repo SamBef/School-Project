@@ -35,13 +35,13 @@ Test commands live in `apps/web` and `apps/api` package.json (e.g. `npm run test
 
 Before large feature work (e.g. AI integration), run the full API smoke test to confirm all critical endpoints work:
 
-1. **Free port 3003** (if needed): stop any process using it (e.g. previous API instance).
-2. **Start the API:** from repo root run `npm run dev:api`. Wait until you see: `KoboTrack API listening on port 3003`.
+1. **Free port 3005** (if needed): stop any process using it (e.g. previous API instance).
+2. **Start the API:** from repo root run `npm run dev:api`. Wait until you see: `KoboTrack API listening on port 3005`.
 3. **Run the smoke test:** in another terminal, from repo root:
    ```bash
    cd apps/api && npm run test:smoke
    ```
-   Or set `API_URL` if the API runs elsewhere: `API_URL=http://localhost:3003 node scripts/smoke-test-api.js`.
+   Or set `API_URL` if the API runs elsewhere: `API_URL=http://localhost:3005 node scripts/smoke-test-api.js`.
 4. **Expect:** all checks to pass (health, register, login, dashboard, inventory locations/units/products/create unit/alerts, expenses, transactions, and unauthenticated 401).
 
 **Requirements:** The API must have `DATABASE_URL`, `DIRECT_URL` (can match `DATABASE_URL`), and `JWT_SECRET` in `apps/api/.env`. If you see a TLS error on Windows, set `DATABASE_INSECURE_SSL=1` in `.env` for local dev only (see docs/setup.md).

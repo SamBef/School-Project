@@ -96,7 +96,7 @@ Use your real deployed URL in production (e.g. `https://app.yourdomain.com`).
 
 | Variable | Meaning | Default |
 |----------|---------|---------|
-| `PORT` | Port the API listens on. | `3003` (this project often uses `3004`; set if needed). |
+| `PORT` | Port the API listens on. | `3005` (set in `apps/api/.env` if needed). |
 | `ADMIN_FRONTEND_URL` | URL of the admin app if it runs on a different origin (for CORS). | Not set. e.g. `http://localhost:5174` |
 | `OPENAI_API_KEY` | For "Suggest category" on expenses. If unset, that feature returns 503. | Not set. |
 
@@ -117,9 +117,9 @@ Use your real deployed URL in production (e.g. `https://app.yourdomain.com`).
 
 | Variable | Meaning | Example (local) |
 |----------|---------|------------------|
-| `VITE_API_URL` | Base URL of the API, **no trailing slash**. The web app calls this URL for all requests. | `http://localhost:3004` |
+| `VITE_API_URL` | Base URL of the API, **no trailing slash**. The web app calls this URL for all requests. | `http://localhost:3005` |
 
-Use the same port (or host) as the API. If your API runs on port 3004, use `http://localhost:3004`. In production, use your API domain (e.g. `https://api.yourdomain.com`).
+Use the same port (or host) as the API. Default API port is 3005, so use `http://localhost:3005`. In production, use your API domain (e.g. `https://api.yourdomain.com`).
 
 ---
 
@@ -139,7 +139,7 @@ You only need this if the **admin app** should talk to an API that is different 
 | `VITE_ADMIN_API_URL` | API URL used by the admin app. | Only if the admin app uses a different API than the main app. |
 | `VITE_API_URL` | Fallback API URL for the admin app. | Only if you need to override the default (e.g. for production build). |
 
-**If you don’t create `apps/admin/.env`:** In development, the admin app usually uses the Vite proxy and talks to the same API as the main app (e.g. `localhost:3004`). So for local dev you can skip this file.
+**If you don’t create `apps/admin/.env`:** In development, the admin app usually uses the Vite proxy and talks to the same API as the main app (e.g. `localhost:3005`). So for local dev you can skip this file.
 
 ---
 
@@ -151,7 +151,7 @@ You only need this if the **admin app** should talk to an API that is different 
   - [ ] Email: either Gmail (`SMTP_USER`, `SMTP_PASS`) or SendGrid (`SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`).  
   - [ ] `FRONTEND_URL` set (e.g. `http://localhost:5173`).  
 - [ ] **Web:** `apps/web/.env` exists.  
-  - [ ] `VITE_API_URL` set (e.g. `http://localhost:3004`).  
+  - [ ] `VITE_API_URL` set (e.g. `http://localhost:3005`).  
 - [ ] **Admin:** Only if needed: `apps/admin/.env` with `VITE_ADMIN_API_URL` or `VITE_API_URL`.
 
 After this, run [Step 3 (Database)](quick-start-2-and-3.md#step-3--database-in-order) from the repo root: `npm run db:generate` then `npm run db:push`.

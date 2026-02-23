@@ -27,7 +27,7 @@ npm run db:push --workspace=apps/api
 In two terminals:
 
 ```bash
-npm run dev:api    # Backend → http://localhost:3003
+npm run dev:api    # Backend → http://localhost:3005
 npm run dev:web    # Frontend → http://localhost:5173
 ```
 
@@ -112,6 +112,6 @@ npm run dev:web    # Frontend → http://localhost:5173
 |---------|----------|
 | `db:push` fails with P1001 | Check `DATABASE_URL` in `apps/api/.env`. See `docs/database-option.md`. |
 | `dev:web` shows Vite errors | Run `npm install` from the project root. |
-| `dev:api` port in use | The API auto-tries ports 3003–3013. Update `VITE_API_URL` in `apps/web/.env` if it starts on a different port. |
+| `dev:api` port in use | The API default port is 3005. Update `VITE_API_URL` in `apps/web/.env` if it starts on a different port. |
 | Invite email not sent | Expected without SendGrid. The invite link appears on screen. See `docs/sendgrid.md` to configure email. |
 | `db:generate` EPERM error | Stop the API server first, then run `npm run db:generate`. See `docs/db-generate-fix.md`. |

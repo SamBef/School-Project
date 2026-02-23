@@ -17,7 +17,7 @@ Use this before deploying so both apps and the API are ready for production.
 | `JWT_SECRET` | Yes | Long random string. **Never** use the dev value in production. |
 | `FRONTEND_URL` | Yes | Main app origin for CORS and email links (e.g. `https://app.yourdomain.com`). |
 | `ADMIN_FRONTEND_URL` | Yes | Admin app origin for CORS and reset links (e.g. `https://admin.yourdomain.com`). |
-| `PORT` | Optional | Default 3003. Set on your host (e.g. Render, Railway). |
+| `PORT` | Optional | Default 3005. Set on your host (e.g. Render, Railway). |
 | `SMTP_*` or `SENDGRID_*` | For emails | Invites, forgot-password, reset. |
 | `OPENAI_API_KEY` | Optional | For KoboAI features. |
 
@@ -88,7 +88,7 @@ Do **not** set `NODE_TLS_REJECT_UNAUTHORIZED=0` or `DATABASE_INSECURE_SSL=1` in 
 
 ## 7. Ports (local reference)
 
-- API: default `3003`; project often uses `3004` in `.env`.  
+- API: default `3005`.  
 - Main app dev: `5173`.  
 - Admin app dev: `5174`.  
-- Smoke test default: `http://localhost:3004` (set `API_URL` if your API uses another port).
+- Smoke test default: `http://localhost:3005` (set `API_URL` if your API uses another port).

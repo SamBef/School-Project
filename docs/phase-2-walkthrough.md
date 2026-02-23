@@ -146,7 +146,7 @@ See `docs/phase-2-run-and-test.md` for the full step-by-step testing guide.
 
 Quick summary:
 
-1. `npm run dev:api` — start backend on port 3003.
+1. `npm run dev:api` — start backend on port 3005.
 2. `npm run dev:web` — start frontend on port 5173.
 3. Open `http://localhost:5173/` — landing page.
 4. Register a business, then test login, dashboard, profile, invite, language switcher.
