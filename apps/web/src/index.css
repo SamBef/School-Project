@@ -697,6 +697,19 @@ img {
   margin-top: var(--space-1);
 }
 
+.profile-suggested-currency {
+  margin-top: var(--space-2);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.btn-inline {
+  margin-left: 0;
+  vertical-align: middle;
+}
+
 .form-hint-error {
   color: var(--color-error, #b91c1c);
 }
@@ -1062,12 +1075,13 @@ fieldset legend {
 .layout-header {
   display: flex;
   align-items: center;
-  padding: var(--space-3) clamp(var(--space-4), 4vw, var(--space-5));
+  padding: var(--space-4) clamp(var(--space-4), 4vw, var(--space-6));
   gap: var(--space-3);
   background-color: var(--surface-raised);
   border-bottom: 1px solid var(--border-default);
   position: sticky;
   top: 0;
+  box-shadow: var(--shadow-sm);
   z-index: 10;
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--transition-normal);
@@ -1927,6 +1941,7 @@ img.header-user-avatar-img {
    Dashboard
    ============================ */
 
+/* Dashboard — refined SME/marketing feel: clear hierarchy, breathing room */
 .dashboard-header {
   margin-bottom: var(--space-8);
 }
@@ -1936,6 +1951,8 @@ img.header-user-avatar-img {
   font-weight: 600;
   margin: 0 0 var(--space-1);
   color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: var(--line-tight);
 }
 
 .dashboard-header p {

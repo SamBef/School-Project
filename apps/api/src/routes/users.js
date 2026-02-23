@@ -97,10 +97,10 @@ router.post('/invite', wrap(requireAuth), requireRole(['OWNER']), async (req, re
     const baseMessage = isResend ? 'Invite resent' : 'Worker added';
     res.status(isResend ? 200 : 201).json({
       message: emailSent
-        ? `${baseMessage}. The worker will receive an email to set their password.`
+        ? `${baseMessage}. The worker will receive a verification email to set their password. If they do not receive it (e.g. latency or server issues), share the link below.`
         : `${baseMessage}. Share this link with them to set their password.`,
       user: { id: user.id, email: user.email, role: user.role },
-      ...(!emailSent && { inviteLink: setPasswordLink }),
+      inviteLink: setPasswordLink,
     });
   } catch (err) {
     console.error('users invite error', err);

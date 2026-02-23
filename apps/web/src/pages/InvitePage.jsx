@@ -373,8 +373,8 @@ export default function InvitePage() {
 
         {inviteLink && (
           <div className="invite-link-box">
-            <p className="form-hint" style={{ marginBottom: 'var(--space-2)' }}>
-              {t('auth.shareInviteLink')}
+            <p className="form-hint invite-link-backup" style={{ marginBottom: 'var(--space-2)' }}>
+              {t('auth.inviteLinkBackup')}
             </p>
             <div className="invite-link-row">
               <code className="invite-link-url">{inviteLink}</code>

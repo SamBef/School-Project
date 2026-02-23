@@ -312,69 +312,87 @@ router.get(
       const currency = business?.baseCurrencyCode ?? 'USD';
       const items = Array.isArray(transaction.items) ? transaction.items : [];
 
-      const doc = new PDFDocument({ margin: 40, size: [280, 600] }); // Thermal-style narrow
+      // 80mm receipt width (227pt) for consistent print across devices; height allows content to flow
+      const RECEIPT_WIDTH_PT = 227;
+      const RECEIPT_HEIGHT_PT = 595;
+      const MARGIN = 28;
+      const contentWidth = RECEIPT_WIDTH_PT - 2 * MARGIN;
+
+      const doc = new PDFDocument({
+        margin: MARGIN,
+        size: [RECEIPT_WIDTH_PT, RECEIPT_HEIGHT_PT],
+        autoFirstPage: true,
+        bufferPages: true,
+      });
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader(
         'Content-Disposition',
         `inline; filename="receipt-${transaction.receipt?.receiptNumber ?? transaction.id}.pdf"`
       );
+      res.setHeader('X-Content-Type-Options', 'nosniff');
 
       doc.pipe(res);
 
-      // Business header
-      doc.fontSize(14).font('Helvetica-Bold').text(business?.name ?? 'KoboTrack', { align: 'center' });
-      doc.fontSize(8).font('Helvetica').text(business?.primaryLocation ?? '', { align: 'center' });
-      doc.text(`${business?.phone ?? ''} | ${business?.email ?? ''}`, { align: 'center' });
-      doc.moveDown(0.5);
+      const lineY = () => doc.y;
+      const drawDivider = () => {
+        doc.moveTo(MARGIN, lineY()).lineTo(RECEIPT_WIDTH_PT - MARGIN, lineY()).stroke('#333');
+        doc.moveDown(0.4);
+      };
 
-      // Divider
-      doc.moveTo(40, doc.y).lineTo(240, doc.y).stroke('#ccc');
-      doc.moveDown(0.5);
+      // Business header — truncate for narrow receipt
+      doc.fontSize(12).font('Helvetica-Bold').text(business?.name ?? 'KoboTrack', MARGIN, lineY(), { width: contentWidth, align: 'center' });
+      doc.moveDown(0.3);
+      doc.fontSize(8).font('Helvetica').text(business?.primaryLocation ?? '', MARGIN, lineY(), { width: contentWidth, align: 'center' });
+      doc.text(`${business?.phone ?? ''} | ${business?.email ?? ''}`, MARGIN, lineY(), { width: contentWidth, align: 'center' });
+      doc.moveDown(0.4);
+      drawDivider();
 
       // Receipt info
-      doc.fontSize(10).font('Helvetica-Bold').text(`Receipt #${transaction.receipt?.receiptNumber ?? '—'}`, { align: 'center' });
+      doc.fontSize(10).font('Helvetica-Bold').text(`Receipt #${transaction.receipt?.receiptNumber ?? '—'}`, MARGIN, lineY(), { width: contentWidth, align: 'center' });
       doc.fontSize(8).font('Helvetica');
-      doc.text(`Date: ${formatDate(transaction.createdAt)}`, { align: 'center' });
-      doc.text(`Payment: ${transaction.paymentMethod.replace('_', ' ')}`, { align: 'center' });
-      doc.moveDown(0.5);
+      doc.text(`Date: ${formatDate(transaction.createdAt)}`, MARGIN, lineY(), { width: contentWidth, align: 'center' });
+      doc.text(`Payment: ${transaction.paymentMethod.replace('_', ' ')}`, MARGIN, lineY(), { width: contentWidth, align: 'center' });
+      doc.moveDown(0.4);
+      drawDivider();
 
-      // Divider
-      doc.moveTo(40, doc.y).lineTo(240, doc.y).stroke('#ccc');
-      doc.moveDown(0.5);
-
-      // Items
+      // Items table — fixed column positions for alignment when printing
+      const colItem = MARGIN;
+      const colQty = MARGIN + 70;
+      const colPrice = MARGIN + 100;
+      const colTotal = MARGIN + 155;
       doc.fontSize(9).font('Helvetica-Bold');
-      doc.text('Item', 40, doc.y);
-      doc.text('Qty', 140, doc.y);
-      doc.text('Price', 170, doc.y);
-      doc.text('Total', 210, doc.y);
-      doc.moveDown(0.3);
+      const tableHeaderY = doc.y;
+      doc.text('Item', colItem, tableHeaderY);
+      doc.text('Qty', colQty, tableHeaderY);
+      doc.text('Price', colPrice, tableHeaderY);
+      doc.text('Total', colTotal, tableHeaderY);
+      doc.moveDown(0.35);
 
       doc.font('Helvetica').fontSize(8);
       for (const item of items) {
         const y = doc.y;
         const lineTotal = (item.quantity ?? 0) * (item.unitPrice ?? 0);
-        doc.text(item.name?.slice(0, 15) ?? '', 40, y);
-        doc.text(String(item.quantity ?? 0), 140, y);
-        doc.text(Number(item.unitPrice ?? 0).toFixed(2), 170, y);
-        doc.text(lineTotal.toFixed(2), 210, y);
-        doc.moveDown(0.2);
+        const itemName = (item.name ?? '').slice(0, 18);
+        doc.text(itemName, colItem, y, { width: 65 });
+        doc.text(String(item.quantity ?? 0), colQty, y);
+        doc.text(Number(item.unitPrice ?? 0).toFixed(2), colPrice, y);
+        doc.text(lineTotal.toFixed(2), colTotal, y);
+        doc.moveDown(0.28);
       }
 
       doc.moveDown(0.3);
-      doc.moveTo(40, doc.y).lineTo(240, doc.y).stroke('#ccc');
-      doc.moveDown(0.3);
+      drawDivider();
 
       // Total
       doc.fontSize(11).font('Helvetica-Bold');
-      doc.text(`TOTAL: ${formatCurrency(transaction.total, currency)}`, { align: 'center' });
+      doc.text(`TOTAL: ${formatCurrency(transaction.total, currency)}`, MARGIN, lineY(), { width: contentWidth, align: 'center' });
       doc.moveDown(0.5);
 
       // Footer
-      doc.fontSize(7).font('Helvetica').fillColor('#888');
-      doc.text('Thank you for your business!', { align: 'center' });
-      doc.text('Powered by KoboTrack', { align: 'center' });
+      doc.fontSize(7).font('Helvetica').fillColor('#555');
+      doc.text('Thank you for your business!', MARGIN, lineY(), { width: contentWidth, align: 'center' });
+      doc.text('Powered by KoboTrack', MARGIN, lineY(), { width: contentWidth, align: 'center' });
 
       doc.end();
     } catch (err) {

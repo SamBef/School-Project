@@ -103,6 +103,23 @@ export default function DashboardPage() {
 
   const currency = stats?.currency ?? business?.baseCurrencyCode ?? 'USD';
 
+  const displayName = user?.firstName ?? user?.email?.split('@')[0] ?? '';
+
+  const greeting = (() => {
+    const LAST_VISIT_KEY = 'koboTrack_lastVisitDate';
+    const today = new Date().toDateString();
+    const lastVisit = typeof localStorage !== 'undefined' ? localStorage.getItem(LAST_VISIT_KEY) : null;
+    const isNewDay = !lastVisit || lastVisit !== today;
+    if (typeof localStorage !== 'undefined') localStorage.setItem(LAST_VISIT_KEY, today);
+    const acceptedAt = user?.acceptedAt ? new Date(user.acceptedAt).getTime() : null;
+    const now = Date.now();
+    const isNewUser = acceptedAt != null && (now - acceptedAt) < 24 * 60 * 60 * 1000;
+    if (isNewUser || isNewDay) return t('common.greetingHeyThere');
+    return t('common.greetingWelcomeBack');
+  })();
+
+  const isCashier = role === 'CASHIER';
+
   async function handleGenerateStrategicInsights() {
     setInsightsError('');
     setStrategicData(null);
@@ -142,10 +159,12 @@ export default function DashboardPage() {
   return (
     <div className="page-content dashboard-page">
       <header className="dashboard-header animate-fade-in" role="banner">
-        <h1>{t('common.welcome')}, {user?.firstName ?? user?.email?.split('@')[0]}</h1>
-        <p className="dashboard-header-subtitle">
-          {business?.name ? `${business.name} — ${business.primaryLocation || ''}`.trim() || business.name : t('auth.dashboard')}
-        </p>
+        <h1>{greeting} {displayName}!</h1>
+        {!isCashier && (
+          <p className="dashboard-header-subtitle">
+            {business?.name ? `${business.name} — ${business.primaryLocation || ''}`.trim() || business.name : t('auth.dashboard')}
+          </p>
+        )}
         <p className="dashboard-currency-note" aria-live="polite">
           {t('dashboard.amountsIn').replace('{currency}', currency)}
         </p>
@@ -314,7 +333,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {business && (
+            {business && !isCashier && (
               <div className="card dashboard-card-business">
                 <div className="card-header">
                   <h2>{t('dashboard.sectionBusiness')}</h2>

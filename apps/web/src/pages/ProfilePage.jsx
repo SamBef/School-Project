@@ -13,6 +13,7 @@ import PasswordInput from '../components/PasswordInput';
 import CustomSelect from '../components/CustomSelect';
 import { clearOnboarding } from '../components/OnboardingModal';
 import { useCurrentLocation } from '../hooks/useCurrentLocation';
+import { getSuggestedCurrency } from '../lib/suggestedCurrency';
 
 const CURRENCIES = [
   { code: 'USD', label: 'USD — US Dollar' },
@@ -78,6 +79,8 @@ export default function ProfilePage() {
   const [bizAddress, setBizAddress] = useState(business?.address ?? '');
   const [savingInfo, setSavingInfo] = useState(false);
 
+  const [suggestedCurrency, setSuggestedCurrency] = useState(null);
+
   // Password change state
   const [changingPassword, setChangingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -90,6 +93,10 @@ export default function ProfilePage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const { getCurrentLocation, loading: locationLoading } = useCurrentLocation();
+
+  useEffect(() => {
+    if (isOwner) getSuggestedCurrency().then(setSuggestedCurrency);
+  }, [isOwner]);
 
   async function handleUseCurrentLocation() {
     try {
@@ -491,8 +498,8 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Business details */}
-      {business && (
+      {/* Business details — Owner only; Cashier/Manager do not see business information */}
+      {business && isOwner && (
         <div className="card">
           <div className="card-header">
             <h2>{t('common.businessInfo')}</h2>
@@ -615,29 +622,39 @@ export default function ProfilePage() {
               )}
               <li>
                 <span className="info-label">{t('common.currency')}</span>
-                {isOwner ? (
-                  <div className="currency-selector">
-                    <CustomSelect
-                      id="profile-currency"
-                      value={currency}
-                      onChange={(v) => { setCurrency(v); clearMessages(); }}
-                      disabled={savingCurrency}
-                      options={CURRENCIES.map((c) => ({ value: c.code, label: c.label }))}
-                    />
-                    {hasCurrencyChanged && (
+                <div className="currency-selector">
+                  <CustomSelect
+                    id="profile-currency"
+                    value={currency}
+                    onChange={(v) => { setCurrency(v); clearMessages(); }}
+                    disabled={savingCurrency}
+                    options={CURRENCIES.map((c) => ({ value: c.code, label: c.label }))}
+                  />
+                  {suggestedCurrency && suggestedCurrency.currency !== (business?.baseCurrencyCode ?? 'USD') && suggestedCurrency.currency !== currency && (
+                    <p className="form-hint profile-suggested-currency" role="status">
+                      {t('profile.suggestedCurrency').replace('{currency}', suggestedCurrency.currency)}
+                      {' '}
                       <button
                         type="button"
-                        className="btn btn-primary btn-sm"
-                        onClick={handleCurrencySave}
+                        className="btn btn-ghost btn-sm btn-inline"
+                        onClick={() => { setCurrency(suggestedCurrency.currency); clearMessages(); }}
                         disabled={savingCurrency}
                       >
-                        {savingCurrency ? t('common.loading') : t('common.save')}
+                        {t('profile.useSuggested')}
                       </button>
-                    )}
-                  </div>
-                ) : (
-                  <span className="info-value">{business.baseCurrencyCode ?? 'USD'}</span>
-                )}
+                    </p>
+                  )}
+                  {hasCurrencyChanged && (
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={handleCurrencySave}
+                      disabled={savingCurrency}
+                    >
+                      {savingCurrency ? t('common.loading') : t('common.save')}
+                    </button>
+                  )}
+                </div>
               </li>
             </ul>
           )}

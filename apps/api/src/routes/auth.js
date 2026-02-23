@@ -10,7 +10,7 @@ import crypto from 'crypto';
 import { config } from '../config.js';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
-import { sendPasswordResetEmail } from '../services/email.js';
+import { sendPasswordResetEmail, sendWelcomeEmail } from '../services/email.js';
 import { logActivity } from '../services/activityLog.js';
 
 const router = Router();
@@ -39,6 +39,7 @@ function toSafeUser(user) {
     avatarUrl: user.avatarUrl ?? null,
     role: user.role,
     businessId: user.businessId,
+    acceptedAt: user.acceptedAt?.toISOString() ?? null,
   };
 }
 
@@ -239,6 +240,11 @@ router.post('/set-password', async (req, res) => {
       where: { id: user.id },
       data: { passwordHash, acceptedAt: new Date(), inviteToken: null, inviteTokenExpiry: null },
     });
+    try {
+      await sendWelcomeEmail(user.email, user.firstName);
+    } catch (welcomeErr) {
+      console.warn('Welcome email failed:', welcomeErr?.message);
+    }
     const jwtToken = signToken({ userId: user.id, email: user.email, role: user.role, businessId: user.businessId });
     res.json({
       token: jwtToken,

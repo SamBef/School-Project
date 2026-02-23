@@ -71,7 +71,8 @@ async function sendMail({ to, subject, text, html }) {
 }
 
 /**
- * Send invite email to a new worker.
+ * Send verification/invite email to a new worker.
+ * The link is the primary way to verify and set password; owner can share the same link as backup if email is delayed.
  */
 export async function sendInviteEmail(toEmail, businessName, setPasswordLink) {
   if (!isEmailConfigured()) {
@@ -81,21 +82,52 @@ export async function sendInviteEmail(toEmail, businessName, setPasswordLink) {
 
   return sendMail({
     to: toEmail,
-    subject: `You're invited to join ${businessName} on KoboTrack`,
-    text: `You have been invited to join ${businessName} on KoboTrack.\n\nSet your password to get started: ${setPasswordLink}\n\nIf you did not expect this email, you can ignore it.`,
+    subject: `Verify your account — ${businessName} on KoboTrack`,
+    text: `You have been invited to join ${businessName} on KoboTrack. Verify your account and set your password:\n\n${setPasswordLink}\n\nIf the link does not open, copy and paste it into your browser. If you did not expect this email, you can ignore it.`,
     html: `
       <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-        <h2 style="color: #171717; margin: 0 0 16px;">You're invited to KoboTrack</h2>
+        <h2 style="color: #171717; margin: 0 0 16px;">Verify your account</h2>
         <p style="color: #525252; line-height: 1.6;">
-          You have been invited to join <strong>${escapeHtml(businessName)}</strong> on KoboTrack.
+          You have been invited to join <strong>${escapeHtml(businessName)}</strong> on KoboTrack. Click below to verify your account and set your password.
         </p>
         <p style="margin: 24px 0;">
           <a href="${escapeHtml(setPasswordLink)}" 
              style="display: inline-block; background-color: #0d9488; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">
-            Set your password
+            Verify and set password
           </a>
         </p>
+        <p style="color: #737373; font-size: 14px;">If the link does not open (e.g. due to network or server delay), copy and paste this link into your browser: ${escapeHtml(setPasswordLink)}</p>
         <p style="color: #a3a3a3; font-size: 14px;">If you did not expect this email, you can ignore it.</p>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Send welcome email after a user has set their password and joined the app.
+ */
+export async function sendWelcomeEmail(toEmail, firstName) {
+  if (!isEmailConfigured()) {
+    console.warn('Email not configured; skipping welcome email to', toEmail);
+    return false;
+  }
+
+  const name = firstName?.trim() || 'there';
+  return sendMail({
+    to: toEmail,
+    subject: 'Welcome to KoboTrack',
+    text: `Hi ${name},\n\nWelcome to KoboTrack. You can now sign in to record sales, track expenses, and manage your business in one place.\n\nIf you have any questions, reach out to your team owner.\n\n— The KoboTrack team`,
+    html: `
+      <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+        <h2 style="color: #171717; margin: 0 0 16px;">Welcome to KoboTrack</h2>
+        <p style="color: #525252; line-height: 1.6;">
+          Hi ${escapeHtml(name)},
+        </p>
+        <p style="color: #525252; line-height: 1.6;">
+          You're all set. You can now sign in to record sales, track expenses, and manage your business in one place.
+        </p>
+        <p style="color: #737373; font-size: 14px;">If you have any questions, reach out to your team owner.</p>
+        <p style="color: #a3a3a3; font-size: 14px;">— The KoboTrack team</p>
       </div>
     `,
   });
