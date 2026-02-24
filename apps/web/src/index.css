@@ -4156,6 +4156,19 @@ img.header-user-avatar-img {
   min-width: 0;
 }
 
+/* Transactions page: isolate layout so global changes don't disorder form/table */
+.transactions-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.transactions-page .page-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
 .page-subtitle {
   margin: 0;
   color: var(--text-muted);

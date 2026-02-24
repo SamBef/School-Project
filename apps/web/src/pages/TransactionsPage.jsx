@@ -275,8 +275,9 @@ export default function TransactionsPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div className="page-content">
-      <h1 className="page-title">{t('common.transactions')}</h1>
+    <div className="transactions-page">
+      <div className="page-content">
+        <h1 className="page-title">{t('common.transactions')}</h1>
       <KoboAIUsageTip page="transactions" />
 
       {canUseKoboAI && koboaiConfigured && (
@@ -649,10 +650,11 @@ export default function TransactionsPage() {
                   {t('common.next')}
                 </button>
               </div>
-            )}
-          </>
+        )}
+      </>
         )}
       </div>
     </div>
+  </div>
   );
 }

@@ -40,7 +40,10 @@ const FALLBACK_CURRENCY = 'USD';
  */
 export async function getSuggestedCurrency() {
   try {
-    const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(5000) });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (!res.ok) return { currency: FALLBACK_CURRENCY, countryCode: null };
     const data = await res.json();
     const countryCode = (data.country_code || '').toUpperCase();

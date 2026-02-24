@@ -14,6 +14,7 @@ import CustomSelect from '../components/CustomSelect';
 import { clearOnboarding } from '../components/OnboardingModal';
 import { useCurrentLocation } from '../hooks/useCurrentLocation';
 import { getSuggestedCurrency } from '../lib/suggestedCurrency';
+import Spinner from '../components/Spinner';
 
 const CURRENCIES = [
   { code: 'USD', label: 'USD — US Dollar' },
@@ -48,7 +49,7 @@ function getRoleBadgeClass(role) {
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user, business, refreshUser } = useAuth();
+  const { user, business, refreshUser, loading: authLoading } = useAuth();
   const role = user?.role ?? '';
   const isOwner = role === 'OWNER';
   const fullName = (user?.firstName && user?.lastName)
@@ -95,7 +96,10 @@ export default function ProfilePage() {
   const { getCurrentLocation, loading: locationLoading } = useCurrentLocation();
 
   useEffect(() => {
-    if (isOwner) getSuggestedCurrency().then(setSuggestedCurrency);
+    if (!isOwner) return;
+    getSuggestedCurrency()
+      .then(setSuggestedCurrency)
+      .catch(() => setSuggestedCurrency(null));
   }, [isOwner]);
 
   async function handleUseCurrentLocation() {
@@ -306,8 +310,17 @@ export default function ProfilePage() {
     }
   }
 
+  if (authLoading) {
+    return (
+      <div className="page-content" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '12rem' }}>
+        <Spinner size={32} />
+        <p className="loading-page-text" style={{ marginTop: 'var(--space-4)' }}>{t('common.loading')}</p>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
+    <div className="profile-page-wrap" style={{ maxWidth: '36rem', margin: '0 auto' }}>
       {/* Profile header */}
       <div className="card" style={{ marginBottom: 'var(--space-6)' }}>
         <div className="profile-header">
