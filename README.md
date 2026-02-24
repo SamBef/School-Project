@@ -79,12 +79,22 @@ kobotrack/
 
 4. **Run locally**
 
-   ```bash
-   npm run dev:api    # Terminal 1: API (must be running first)
-   npm run dev:web    # Terminal 2: Web
-   ```
+   You must run **both** the API and the web app. Use two terminals:
 
-   If you see "Cannot reach the API", start the API in a separate terminal and ensure `VITE_API_URL` in `apps/web/.env` matches the API URL (e.g. `http://localhost:3000`).
+   **Terminal 1 — API (start this first):**
+   ```bash
+   npm run dev:api
+   ```
+   Wait until you see e.g. `KoboTrack API listening on port 3005`.
+
+   **Terminal 2 — Web:**
+   ```bash
+   npm run dev:web
+   ```
+   Then open the URL shown (e.g. `http://localhost:5174`).
+
+   **If you see "Failed to load data" or "Cannot reach the API":**  
+   The API is not running or not reachable. Start it in Terminal 1 and ensure `apps/web/.env` has `VITE_API_URL=http://localhost:3005` (or the port your API uses). The default API port is **3005**.
 
 ---
 

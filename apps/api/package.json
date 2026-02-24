@@ -16,6 +16,7 @@
     "admin:create": "node scripts/create-admin.js",
     "test": "node --test src/",
     "test:smoke": "node scripts/smoke-test-api.js",
+    "check:health": "node scripts/check-health.js",
     "lint": "eslint src --ext .js"
   },
   "dependencies": {

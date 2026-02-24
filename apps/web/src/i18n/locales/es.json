@@ -348,6 +348,9 @@
     "avatarUpdated": "Foto de perfil actualizada.",
     "avatarRemoved": "Foto de perfil eliminada.",
     "help": "Ayuda",
+    "loadFailed": "No se pudo cargar el perfil. Comprueba la conexión e inténtalo de nuevo.",
+    "loadingSlow": "Tarda más de lo habitual. Comprueba que la API esté en ejecución e inténtalo de nuevo.",
+    "retry": "Reintentar",
     "helpTourDesc": "Volver a ver el tour para saber dónde registrar ventas, gastos y cómo KoboAI puede ayudarte.",
     "showTourAgain": "Ver tour de nuevo"
   },

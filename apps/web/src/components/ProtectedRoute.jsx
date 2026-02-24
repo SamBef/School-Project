@@ -13,9 +13,11 @@ export default function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="loading-page" role="status" aria-busy="true">
-        <Spinner size={32} />
-        <p>Loading…</p>
+      <div className="app-layout" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="loading-page" role="status" aria-busy="true" style={{ flex: 1, color: 'var(--text-primary)' }}>
+          <Spinner size={32} />
+          <p style={{ marginTop: 'var(--space-3)', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>Loading…</p>
+        </div>
       </div>
     );
   }

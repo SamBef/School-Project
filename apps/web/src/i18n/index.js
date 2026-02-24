@@ -33,7 +33,7 @@ function t(key) {
   for (const k of keys) {
     value = value?.[k];
   }
-  return value ?? key;
+  return (typeof value === 'string' ? value : null) ?? key;
 }
 
 export { SUPPORTED_LOCALES, DEFAULT_LOCALE, loadLocale, getLocale, setLocale, t };

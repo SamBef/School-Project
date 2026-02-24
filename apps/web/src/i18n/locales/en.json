@@ -348,6 +348,9 @@
     "avatarUpdated": "Profile photo updated.",
     "avatarRemoved": "Profile photo removed.",
     "help": "Help",
+    "loadFailed": "Profile could not be loaded. Check your connection and try again.",
+    "loadingSlow": "Taking longer than usual. Check that the API is running and try again.",
+    "retry": "Retry",
     "helpTourDesc": "Re-run the short tour to see where to record sales, expenses, and how KoboAI can help.",
     "showTourAgain": "Show tour again"
   },

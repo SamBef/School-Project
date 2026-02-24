@@ -10,9 +10,11 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleRoute from './components/RoleRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import { t } from './i18n';
 
 import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import SetPasswordPage from './pages/SetPasswordPage';
@@ -25,7 +27,6 @@ const ExpensesPage = lazy(() => import('./pages/ExpensesPage'));
 const ExportPage = lazy(() => import('./pages/ExportPage'));
 const AnalysisPage = lazy(() => import('./pages/AnalysisPage'));
 const InvitePage = lazy(() => import('./pages/InvitePage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const UserActivityPage = lazy(() => import('./pages/UserActivityPage'));
 const InventoryPage = lazy(() => import('./pages/InventoryPage'));
 const InventoryProductsPage = lazy(() => import('./pages/inventory/InventoryProductsPage'));
@@ -273,7 +274,7 @@ export default function App() {
             <Route path="/expenses" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><ExpensesPage /></Layout></RoleRoute></ProtectedRoute>} />
             <Route path="/export" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><ExportPage /></Layout></RoleRoute></ProtectedRoute>} />
             <Route path="/analysis" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER', 'MANAGER']}><Layout><AnalysisPage /></Layout></RoleRoute></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
+            <Route path="/profile" element={<ErrorBoundary fallbackTitle={t('common.profile')}><ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute></ErrorBoundary>} />
             <Route path="/invite" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER']}><Layout><InvitePage /></Layout></RoleRoute></ProtectedRoute>} />
             <Route path="/team/:id" element={<ProtectedRoute><RoleRoute allowedRoles={['OWNER']}><Layout><UserActivityPage /></Layout></RoleRoute></ProtectedRoute>} />
             <Route path="/inventory" element={<ProtectedRoute><Layout><InventoryPage /></Layout></ProtectedRoute>} />

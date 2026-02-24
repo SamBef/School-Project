@@ -36,6 +36,11 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
+    setLoading(true);
+    const timeoutMs = 15000;
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, timeoutMs);
     try {
       const data = await api.get('/auth/me');
       setUser(data.user);
@@ -43,6 +48,7 @@ export function AuthProvider({ children }) {
     } catch {
       setToken(null);
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   }, [token, setToken]);

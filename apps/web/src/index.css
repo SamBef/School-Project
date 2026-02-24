@@ -72,10 +72,11 @@
   --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
 
-  /* Transitions */
-  --transition-fast: 120ms ease;
-  --transition-normal: 200ms ease;
-  --transition-enter: 280ms cubic-bezier(0.32, 0.72, 0, 1);
+  /* Transitions — natural, smooth; respect prefers-reduced-motion */
+  --transition-fast: 150ms ease;
+  --transition-normal: 220ms ease;
+  --transition-enter: 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-out-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
   /* Theme — light/dark mix, logo teal (#0d9488) */
   --surface-base: #f1f5f9;
@@ -159,6 +160,7 @@ body {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
+  transition: background-color 0.35s var(--ease-out-smooth), color 0.35s var(--ease-out-smooth);
 }
 
 body {
@@ -314,7 +316,7 @@ img {
   box-shadow: var(--shadow-sm);
   min-width: 0;
   color: var(--text-primary);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-normal);
+  transition: background-color 0.35s var(--ease-out-smooth), color 0.35s var(--ease-out-smooth), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-normal);
 }
 
 .card:hover {
@@ -1083,9 +1085,8 @@ fieldset legend {
   top: 0;
   box-shadow: var(--shadow-sm);
   z-index: 10;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-normal);
   padding-top: max(var(--space-3), env(safe-area-inset-top));
+  transition: background-color 0.35s var(--ease-out-smooth), color 0.35s var(--ease-out-smooth), border-color 0.35s var(--ease-out-smooth), box-shadow var(--transition-normal);
 }
 
 .layout-header .logo-link {
@@ -1153,6 +1154,8 @@ fieldset legend {
   border-radius: var(--radius-md);
   cursor: pointer;
   white-space: nowrap;
+  min-width: 8rem;
+  flex-shrink: 0;
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
@@ -1536,7 +1539,8 @@ img.header-user-avatar-img {
   min-width: 0;
   overflow-x: hidden;
   background-color: var(--surface-base);
-  animation: layoutFadeIn 0.35s ease-out;
+  transition: background-color 0.35s var(--ease-out-smooth), color 0.35s var(--ease-out-smooth);
+  animation: layoutFadeIn 0.35s var(--ease-out-smooth);
 }
 
 @keyframes layoutFadeIn {
@@ -2993,13 +2997,45 @@ img.header-user-avatar-img {
 }
 
 .filter-date {
-  padding: var(--space-2) var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  min-height: 2.5rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
   background: var(--input-bg);
   color: var(--text-primary);
+  cursor: pointer;
+  color-scheme: light;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.filter-date:hover {
+  border-color: var(--border-strong, var(--color-border));
+}
+
+.filter-date:focus {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-color: var(--color-accent);
+}
+
+.transactions-page .filter-date,
+[data-theme="dark"] .filter-date {
+  color-scheme: inherit;
   max-width: 150px;
+}
+
+/* All date inputs: consistent aesthetic and light/dark calendar */
+input[type="date"] {
+  color-scheme: light;
+  min-height: 2.5rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+[data-theme="dark"] input[type="date"] {
+  color-scheme: dark;
 }
 
 .filter-date-sep {
@@ -3806,12 +3842,14 @@ img.header-user-avatar-img {
     display: none;
   }
 
-  .line-item-row {
+  .line-item-row,
+  .transactions-page .line-item-row {
     grid-template-columns: 1fr 1fr;
     gap: var(--space-2);
   }
 
-  .line-item-col-name {
+  .line-item-col-name,
+  .transactions-page .line-item-col-name {
     grid-column: 1 / -1;
   }
 
@@ -4156,10 +4194,20 @@ img.header-user-avatar-img {
   min-width: 0;
 }
 
+/* Profile page: ensure content area is never blank or collapsed */
+.profile-page,
+.profile-page.profile-loading {
+  min-height: min(50vh, 20rem);
+  color: var(--text-primary);
+}
+
 /* Transactions page: isolate layout so global changes don't disorder form/table */
 .transactions-page {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .transactions-page .page-content {
@@ -4167,6 +4215,102 @@ img.header-user-avatar-img {
   flex-direction: column;
   gap: var(--space-6);
   min-width: 0;
+}
+
+/* New transaction card: contain all content, no overflow */
+.transactions-page .card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.transactions-page .card form {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.transactions-page .line-items {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.transactions-page .line-items-header,
+.transactions-page .line-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(5rem, 1fr) 5.5rem;
+  gap: var(--space-2);
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.transactions-page .line-items-header .line-item-col-total {
+  text-align: right;
+}
+
+.transactions-page .line-item-col-name {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.transactions-page .line-item-col-name input {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.transactions-page .line-item-col-qty,
+.transactions-page .line-item-col-price {
+  min-width: 0;
+}
+
+.transactions-page .line-item-col-qty input,
+.transactions-page .line-item-col-price input {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.transactions-page .line-item-col-total {
+  min-width: 5rem;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.transactions-page .line-item-col-action {
+  width: 5.5rem;
+  min-width: 5.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+.transactions-page .line-item-actions {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.transactions-page .transaction-footer {
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.transactions-page .transaction-footer .form-group,
+.transactions-page .transaction-footer .transaction-total {
+  min-width: 0;
+}
+
+.transactions-page .transaction-footer .btn {
+  flex-shrink: 0;
 }
 
 .page-subtitle {

@@ -4,7 +4,7 @@
  * All users can change their password.
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
@@ -47,9 +47,12 @@ function getRoleBadgeClass(role) {
   return 'role-badge role-badge-cashier';
 }
 
+const AUTH_LOADING_TIMEOUT_MS = 12000;
+
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user, business, refreshUser, loading: authLoading } = useAuth();
+  const { user, business, refreshUser, logout, loading: authLoading } = useAuth();
+  const [loadingFallback, setLoadingFallback] = useState(false);
   const role = user?.role ?? '';
   const isOwner = role === 'OWNER';
   const fullName = (user?.firstName && user?.lastName)
@@ -101,6 +104,15 @@ export default function ProfilePage() {
       .then(setSuggestedCurrency)
       .catch(() => setSuggestedCurrency(null));
   }, [isOwner]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      setLoadingFallback(false);
+      return;
+    }
+    const t = setTimeout(() => setLoadingFallback(true), AUTH_LOADING_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [authLoading]);
 
   async function handleUseCurrentLocation() {
     try {
@@ -312,15 +324,50 @@ export default function ProfilePage() {
 
   if (authLoading) {
     return (
-      <div className="page-content" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '12rem' }}>
-        <Spinner size={32} />
-        <p className="loading-page-text" style={{ marginTop: 'var(--space-4)' }}>{t('common.loading')}</p>
+      <div className="page-content profile-page profile-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'min(40vh, 16rem)', textAlign: 'center' }}>
+        <h1 className="page-title" style={{ marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>{t('common.profile')}</h1>
+        <div>
+          {!loadingFallback ? (
+            <>
+              <Spinner size={32} />
+              <p className="loading-page-text" style={{ marginTop: 'var(--space-4)', color: 'var(--text-muted)' }}>{t('common.loading')}</p>
+            </>
+          ) : (
+            <>
+              <p className="form-hint" style={{ marginBottom: 'var(--space-4)', color: 'var(--text-muted)' }}>{t('profile.loadingSlow')}</p>
+              <button type="button" className="btn btn-primary" onClick={() => refreshUser()}>
+                {t('profile.retry')}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="page-content profile-page" style={{ maxWidth: '36rem', margin: '0 auto' }}>
+        <h1 className="page-title" style={{ marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>{t('common.profile')}</h1>
+        <div className="card" style={{ minHeight: '10rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+          <p className="form-hint" style={{ marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>
+            {t('profile.loadFailed')}
+          </p>
+          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button type="button" className="btn btn-primary" onClick={() => refreshUser()}>
+              {t('profile.retry')}
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={() => { logout(); navigate('/login'); }}>
+              {t('auth.signOut')}
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="profile-page-wrap" style={{ maxWidth: '36rem', margin: '0 auto' }}>
+    <div className="page-content profile-page-wrap" style={{ maxWidth: '36rem', margin: '0 auto' }}>
       {/* Profile header */}
       <div className="card" style={{ marginBottom: 'var(--space-6)' }}>
         <div className="profile-header">
@@ -613,21 +660,21 @@ export default function ProfilePage() {
             <ul className="business-info-list">
               <li>
                 <span className="info-label">{t('common.name')}</span>
-                <span className="info-value">{business.name}</span>
+                <span className="info-value">{business?.name ?? '—'}</span>
               </li>
               <li>
                 <span className="info-label">{t('common.email')}</span>
-                <span className="info-value">{business.email}</span>
+                <span className="info-value">{business?.email ?? '—'}</span>
               </li>
               <li>
                 <span className="info-label">{t('common.phone')}</span>
-                <span className="info-value">{business.phone}</span>
+                <span className="info-value">{business?.phone ?? '—'}</span>
               </li>
               <li>
                 <span className="info-label">{t('common.location')}</span>
-                <span className="info-value">{business.primaryLocation}</span>
+                <span className="info-value">{business?.primaryLocation ?? '—'}</span>
               </li>
-              {business.address && (
+              {business?.address && (
                 <li>
                   <span className="info-label">{t('profile.address')}</span>
                   <span className="info-value">{business.address}</span>
@@ -645,7 +692,7 @@ export default function ProfilePage() {
                   />
                   {suggestedCurrency && suggestedCurrency.currency !== (business?.baseCurrencyCode ?? 'USD') && suggestedCurrency.currency !== currency && (
                     <p className="form-hint profile-suggested-currency" role="status">
-                      {t('profile.suggestedCurrency').replace('{currency}', suggestedCurrency.currency)}
+                      {(t('profile.suggestedCurrency') || '').replace('{currency}', suggestedCurrency?.currency ?? '')}
                       {' '}
                       <button
                         type="button"
