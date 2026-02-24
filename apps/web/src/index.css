@@ -699,13 +699,7 @@ img {
   margin-top: var(--space-1);
 }
 
-.profile-suggested-currency {
-  margin-top: var(--space-2);
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
+/* Profile suggested currency: overridden in .currency-selector block above for layout */
 
 .btn-inline {
   margin-left: 0;
@@ -1077,8 +1071,8 @@ fieldset legend {
 .layout-header {
   display: flex;
   align-items: center;
-  padding: var(--space-4) clamp(var(--space-4), 4vw, var(--space-6));
-  gap: var(--space-3);
+  padding: var(--space-3) clamp(var(--space-4), 4vw, var(--space-6));
+  gap: var(--space-4);
   background-color: var(--surface-raised);
   border-bottom: 1px solid var(--border-default);
   position: sticky;
@@ -1109,9 +1103,10 @@ fieldset legend {
 .layout-nav {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   flex: 1;
   min-width: 0;
+  justify-content: flex-start;
 }
 
 .layout-nav a {
@@ -1119,7 +1114,7 @@ fieldset legend {
   text-decoration: none;
   font-size: var(--text-sm);
   font-weight: 500;
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   white-space: nowrap;
   transition: background-color var(--transition-fast), color var(--transition-fast);
@@ -1144,8 +1139,8 @@ fieldset legend {
 .nav-dropdown-trigger {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-2);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-secondary);
@@ -1154,7 +1149,7 @@ fieldset legend {
   border-radius: var(--radius-md);
   cursor: pointer;
   white-space: nowrap;
-  min-width: 8rem;
+  min-width: 8.5rem;
   flex-shrink: 0;
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
@@ -1228,7 +1223,7 @@ fieldset legend {
 .header-right {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   flex-shrink: 0;
   margin-left: auto;
 }
@@ -2319,6 +2314,16 @@ img.header-user-avatar-img {
 .business-info-list .info-value {
   font-weight: 500;
   color: var(--color-neutral-800);
+}
+
+.business-info-list li:has(.currency-selector) {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.business-info-list li:has(.currency-selector) .info-label {
+  margin-bottom: 0;
 }
 
 
@@ -3429,13 +3434,13 @@ input[type="date"] {
   border: none;
   padding: var(--space-2);
   cursor: pointer;
-  color: var(--color-neutral-700);
+  color: var(--text-primary);
   border-radius: var(--radius-md);
   z-index: 30;
 }
 
 .mobile-menu-toggle:hover {
-  background-color: var(--color-neutral-100);
+  background-color: var(--surface-overlay);
 }
 
 /* Mobile nav overlay (backdrop) */
@@ -3487,17 +3492,42 @@ input[type="date"] {
 /* Currency selector (profile page) */
 .currency-selector {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.currency-selector .custom-select {
+  max-width: 12rem;
+}
+
+.currency-selector .custom-select-trigger {
+  border-radius: var(--radius-md);
+}
+
+.profile-suggested-currency {
+  margin-top: 0;
+  display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.profile-suggested-currency .btn-inline {
+  font-weight: 500;
 }
 
 .currency-selector select {
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
   background: var(--input-bg);
   color: var(--text-primary);
+  min-height: 2.5rem;
 }
 
 
@@ -3515,23 +3545,45 @@ input[type="date"] {
 
 
 /* ============================
-   Responsive — Tablet (768px)
+   Responsive — Tablet & medium (1024px): hamburger nav
+   ============================
+   From 1024px down, use hamburger + slide panel so the header stays clean
+   and nav never feels cramped on medium screens.
    ============================ */
 
-@media (max-width: 768px) {
-  /* Header */
+@media (max-width: 1024px) {
+  /* Header: single row — logo, then right-aligned tools + hamburger */
   .layout-header {
     padding: var(--space-3) var(--space-4);
     gap: var(--space-2);
+  }
+
+  .layout-header .logo-link {
+    font-size: var(--text-base);
   }
 
   .mobile-menu-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
   }
 
-  /* Hide inline nav on mobile — it moves to the slide panel */
+  .mobile-menu-toggle:hover {
+    background-color: var(--surface-overlay);
+    color: var(--color-accent);
+  }
+
+  .mobile-menu-toggle:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Hide inline nav — all links move to the slide-out panel */
   .layout-nav {
     display: none;
   }
@@ -3594,15 +3646,15 @@ input[type="date"] {
     border: none;
     padding: var(--space-1);
     cursor: pointer;
-    color: var(--color-neutral-500);
+    color: var(--text-muted);
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
   }
 
   .mobile-nav-close:hover {
-    color: var(--color-neutral-900);
-    background-color: var(--color-neutral-100);
+    color: var(--text-primary);
+    background-color: var(--surface-overlay);
   }
 
   .mobile-nav-links {
@@ -3640,7 +3692,7 @@ input[type="date"] {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--color-neutral-500);
+    color: var(--text-muted);
   }
 
   .mobile-nav-footer {
